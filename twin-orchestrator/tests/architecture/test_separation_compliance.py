@@ -41,6 +41,7 @@ FORBIDDEN_DB_PATTERNS = [
 
 ALLOWED_API_CLIENTS = [
     "TuringCoreAPIClient",
+    "TuringCoreClient",
     "turingcore_client",
 ]
 
