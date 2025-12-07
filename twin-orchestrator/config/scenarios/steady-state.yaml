@@ -1,0 +1,296 @@
+# Steady State Scenario Configuration
+# 30 days of normal operations for CU-Digital
+
+scenario_code: "STEADY_STATE_30D"
+scenario_name: "Steady State - 30 Days"
+description: "30 days of normal economic conditions with baseline transaction patterns"
+version: "1.0"
+
+# Target tenant
+tenant: "CU_DIGITAL"
+
+# Customer generation parameters
+customers:
+  count: 500
+  
+  # Demographics distribution (aligns with tenant config)
+  demographics:
+    age_buckets:
+      "18-25": 0.25    # Digital natives
+      "26-40": 0.45    # Young professionals
+      "41-60": 0.25    # Mid-career
+      "60+": 0.05      # Retirees
+    
+    income_distribution:
+      low: 0.20        # $25K-$45K annually
+      mid: 0.60        # $45K-$95K annually
+      high: 0.20       # $95K+ annually
+    
+    employment_types:
+      full_time: 0.70
+      part_time: 0.15
+      self_employed: 0.10
+      unemployed: 0.05
+    
+    location_distribution:
+      metro: 0.70      # Sydney, Melbourne, Brisbane
+      regional: 0.25   # Regional cities
+      rural: 0.05      # Rural areas
+
+# Account opening patterns
+accounts:
+  # Transaction accounts (per customer)
+  txn_per_customer: 1
+  txn_premium_probability: 0.15    # 15% open premium account
+  
+  # Savings accounts (per customer)
+  savings_per_customer: 1
+  savings_youth_probability: 0.20  # 20% of 18-25 age group
+  
+  # Term deposits
+  term_deposit_probability: 0.10   # 10% of customers
+  term_deposit_distribution:
+    "TERM_3M": 0.40
+    "TERM_6M": 0.40
+    "TERM_12M": 0.20
+  term_deposit_amount_ranges:
+    low: [5000, 15000]
+    mid: [15000, 50000]
+    high: [50000, 200000]
+  
+  # Loans
+  personal_loan_probability: 0.15  # 15% of customers
+  personal_loan_distribution:
+    "PL_CLASSIC": 0.85
+    "PL_GREEN": 0.15
+  personal_loan_amount_ranges:
+    low: [2000, 10000]
+    mid: [10000, 30000]
+    high: [30000, 50000]
+  
+  home_loan_probability: 0.08      # 8% of customers (realistic for digital CU)
+  home_loan_distribution:
+    "HOME_VARIABLE": 0.70
+    "HOME_FIXED_3Y": 0.30
+  home_loan_amount_ranges:
+    low: [200000, 400000]
+    mid: [400000, 700000]
+    high: [700000, 1200000]
+  
+  credit_card_probability: 0.25    # 25% of customers
+  credit_card_distribution:
+    "CC_LOW_RATE": 0.70
+    "CC_REWARDS": 0.30
+  credit_card_limit_ranges:
+    low: [2000, 5000]
+    mid: [5000, 15000]
+    high: [15000, 30000]
+
+# Initial balances (seeded at account opening)
+initial_balances:
+  txn_account_ranges:
+    low: [100, 500]
+    mid: [500, 2000]
+    high: [2000, 10000]
+  
+  savings_account_ranges:
+    low: [500, 2000]
+    mid: [2000, 10000]
+    high: [10000, 50000]
+
+# Timeline configuration
+timeline:
+  days: 30
+  start_date: "2025-01-01"         # Synthetic start date
+  time_acceleration: 1.0           # 1.0 = real-time, >1.0 = time warp
+  
+  # Business day patterns
+  business_days_per_week: 5
+  weekend_transaction_reduction: 0.3  # 30% of weekday volume
+
+# Transaction patterns
+transactions:
+  # Salary/income deposits
+  salary_pay_cycle_days: 14        # Fortnightly
+  salary_amount_ranges:
+    low: [1500, 2500]              # Aligns with income distribution
+    mid: [2500, 4500]
+    high: [4500, 8000]
+  salary_variation: 0.05           # 5% random variation per pay
+  
+  # Daily spending (debit transactions)
+  daily_debits_per_customer:
+    min: 0
+    max: 5
+    mean: 2.5
+  debit_amount_range: [5, 200]
+  debit_amount_distribution:
+    small: 0.60                    # $5-$30 (coffee, lunch)
+    medium: 0.30                   # $30-$100 (groceries, fuel)
+    large: 0.10                    # $100-$200 (shopping, dining)
+  
+  # Transfers to savings
+  savings_transfer_probability: 0.40  # 40% of customers transfer monthly
+  savings_transfer_frequency_days: 14  # Every 2 weeks
+  savings_transfer_fraction_range: [0.05, 0.30]  # 5-30% of salary
+  
+  # Bill payments (BPAY)
+  bill_payment_probability: 0.80   # 80% of customers pay bills
+  bill_payments_per_month: [2, 6]  # 2-6 bills per month
+  bill_amount_ranges:
+    utilities: [100, 400]
+    insurance: [50, 200]
+    subscription: [10, 50]
+    other: [50, 300]
+  
+  # NPP (instant) payments
+  npp_payment_probability: 0.60    # 60% of customers use NPP
+  npp_payments_per_month: [1, 5]
+  npp_amount_range: [10, 500]
+  
+  # ATM withdrawals
+  atm_withdrawal_probability: 0.40  # 40% of customers use ATMs
+  atm_withdrawals_per_month: [1, 4]
+  atm_amount_range: [50, 200]
+  
+  # Loan repayments (automatic)
+  loan_repayment_day_of_month: 15  # Mid-month
+  loan_repayment_on_time_probability: 0.95  # 95% on-time
+  loan_repayment_late_days_range: [1, 14]   # If late
+  
+  # Credit card transactions
+  credit_card_transactions_per_month: [5, 30]
+  credit_card_amount_range: [10, 500]
+  credit_card_payment_probability: 0.90  # 90% pay on time
+  credit_card_payment_fraction:
+    full_balance: 0.60             # 60% pay full balance
+    minimum: 0.20                  # 20% pay minimum
+    partial: 0.20                  # 20% pay partial
+
+# Behavioral patterns
+behaviors:
+  # Spending patterns by day of week
+  spending_by_day:
+    monday: 0.90
+    tuesday: 0.95
+    wednesday: 1.00
+    thursday: 1.05
+    friday: 1.20                   # Highest spending day
+    saturday: 1.10
+    sunday: 0.80
+  
+  # Spending patterns by time of day (for time-warped scenarios)
+  spending_by_hour:
+    "00-06": 0.05                  # Minimal overnight
+    "06-09": 0.80                  # Morning coffee/commute
+    "09-12": 1.00                  # Mid-morning
+    "12-14": 1.30                  # Lunch peak
+    "14-17": 0.90                  # Afternoon
+    "17-20": 1.20                  # Evening shopping/dining
+    "20-24": 0.60                  # Evening wind-down
+  
+  # Seasonal patterns (for longer scenarios)
+  seasonal_multipliers:
+    january: 0.85                  # Post-holiday slowdown
+    february: 0.90
+    march: 1.00
+    april: 0.95
+    may: 1.00
+    june: 1.05                     # EOFY
+    july: 0.90
+    august: 0.95
+    september: 1.00
+    october: 1.05
+    november: 1.10
+    december: 1.30                 # Holiday spending peak
+
+# Economic conditions (steady state = normal)
+economic_conditions:
+  unemployment_rate: 0.04          # 4% unemployment
+  inflation_rate: 0.025            # 2.5% inflation
+  cash_rate: 0.0425                # 4.25% RBA cash rate
+  consumer_confidence: 100         # Index, 100 = neutral
+  
+  # Credit quality distribution
+  credit_score_distribution:
+    excellent: 0.25                # 750+
+    good: 0.45                     # 650-749
+    fair: 0.20                     # 550-649
+    poor: 0.10                     # <550
+  
+  # Arrears rates (steady state = low)
+  loan_arrears_rate: 0.02          # 2% of loans
+  credit_card_arrears_rate: 0.05   # 5% of cards
+
+# Fraud and anomaly simulation (low rate for steady state)
+fraud_simulation:
+  enabled: true
+  fraud_attempt_rate: 0.001        # 0.1% of transactions
+  fraud_types:
+    card_not_present: 0.50
+    account_takeover: 0.30
+    identity_theft: 0.20
+  fraud_detection_rate: 0.85       # 85% caught by AI
+
+# Compliance events
+compliance_events:
+  # AML/CTF triggers
+  large_cash_transactions_per_month: 2    # Per 10K customers
+  international_transfers_per_month: 10
+  suspicious_patterns_per_month: 5
+  
+  # CDR (Open Banking) activity
+  cdr_consent_requests_per_month: 20      # Per 10K customers
+  cdr_data_sharing_sessions_per_month: 50
+
+# Performance and validation
+validation:
+  # Expected outcomes (for automated testing)
+  expected_total_transactions: 37500      # ~500 customers × 2.5 txn/day × 30 days
+  expected_total_volume_aud: 5000000      # ~$5M total transaction volume
+  expected_loan_applications: 75          # 15% of 500 customers
+  expected_loan_approvals: 60             # 80% approval rate
+  
+  # Invariant checks
+  check_balance_derivability: true
+  check_event_integrity: true
+  check_tenant_isolation: true
+  check_idempotency: true
+  check_audit_completeness: true
+  
+  # Performance targets
+  max_scenario_runtime_minutes: 15        # Should complete in <15 min
+  max_command_latency_ms: 500
+  max_event_lag_seconds: 5
+
+# Logging and observability
+logging:
+  level: "INFO"
+  log_every_n_transactions: 100
+  log_customer_sample_size: 10            # Log details for 10 sample customers
+  
+  # Metrics to track
+  metrics:
+    - "transactions_per_second"
+    - "commands_issued"
+    - "events_consumed"
+    - "api_latency_p95"
+    - "api_error_rate"
+    - "invariant_breaches"
+
+# Output configuration
+output:
+  # Summary report
+  generate_summary: true
+  summary_format: "JSON"
+  summary_path: "output/steady-state-summary.json"
+  
+  # Detailed logs
+  detailed_logs: true
+  logs_path: "output/steady-state-logs.jsonl"
+  
+  # Sample data exports (for inspection)
+  export_sample_customers: true
+  export_sample_accounts: true
+  export_sample_transactions: true
+  sample_size: 10
