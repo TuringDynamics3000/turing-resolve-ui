@@ -1000,6 +1000,139 @@
             "unit": "short"
           }
         }
+      },
+      {
+        "type": "stat",
+        "title": "AML AI: Investigations Pending",
+        "gridPos": { "x": 0, "y": 76, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "aml_ai_investigations_pending{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 50 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "AML AI: Scores Today",
+        "gridPos": { "x": 5, "y": 76, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "aml_ai_scores_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "AML AI: High Risk Flags",
+        "gridPos": { "x": 10, "y": 76, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "aml_ai_high_risk_flags{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 5 },
+                { "color": "red", "value": 20 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "AML AI: SMRs Submitted (30d)",
+        "gridPos": { "x": 15, "y": 76, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "aml_ai_smrs_submitted_30d{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "AML AI: Risk Score Distribution",
+        "gridPos": { "x": 0, "y": 80, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, aml_ai_risk_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.75, aml_ai_risk_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p75"
+          },
+          {
+            "expr": "histogram_quantile(0.95, aml_ai_risk_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p95"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "max": 1.0
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "AML AI: Investigation Outcomes",
+        "gridPos": { "x": 10, "y": 80, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "aml_ai_investigations_cleared{tenant=\"$tenant\"}",
+            "legendFormat": "Cleared"
+          },
+          {
+            "expr": "aml_ai_investigations_escalated{tenant=\"$tenant\"}",
+            "legendFormat": "Escalated"
+          },
+          {
+            "expr": "aml_ai_smrs_submitted{tenant=\"$tenant\"}",
+            "legendFormat": "SMRs Submitted"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
       }
     ]
   }
