@@ -1,0 +1,260 @@
+# Kubernetes Deployment for Payments RL Shadow Consumer
+# Version: 1.0
+# Namespace: turingcore-risk-brain
+
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: turingcore-risk-brain
+  labels:
+    name: turingcore-risk-brain
+    layer: b
+    component: risk-brain
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: payments-rl-shadow-config
+  namespace: turingcore-risk-brain
+data:
+  # Kafka configuration
+  bootstrap-servers: "your-kafka-bootstrap:9092"
+  
+  # Topic configuration
+  input-topic: "protocol.payments.live.shadow"
+  output-topic: "protocol.payments.rl.evaluated"
+  consumer-group: "payments-rl-shadow-consumer"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: payments-rl-shadow-secrets
+  namespace: turingcore-risk-brain
+type: Opaque
+stringData:
+  # Kafka credentials (if using SASL/SCRAM)
+  kafka-username: "payments-rl-shadow"
+  kafka-password: "your-kafka-password"
+  
+  # AWS MSK IAM credentials (if using IAM auth)
+  # aws-access-key-id: "your-access-key"
+  # aws-secret-access-key: "your-secret-key"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payments-rl-shadow
+  namespace: turingcore-risk-brain
+  labels:
+    app: payments-rl-shadow
+    layer: b
+    domain: payments-rl
+    version: v1.0
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: payments-rl-shadow
+  template:
+    metadata:
+      labels:
+        app: payments-rl-shadow
+        layer: b
+        domain: payments-rl
+        version: v1.0
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: payments-rl-shadow
+      
+      # Security context
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      
+      containers:
+      - name: consumer
+        image: turingcore/payments-rl-shadow:1.0
+        imagePullPolicy: IfNotPresent
+        
+        # Environment variables
+        env:
+        - name: KAFKA_BOOTSTRAP
+          valueFrom:
+            configMapKeyRef:
+              name: payments-rl-shadow-config
+              key: bootstrap-servers
+        
+        # Kill-switch layer 1: Environment variable
+        - name: RISK_BRAIN_PAYMENTS_RL_ENABLED
+          value: "true"
+        
+        # Kill-switch layer 2: Governance authority
+        - name: RISK_BRAIN_GOV_AUTH
+          value: "SHADOW_ENABLED"
+        
+        # Kafka credentials (if needed)
+        # - name: KAFKA_USERNAME
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: payments-rl-shadow-secrets
+        #       key: kafka-username
+        # - name: KAFKA_PASSWORD
+        #   valueFrom:
+        #     secretKeyRef:
+        #       name: payments-rl-shadow-secrets
+        #       key: kafka-password
+        
+        # Resource limits
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        
+        # Liveness probe (process health)
+        livenessProbe:
+          exec:
+            command:
+            - pgrep
+            - -f
+            - consumer.py
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        
+        # Readiness probe (Kafka connectivity)
+        readinessProbe:
+          exec:
+            command:
+            - pgrep
+            - -f
+            - consumer.py
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        
+        # Security context
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: payments-rl-shadow
+  namespace: turingcore-risk-brain
+  labels:
+    app: payments-rl-shadow
+
+---
+# Optional: HorizontalPodAutoscaler for scaling based on consumer lag
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: payments-rl-shadow-hpa
+  namespace: turingcore-risk-brain
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: payments-rl-shadow
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  # Scale based on CPU utilization
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  # Scale based on memory utilization
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  # Optional: Scale based on Kafka consumer lag (requires custom metrics)
+  # - type: External
+  #   external:
+  #     metric:
+  #       name: kafka_consumer_lag
+  #       selector:
+  #         matchLabels:
+  #           topic: protocol.payments.live.shadow
+  #           group: payments-rl-shadow-consumer
+  #     target:
+  #       type: Value
+  #       value: "1000"
+
+---
+# Optional: PodDisruptionBudget for high availability
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: payments-rl-shadow-pdb
+  namespace: turingcore-risk-brain
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: payments-rl-shadow
+
+---
+# Optional: NetworkPolicy for security (restrict egress to Kafka only)
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: payments-rl-shadow-netpol
+  namespace: turingcore-risk-brain
+spec:
+  podSelector:
+    matchLabels:
+      app: payments-rl-shadow
+  policyTypes:
+  - Egress
+  egress:
+  # Allow DNS
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+  # Allow Kafka
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: kafka
+    ports:
+    - protocol: TCP
+      port: 9092
+  # Allow external Kafka (if using managed service like MSK)
+  - to:
+    - podSelector: {}
+    ports:
+    - protocol: TCP
+      port: 9092
