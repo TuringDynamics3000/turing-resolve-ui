@@ -11,3 +11,8 @@ venv/
 ENV/
 env/
 
+
+# Deterministic testing infrastructure
+twin-orchestrator/src/replays/
+twin-orchestrator/src/golden/*.json
+!twin-orchestrator/src/golden/.gitkeep
