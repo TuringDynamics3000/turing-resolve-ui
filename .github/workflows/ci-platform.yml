@@ -3,10 +3,9 @@ name: CI - Platform Guardrails
 on:
   pull_request:
   push:
-    branches:
-      - main
-      - develop
-      - release/*
+  branches:
+    - "**"
+
 
 jobs:
   infra-validation:
