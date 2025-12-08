@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+
+  # UI Gateway (mock metrics)
+  - job_name: "risk-brain-ui-gateway"
+    static_configs:
+      - targets: ["ui-gateway:8080"]
+        labels:
+          service: "ui-gateway"
+          environment: "demo"
+
+  # Placeholder for future Risk Brain services
+  # - job_name: "risk-brain-enforcement"
+  #   static_configs:
+  #     - targets: ["enforcement:9100"]
+
+  # Placeholder for future domain services
+  # - job_name: "payments-rl-shadow"
+  #   static_configs:
+  #     - targets: ["payments-rl:9100"]

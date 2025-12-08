@@ -1,6 +1,6 @@
 export function getDemoRole() {
-  if (typeof window === "undefined") {
-    return process.env.NEXT_PUBLIC_DEMO_USER_ROLE || "operator"
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("demo_role") || "operator"
   }
-  return process.env.NEXT_PUBLIC_DEMO_USER_ROLE || "operator"
+  return "operator"
 }

@@ -20,6 +20,10 @@ TuringCore-v3 itself lives in [`TuringCore-v3`](https://github.com/TuringDynamic
 
 👉 **[QUICKSTART.md](QUICKSTART.md)** — Run the full CU Digital Twin scenario in 30 minutes
 
+**Want a one-command demo?** Use the Docker demo stack:
+
+👉 **[DOCKER_DEMO.md](DOCKER_DEMO.md)** — One-command Docker demo with Prometheus + Grafana
+
 **Want to know what's done?** Check the unified truth file:
 
 👉 **[STATUS.md](STATUS.md)** — Single authoritative status declaration for the platform
