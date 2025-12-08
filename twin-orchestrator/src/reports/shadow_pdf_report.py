@@ -357,6 +357,94 @@ def generate_shadow_report(json_path: str, output_pdf: str) -> None:
     
     story.append(Spacer(1, 20))
     
+    # ========== CREDIT CARDS (PHASE 3) ==========
+    story.append(Paragraph("<b>Credit Card Metrics</b>", styles["Heading2"]))
+    story.append(Spacer(1, 6))
+    
+    cc_data = data.get("credit_cards", {})
+    if cc_data:
+        cc_table = [
+            ["Metric", "UltraData", "TuringCore", "Delta"],
+            [
+                "Total CC Count",
+                cc_data.get("ultra_cc_count", 0),
+                cc_data.get("turing_cc_count", 0),
+                cc_data.get("cc_count_delta", 0)
+            ],
+            [
+                "Total Outstandings",
+                f"${cc_data.get('ultra_total_outstanding', 0.0):,.2f}",
+                f"${cc_data.get('turing_total_outstanding', 0.0):,.2f}",
+                f"${cc_data.get('outstanding_delta', 0.0):,.2f}"
+            ],
+            [
+                "Avg Utilisation %",
+                f"{cc_data.get('ultra_utilisation', 0.0):.1f}%",
+                f"{cc_data.get('turing_utilisation', 0.0):.1f}%",
+                f"{cc_data.get('utilisation_delta', 0.0):.1f}%"
+            ],
+            [
+                "Instalments Active",
+                cc_data.get("ultra_instalments_active", 0),
+                cc_data.get("turing_instalments_active", 0),
+                cc_data.get("instalments_delta", 0)
+            ],
+            [
+                "Balance Transfers",
+                f"${cc_data.get('ultra_bt_balance', 0.0):,.2f}",
+                f"${cc_data.get('turing_bt_balance', 0.0):,.2f}",
+                f"${cc_data.get('bt_delta', 0.0):,.2f}"
+            ],
+        ]
+        
+        story.append(Table(cc_table, style=_table_style()))
+        story.append(Spacer(1, 12))
+        
+        # Arrears buckets
+        arrears = cc_data.get("arrears_buckets", {})
+        if arrears:
+            arrears_table = [
+                ["Arrears Bucket", "Count"],
+                ["0-30 days", arrears.get('0_30_days', 0)],
+                ["31-60 days", arrears.get('31_60_days', 0)],
+                ["61-90 days", arrears.get('61_90_days', 0)],
+                ["90+ days", arrears.get('90_plus_days', 0)],
+            ]
+            
+            story.append(Paragraph("<b>Arrears Buckets</b>", styles["Normal"]))
+            story.append(Table(arrears_table, style=_table_style()))
+            story.append(Spacer(1, 12))
+        
+        # Credit card invariants
+        cc_inv = cc_data.get("invariants", {})
+        if cc_inv:
+            cc_inv_rows = [["Invariant", "Status", "Violations"]]
+            
+            inv_names = {
+                "credit_limit_enforced": "Credit Limit Enforced",
+                "min_payment_enforced": "Min Payment Enforced",
+                "instalments_isolated": "Instalments Isolated",
+                "bt_promo_expiry": "BT Promo Expiry",
+                "interest_calculation_correct": "Interest Calculation Correct",
+                "hardship_compliance": "Hardship Compliance",
+                "no_overlimit_fees_when_prohibited": "No Overlimit Fees When Prohibited",
+            }
+            
+            for key, display_name in inv_names.items():
+                status = cc_inv.get(key, "N/A")
+                violations = "0" if status == "PASS" else "N/A"
+                cc_inv_rows.append([display_name, status, violations])
+            
+            story.append(Paragraph("<b>Credit Card Invariants</b>", styles["Normal"]))
+            story.append(Table(cc_inv_rows, style=_table_style()))
+    else:
+        story.append(Paragraph(
+            "Credit card shadow migration not yet active.",
+            styles["Normal"]
+        ))
+    
+    story.append(Spacer(1, 20))
+    
     # ========== ANOMALIES & EXCEPTIONS ==========
     story.append(Paragraph("<b>Anomalies & Exceptions</b>", styles["Heading2"]))
     story.append(Spacer(1, 6))

@@ -333,3 +333,62 @@ products:
     apra_risk_class: RETAIL_DEPOSITS
     ifrs9_stage: STAGE_1
     allowed_channels: [MOBILE, ONLINE, BRANCH, ATM, POS]
+
+  # ========== CREDIT CARDS (PHASE 3) ==========
+  
+  - product_code: CC_STD
+    name: Standard Credit Card
+    family: CREDIT_CARD
+    currency: AUD
+    effective_from: "2025-01-01"
+    effective_to: null
+    status: ACTIVE
+
+    credit_card_rules:
+      max_limit: 25000.0
+      purchase_rate: 18.99
+      cash_rate: 21.99
+      interest_free_days: 55
+      min_payment_percent: 2.0
+      instalments_enabled: true
+      balance_transfers_enabled: true
+      balance_transfer_rate: 3.99
+      balance_transfer_term_months: 12
+
+    interest:
+      applies: true
+      side: DEBIT
+      method: DAILY_COMPOUND
+      accrual_frequency: DAILY
+      posting_frequency: MONTHLY
+      base_rate: 0.1899
+
+    fees:
+      account_keeping_fee: 0.0
+      account_keeping_frequency: MONTHLY
+      late_payment_fee: 20.0
+      overlimit_fee: 0.0
+      cash_advance_fee: 3.0
+      international_transaction_fee_pct: 0.03
+
+    limits:
+      credit_limit_min: 500.0
+      credit_limit_max: 25000.0
+
+    eligibility:
+      min_age: 18
+      residency_required: true
+      min_income_annual: 25000.0
+      min_credit_score: 600
+
+    accounting:
+      gl_open_debit: GL_CC_RECEIVABLES
+      gl_open_credit: GL_CASH_AT_BANK
+      gl_interest_debit: GL_CASH_AT_BANK
+      gl_interest_credit: GL_INTEREST_INCOME
+      gl_fee_debit: GL_CASH_AT_BANK
+      gl_fee_credit: GL_FEE_INCOME
+
+    apra_risk_class: REVOLVING_CREDIT
+    ifrs9_stage: STAGE_1
+    allowed_channels: [MOBILE, ONLINE, BRANCH, ATM, POS]
