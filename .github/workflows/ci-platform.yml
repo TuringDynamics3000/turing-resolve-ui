@@ -1,3 +1,5 @@
+name: CI - Platform Guardrails
+
 on:
   push:
     branches:
@@ -7,3 +9,49 @@ on:
     branches:
       - master
       - develop
+
+jobs:
+  infra-validation:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Format
+        working-directory: infra
+        run: terraform fmt -recursive -check
+
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init -backend=false
+
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
+
+  docker-sanity:
+    name: Docker Compose Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate docker-compose
+        run: docker compose -f docker-compose.demo.yml config
+
+  security-scan:
+    name: Supply Chain Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy FS Scan
+        uses: aquasecurity/trivy-action@0.20.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          vuln-type: os,library
+          severity: CRITICAL,HIGH
+          exit-code: 1
