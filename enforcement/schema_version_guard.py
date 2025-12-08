@@ -60,6 +60,7 @@ PINNED_SCHEMAS = {
     
     # Treasury RL
     "TreasuryRlPolicyEvaluated": "1.0",
+    "TreasuryRiskAdvisoryIssued": "1.0",
     "TreasuryAdvisoryIssued": "1.0",
     
     # Model governance
