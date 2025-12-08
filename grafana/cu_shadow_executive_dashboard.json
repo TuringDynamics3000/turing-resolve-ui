@@ -865,6 +865,141 @@
             "unit": "ops"
           }
         }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud AI: Cases Pending",
+        "gridPos": { "x": 0, "y": 66, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "fraud_ai_cases_pending{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 20 },
+                { "color": "red": 100 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud AI: Scores Today",
+        "gridPos": { "x": 5, "y": 66, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "fraud_ai_scores_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud AI: High Risk Flags",
+        "gridPos": { "x": 10, "y": 66, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "fraud_ai_high_risk_flags{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 50 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud AI: Advisory Acceptance %",
+        "gridPos": { "x": 15, "y": 66, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "fraud_ai_advisory_acceptance_rate{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 0.5 },
+                { "color": "green", "value": 0.8 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Fraud AI: Score Distribution",
+        "gridPos": { "x": 0, "y": 70, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, fraud_ai_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.75, fraud_ai_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p75"
+          },
+          {
+            "expr": "histogram_quantile(0.95, fraud_ai_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p95"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "max": 1.0
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Fraud AI: Cluster Detections",
+        "gridPos": { "x": 10, "y": 70, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "fraud_ai_clusters_detected{tenant=\"$tenant\",cluster_type=\"MULE_RING\"}",
+            "legendFormat": "Mule Rings"
+          },
+          {
+            "expr": "fraud_ai_clusters_detected{tenant=\"$tenant\",cluster_type=\"COMPROMISED_TERMINAL\"}",
+            "legendFormat": "Compromised Terminals"
+          },
+          {
+            "expr": "fraud_ai_clusters_detected{tenant=\"$tenant\",cluster_type=\"ACCOUNT_TAKEOVER\"}",
+            "legendFormat": "Account Takeovers"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
       }
     ]
   }
