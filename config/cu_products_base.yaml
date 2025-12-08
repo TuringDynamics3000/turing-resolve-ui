@@ -1,0 +1,232 @@
+# CU-Digital Base Product Catalog
+#
+# This is the CANONICAL national CU product set.
+# It lives in the CUSTOMER repository (turingcore-cu-digital-twin).
+#
+# Tenant-specific overrides live in config/tenants/*.yaml
+# The schema is defined in TuringCore-v3 (domains/product_configuration/product_schema.py)
+
+products:
+  # ========== TRANSACTION ACCOUNTS ==========
+  
+  - product_code: TXN_EVERYDAY
+    name: Everyday Transaction
+    family: DEPOSIT
+    currency: AUD
+    effective_from: "2025-01-01"
+    effective_to: null
+    status: ACTIVE
+
+    interest:
+      applies: false
+      side: null
+      method: NONE
+      accrual_frequency: null
+      posting_frequency: null
+
+    fees:
+      account_keeping_fee: 5.0
+      account_keeping_frequency: MONTHLY
+      free_transactions_per_month: 30
+      excess_transaction_fee: 0.25
+      dishonour_fee: 10.0
+
+    limits:
+      min_opening_balance: 0.0
+      min_ongoing_balance: 0.0
+      overdraft_allowed: false
+
+    eligibility:
+      min_age: 14
+      residency_required: true
+
+    accounting:
+      gl_open_debit: GL_CASH_AT_BANK
+      gl_open_credit: GL_MEMBER_DEPOSITS_TXN
+      gl_interest_debit: GL_INTEREST_EXPENSE
+      gl_interest_credit: GL_MEMBER_DEPOSITS_TXN
+      gl_fee_debit: GL_MEMBER_DEPOSITS_TXN
+      gl_fee_credit: GL_FEE_INCOME
+
+    apra_risk_class: RETAIL_DEPOSITS
+    ifrs9_stage: STAGE_1
+    allowed_channels: [MOBILE, ONLINE, BRANCH]
+
+  # ========== SAVINGS ACCOUNTS ==========
+  
+  - product_code: SAVER_BONUS
+    name: Bonus Saver
+    family: DEPOSIT
+    currency: AUD
+    effective_from: "2025-01-01"
+    effective_to: null
+    status: ACTIVE
+
+    interest:
+      applies: true
+      side: CREDIT
+      method: DAILY_COMPOUND
+      accrual_frequency: DAILY
+      posting_frequency: MONTHLY
+      base_rate: 0.005
+      bonus_rate: 0.030
+      bonus_conditions:
+        min_monthly_deposit: 200.0
+        allow_withdrawals: false
+
+    fees:
+      account_keeping_fee: 0.0
+      free_transactions_per_month: 5
+      excess_transaction_fee: 0.5
+
+    limits:
+      min_opening_balance: 0.0
+      min_ongoing_balance: 0.0
+      overdraft_allowed: false
+
+    eligibility:
+      min_age: 14
+      residency_required: true
+
+    accounting:
+      gl_open_debit: GL_CASH_AT_BANK
+      gl_open_credit: GL_MEMBER_DEPOSITS_SAVINGS
+      gl_interest_debit: GL_INTEREST_EXPENSE
+      gl_interest_credit: GL_MEMBER_DEPOSITS_SAVINGS
+      gl_fee_debit: GL_MEMBER_DEPOSITS_SAVINGS
+      gl_fee_credit: GL_FEE_INCOME
+
+    apra_risk_class: RETAIL_DEPOSITS
+    ifrs9_stage: STAGE_1
+    allowed_channels: [MOBILE, ONLINE]
+
+  # ========== TERM DEPOSITS ==========
+  
+  - product_code: TERM_12M
+    name: 12 Month Term Deposit
+    family: TERM_DEPOSIT
+    currency: AUD
+    effective_from: "2025-01-01"
+    effective_to: null
+    status: ACTIVE
+
+    interest:
+      applies: true
+      side: CREDIT
+      method: DAILY_SIMPLE
+      accrual_frequency: DAILY
+      posting_frequency: MATURITY
+      base_rate: 0.048
+
+    fees:
+      account_keeping_fee: 0.0
+
+    limits:
+      min_opening_balance: 1000.0
+      min_ongoing_balance: 1000.0
+      max_balance: 2000000.0
+      overdraft_allowed: false
+
+    eligibility:
+      min_age: 18
+      residency_required: true
+
+    accounting:
+      gl_open_debit: GL_CASH_AT_BANK
+      gl_open_credit: GL_MEMBER_DEPOSITS_TERM
+      gl_interest_debit: GL_INTEREST_EXPENSE
+      gl_interest_credit: GL_MEMBER_DEPOSITS_TERM
+      gl_fee_debit: GL_MEMBER_DEPOSITS_TERM
+      gl_fee_credit: GL_FEE_INCOME
+
+    apra_risk_class: RETAIL_DEPOSITS
+    ifrs9_stage: STAGE_1
+    allowed_channels: [BRANCH, ONLINE]
+
+  # ========== PERSONAL LOANS ==========
+  
+  - product_code: PL_36M
+    name: Personal Loan 36 Months
+    family: LOAN
+    currency: AUD
+    effective_from: "2025-01-01"
+    effective_to: null
+    status: ACTIVE
+
+    interest:
+      applies: true
+      side: DEBIT
+      method: DAILY_SIMPLE
+      accrual_frequency: DAILY
+      posting_frequency: MONTHLY
+      base_rate: 0.1299
+
+    fees:
+      account_keeping_fee: 0.0
+      dishonour_fee: 15.0
+      overlimit_fee: 0.0
+
+    limits:
+      credit_limit_min: 2000.0
+      credit_limit_max: 50000.0
+
+    eligibility:
+      min_age: 18
+      residency_required: true
+      min_income_annual: 35000.0
+      min_credit_score: 650
+
+    accounting:
+      gl_open_debit: GL_LOANS_PERSONAL
+      gl_open_credit: GL_CASH_AT_BANK
+      gl_interest_debit: GL_CASH_AT_BANK
+      gl_interest_credit: GL_INTEREST_INCOME
+      gl_fee_debit: GL_CASH_AT_BANK
+      gl_fee_credit: GL_FEE_INCOME
+
+    apra_risk_class: PERSONAL_UNSECURED
+    ifrs9_stage: STAGE_1
+    allowed_channels: [BRANCH, ONLINE]
+
+  # ========== OVERDRAFTS ==========
+  
+  - product_code: OD_TXN
+    name: Overdraft for TXN
+    family: REVOLVING_CREDIT
+    currency: AUD
+    effective_from: "2025-01-01"
+    effective_to: null
+    status: ACTIVE
+
+    interest:
+      applies: true
+      side: DEBIT
+      method: DAILY_SIMPLE
+      accrual_frequency: DAILY
+      posting_frequency: MONTHLY
+      base_rate: 0.1799
+
+    fees:
+      dishonour_fee: 10.0
+      overlimit_fee: 15.0
+
+    limits:
+      overdraft_allowed: true
+      overdraft_limit: 2000.0
+
+    eligibility:
+      min_age: 18
+      residency_required: true
+      min_credit_score: 600
+
+    accounting:
+      gl_open_debit: GL_OD_ASSET
+      gl_open_credit: GL_CASH_AT_BANK
+      gl_interest_debit: GL_CASH_AT_BANK
+      gl_interest_credit: GL_INTEREST_INCOME
+      gl_fee_debit: GL_CASH_AT_BANK
+      gl_fee_credit: GL_FEE_INCOME
+
+    apra_risk_class: REVOLVING_CREDIT
+    ifrs9_stage: STAGE_2
+    allowed_channels: [MOBILE, ONLINE]
