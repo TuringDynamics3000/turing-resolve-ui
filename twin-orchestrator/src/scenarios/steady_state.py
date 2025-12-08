@@ -27,6 +27,7 @@ from generators.transactions import (
     iter_all_transactions,
     map_planned_transactions_to_postentry_payloads,
 )
+from invariants.cu_invariants import CUInvariantSuiteResult, run_cu_digital_invariants
 from models.account import AccountHandle, AccountPlan
 from models.customer import CustomerHandle, CustomerSeed
 from models.scenario import SteadyStateScenarioConfig
@@ -242,30 +243,25 @@ class SteadyStateScenario:
     def inspect_invariants(self) -> SteadyStateScenarioResult:
         """
         Run invariants against TuringCore projections and event streams.
-        
-        Implementation will:
-        1. Query TuringCore for:
-           - All customers (count)
-           - All accounts (count)
-           - All transactions (count)
-           - Account balances
-           - Event stream
-        2. Run invariants from invariants/ledger_invariants.py:
-           - Conservation of value
-           - Double-entry balance
-           - No negative balances (unless overdraft)
-           - Event-projection consistency
-           - Idempotency (no duplicate events)
-        3. Run invariants from invariants/cu_invariants.py:
-           - Customer count matches expected
-           - Account count matches expected
-           - Transaction count matches expected
-        4. Aggregate results into SteadyStateScenarioResult
-        5. Return result
         """
-        # TODO: call invariants/ledger_invariants + invariants/cu_invariants
-        # and aggregate results into SteadyStateScenarioResult
-        raise NotImplementedError
+        cu_result: CUInvariantSuiteResult = run_cu_digital_invariants(
+            client=self.client,
+            tenant_cfg=self.tenant_cfg,
+            scenario_cfg=self.scenario_cfg,
+        )
+
+        return SteadyStateScenarioResult(
+            tenant_id=self.tenant_id,
+            num_customers=len(self._customer_seeds),
+            num_accounts=len(self._account_handles),
+            num_transactions=0,  # will be set by run_all()
+            invariants_passed=cu_result.passed,
+            invariant_failures=[
+                f"{r.name}: {r.details}"
+                for r in cu_result.results
+                if not r.passed
+            ],
+        )
 
     # ---------- One-shot convenience ----------
 

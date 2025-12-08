@@ -7,46 +7,65 @@ Functions for loading tenant configuration from cu-digital.yaml into TenantConfi
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import yaml
 
 from models.tenant import ProductConfig, TenantConfig
 
 
-def load_tenant_config(config_path: str | Path) -> TenantConfig:
+def load_tenant_config(path: str | Path) -> TenantConfig:
     """
-    Load tenant configuration from YAML file.
-    
+    Load cu-digital.yaml (or similar) into TenantConfig.
+
+    Expected shape (simplified):
+      tenant:
+        code: "CU_DIGITAL"
+        displayName: "CU Digital Twin"
+        region: "AU"
+        baseCurrency: "AUD"
+        timeZone: "Australia/Sydney"
+      products:
+        - code: "TXN_EVERYDAY"
+          name: "Everyday Transaction Account"
+          type: "DEPOSIT"
+          currency: "AUD"
+          interestRate: 0.0
+          monthlyFee: 0.0
+          constraints: {...}
+
+      # anything else goes into raw
+      
     Args:
-        config_path: Path to cu-digital.yaml
+        path: Path to cu-digital.yaml
         
     Returns:
         TenantConfig object
-        
-    Implementation will:
-    1. Load YAML file
-    2. Extract tenant metadata (tenantCode, displayName, region, baseCurrency, timeZone)
-    3. Parse products list into ProductConfig objects
-    4. Store raw YAML in TenantConfig.raw for demographics, AI config, etc.
-    5. Return TenantConfig
     """
-    with open(config_path, "r") as f:
-        raw = yaml.safe_load(f)
-    
-    # TODO: parse raw YAML into TenantConfig
-    raise NotImplementedError
+    path = Path(path)
+    data: Dict[str, Any] = yaml.safe_load(path.read_text(encoding="utf-8"))
 
+    tenant_raw = data.get("tenant", {})
+    products_raw: List[Dict[str, Any]] = data.get("products", [])
 
-def _parse_product(product_dict: Dict) -> ProductConfig:
-    """
-    Parse a single product from YAML dict into ProductConfig.
-    
-    Args:
-        product_dict: Product configuration from YAML
-        
-    Returns:
-        ProductConfig object
-    """
-    # TODO: implement
-    raise NotImplementedError
+    tenant_cfg = TenantConfig(
+        tenant_code=tenant_raw["code"],
+        display_name=tenant_raw["displayName"],
+        region=tenant_raw.get("region", "AU"),
+        base_currency=tenant_raw.get("baseCurrency", "AUD"),
+        time_zone=tenant_raw.get("timeZone", "Australia/Sydney"),
+        products=[
+            ProductConfig(
+                code=p["code"],
+                name=p["name"],
+                product_type=p["type"],
+                currency=p.get("currency", tenant_raw.get("baseCurrency", "AUD")),
+                interest_rate=float(p.get("interestRate", 0.0)),
+                monthly_fee=float(p.get("monthlyFee", 0.0)),
+                constraints=p.get("constraints", {}),
+            )
+            for p in products_raw
+        ],
+        raw=data,
+    )
+    return tenant_cfg

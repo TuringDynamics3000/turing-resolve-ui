@@ -3,123 +3,94 @@ CU-Specific Invariants
 
 Functions for checking CU-specific invariants against TuringCore projections.
 
-These are higher-level invariants specific to the CU Digital Twin scenario:
-1. Customer count matches expected
-2. Account count matches expected
-3. Transaction count matches expected
+These are higher-level invariants specific to the CU Digital Twin scenario.
 """
 
 from __future__ import annotations
 
-from typing import Dict, Tuple
+from dataclasses import dataclass
+from typing import List
 
 from api_client import TuringCoreClient
+from invariants.ledger_invariants import InvariantResult
 from models.scenario import SteadyStateScenarioConfig
+from models.tenant import TenantConfig
 
 
-def check_customer_count(
+@dataclass
+class CUInvariantSuiteResult:
+    """Result of running the complete CU invariant suite."""
+    tenant_id: str
+    scenario_name: str
+    passed: bool
+    results: List[InvariantResult]
+
+
+def run_cu_digital_invariants(
     client: TuringCoreClient,
-    tenant_id: str,
-    expected_count: int,
-) -> Tuple[bool, str]:
-    """
-    Check that the number of customers matches expected.
-    
-    Args:
-        client: TuringCore API client
-        tenant_id: Tenant ID to check
-        expected_count: Expected number of customers
-        
-    Returns:
-        (passed, message) tuple
-        
-    Implementation will:
-    1. Query customers via client.list_customers()
-    2. Count total customers
-    3. Compare with expected_count
-    4. Return (True, "OK") if matched, (False, error_message) if mismatched
-    """
-    # TODO: implement
-    raise NotImplementedError
-
-
-def check_account_count(
-    client: TuringCoreClient,
-    tenant_id: str,
-    expected_min: int,
-    expected_max: int,
-) -> Tuple[bool, str]:
-    """
-    Check that the number of accounts is within expected range.
-    
-    Args:
-        client: TuringCore API client
-        tenant_id: Tenant ID to check
-        expected_min: Minimum expected number of accounts
-        expected_max: Maximum expected number of accounts
-        
-    Returns:
-        (passed, message) tuple
-        
-    Implementation will:
-    1. Query accounts via client.list_accounts()
-    2. Count total accounts
-    3. Check that expected_min <= count <= expected_max
-    4. Return (True, "OK") if in range, (False, error_message) if out of range
-    """
-    # TODO: implement
-    raise NotImplementedError
-
-
-def check_transaction_count(
-    client: TuringCoreClient,
-    tenant_id: str,
-    expected_min: int,
-) -> Tuple[bool, str]:
-    """
-    Check that the number of transactions is at least expected minimum.
-    
-    Args:
-        client: TuringCore API client
-        tenant_id: Tenant ID to check
-        expected_min: Minimum expected number of transactions
-        
-    Returns:
-        (passed, message) tuple
-        
-    Implementation will:
-    1. Query all account events via client.get_account_events()
-    2. Count PostingApplied events
-    3. Check that count >= expected_min
-    4. Return (True, "OK") if >= min, (False, error_message) if < min
-    """
-    # TODO: implement
-    raise NotImplementedError
-
-
-def run_all_cu_invariants(
-    client: TuringCoreClient,
-    tenant_id: str,
+    tenant_cfg: TenantConfig,
     scenario_cfg: SteadyStateScenarioConfig,
-) -> Dict[str, Tuple[bool, str]]:
+) -> CUInvariantSuiteResult:
     """
-    Run all CU-specific invariants and return results.
+    Execute all invariants configured for CU-Digital steady-state scenario.
+    
+    This is the main entry point for running invariants. It dispatches to
+    specific invariant check functions based on the scenario configuration.
     
     Args:
         client: TuringCore API client
-        tenant_id: Tenant ID to check
-        scenario_cfg: Scenario configuration with expected counts
+        tenant_cfg: Tenant configuration
+        scenario_cfg: Scenario configuration with invariants list
         
     Returns:
-        Dict mapping invariant name to (passed, message) tuple
+        CUInvariantSuiteResult with aggregated results
     """
-    expected_customers = scenario_cfg.num_customers
-    expected_accounts_min = expected_customers  # At least 1 account per customer
-    expected_accounts_max = expected_customers * 5  # At most 5 accounts per customer
-    expected_transactions_min = expected_customers * scenario_cfg.simulation_days  # At least 1 tx per customer per day
-    
-    return {
-        "customer_count": check_customer_count(client, tenant_id, expected_customers),
-        "account_count": check_account_count(client, tenant_id, expected_accounts_min, expected_accounts_max),
-        "transaction_count": check_transaction_count(client, tenant_id, expected_transactions_min),
-    }
+    tenant_id = tenant_cfg.tenant_code
+    active_invariants = scenario_cfg.invariants or [
+        "ledger_value_conserved_sampled",
+        "no_negative_balances_without_overdraft",
+    ]
+
+    results: List[InvariantResult] = []
+
+    # Dispatch based on names; simple registry pattern.
+    for name in active_invariants:
+        if name == "ledger_value_conserved_sampled":
+            from invariants.ledger_invariants import check_value_conservation
+
+            results.append(
+                check_value_conservation(
+                    client=client,
+                    tenant_id=tenant_id,
+                    sample_size=50,
+                )
+            )
+        elif name == "no_negative_balances_without_overdraft":
+            from invariants.ledger_invariants import (
+                check_no_negative_balances_without_overdraft,
+            )
+
+            results.append(
+                check_no_negative_balances_without_overdraft(
+                    client=client,
+                    tenant_id=tenant_id,
+                    sample_size=50,
+                )
+            )
+        else:
+            results.append(
+                InvariantResult(
+                    name=name,
+                    passed=False,
+                    details="Invariant not implemented",
+                )
+            )
+
+    passed = all(r.passed for r in results)
+
+    return CUInvariantSuiteResult(
+        tenant_id=tenant_id,
+        scenario_name=scenario_cfg.raw.get("scenario", {}).get("name", "steady_state"),
+        passed=passed,
+        results=results,
+    )

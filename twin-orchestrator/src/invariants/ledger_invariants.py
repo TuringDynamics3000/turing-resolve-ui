@@ -3,172 +3,92 @@ Ledger Invariants
 
 Functions for checking ledger invariants against TuringCore projections and event streams.
 
-These are the fundamental invariants that MUST hold for any correct ledger implementation:
-1. Conservation of value (sum of all postings = 0)
-2. Double-entry balance (debits = credits for each entry)
-3. No negative balances (unless overdraft allowed)
-4. Event-projection consistency (balances derivable from events)
-5. Idempotency (no duplicate events)
+These are the fundamental invariants that MUST hold for any correct ledger implementation.
 """
 
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
+from dataclasses import dataclass
+from typing import List, Tuple
 
 from api_client import TuringCoreClient
 
 
-def check_conservation_of_value(
+@dataclass
+class InvariantResult:
+    """Result of running a single invariant check."""
+    name: str
+    passed: bool
+    details: str = ""
+
+
+def check_value_conservation(
     client: TuringCoreClient,
     tenant_id: str,
-) -> Tuple[bool, str]:
+    sample_size: int = 50,
+) -> InvariantResult:
     """
-    Check that the sum of all postings across all accounts equals zero.
-    
-    This is the fundamental invariant: money cannot be created or destroyed,
-    only moved between accounts.
+    Invariant: For sampled accounts, projection balance ~= sum(postings in event log).
+
+    This is a smoke-level check: we don't try to prove global conservation,
+    just that projections are consistent with events for a sample.
     
     Args:
         client: TuringCore API client
         tenant_id: Tenant ID to check
+        sample_size: Number of accounts to sample
         
     Returns:
-        (passed, message) tuple
-        
-    Implementation will:
-    1. Query all account events via client.get_account_events()
-    2. Sum all posting legs (DEBIT positive, CREDIT negative)
-    3. Check that abs(total) < 0.01 (within rounding tolerance)
-    4. Return (True, "OK") if passed, (False, error_message) if failed
+        InvariantResult with pass/fail status and details
+    
+    Implementation steps:
+    1. List N accounts via client.list_accounts
+    2. For each account, call client.get_account_events
+    3. Compute sum of postings from events
+    4. Compare with projection balance
+    5. Aggregate failures
     """
-    # TODO: implement
-    raise NotImplementedError
+    # TODO:
+    # - list N accounts via client.list_accounts
+    # - for each, call client.get_account_events
+    # - compute sum of postings and compare to projection balance
+    # - aggregate failures
+    return InvariantResult(
+        name="ledger_value_conserved_sampled",
+        passed=False,
+        details="Not implemented",
+    )
 
 
-def check_double_entry_balance(
+def check_no_negative_balances_without_overdraft(
     client: TuringCoreClient,
     tenant_id: str,
-) -> Tuple[bool, str]:
+    sample_size: int = 50,
+) -> InvariantResult:
     """
-    Check that every entry has balanced legs (debits = credits).
+    Invariant: No account that is not configured for overdraft is negative.
+
+    Needs product metadata / constraints to know which products allow overdraft.
     
     Args:
         client: TuringCore API client
         tenant_id: Tenant ID to check
+        sample_size: Number of accounts to sample
         
     Returns:
-        (passed, message) tuple
+        InvariantResult with pass/fail status and details
         
-    Implementation will:
-    1. Query all account events via client.get_account_events()
-    2. For each PostingApplied event:
-       - Sum debits
-       - Sum credits
-       - Check that abs(debits - credits) < 0.01
-    3. Return (True, "OK") if all passed, (False, error_message) if any failed
+    Implementation steps:
+    1. List accounts via client.list_accounts
+    2. Join with product config (from tenant_cfg) if needed
+    3. Flag any non-overdraft account with negative balance
     """
-    # TODO: implement
-    raise NotImplementedError
-
-
-def check_no_negative_balances(
-    client: TuringCoreClient,
-    tenant_id: str,
-) -> Tuple[bool, str]:
-    """
-    Check that no accounts have negative balances (unless overdraft allowed).
-    
-    Args:
-        client: TuringCore API client
-        tenant_id: Tenant ID to check
-        
-    Returns:
-        (passed, message) tuple
-        
-    Implementation will:
-    1. Query all accounts via client.list_accounts()
-    2. For each account:
-       - Check if balance < 0
-       - If so, check if overdraft_limit > 0
-       - If not, record violation
-    3. Return (True, "OK") if all passed, (False, error_message) if any failed
-    """
-    # TODO: implement
-    raise NotImplementedError
-
-
-def check_event_projection_consistency(
-    client: TuringCoreClient,
-    tenant_id: str,
-) -> Tuple[bool, str]:
-    """
-    Check that account balances are derivable from event stream.
-    
-    This is the critical invariant for event sourcing: projections must be
-    consistent with events.
-    
-    Args:
-        client: TuringCore API client
-        tenant_id: Tenant ID to check
-        
-    Returns:
-        (passed, message) tuple
-        
-    Implementation will:
-    1. Query all accounts via client.list_accounts()
-    2. For each account:
-       - Query events via client.get_account_events(account_id)
-       - Replay events to compute balance
-       - Compare with projection balance
-       - Check that abs(computed - projection) < 0.01
-    3. Return (True, "OK") if all passed, (False, error_message) if any failed
-    """
-    # TODO: implement
-    raise NotImplementedError
-
-
-def check_idempotency(
-    client: TuringCoreClient,
-    tenant_id: str,
-) -> Tuple[bool, str]:
-    """
-    Check that there are no duplicate events (idempotency violation).
-    
-    Args:
-        client: TuringCore API client
-        tenant_id: Tenant ID to check
-        
-    Returns:
-        (passed, message) tuple
-        
-    Implementation will:
-    1. Query all account events via client.get_account_events()
-    2. Build set of (commandId, eventType) tuples
-    3. Check for duplicates
-    4. Return (True, "OK") if no duplicates, (False, error_message) if duplicates found
-    """
-    # TODO: implement
-    raise NotImplementedError
-
-
-def run_all_ledger_invariants(
-    client: TuringCoreClient,
-    tenant_id: str,
-) -> Dict[str, Tuple[bool, str]]:
-    """
-    Run all ledger invariants and return results.
-    
-    Args:
-        client: TuringCore API client
-        tenant_id: Tenant ID to check
-        
-    Returns:
-        Dict mapping invariant name to (passed, message) tuple
-    """
-    return {
-        "conservation_of_value": check_conservation_of_value(client, tenant_id),
-        "double_entry_balance": check_double_entry_balance(client, tenant_id),
-        "no_negative_balances": check_no_negative_balances(client, tenant_id),
-        "event_projection_consistency": check_event_projection_consistency(client, tenant_id),
-        "idempotency": check_idempotency(client, tenant_id),
-    }
+    # TODO:
+    # - list accounts
+    # - join with product config (from tenant_cfg) if needed; here you may pass it in
+    # - flag any non-overdraft account with negative balance
+    return InvariantResult(
+        name="no_negative_balances_without_overdraft",
+        passed=False,
+        details="Not implemented",
+    )
