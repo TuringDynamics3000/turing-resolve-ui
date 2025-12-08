@@ -1,0 +1,37 @@
+{
+  "type": "record",
+  "name": "ModelDeployed",
+  "namespace": "turing.protocol.intelligence.governance",
+  "doc": "Model deployed to production. Mandatory for APRA/ASIC model governance.",
+  "fields": [
+    {
+      "name": "base",
+      "type": "turing.protocol.intelligence.IntelligenceEventBase",
+      "doc": "Base intelligence event fields"
+    },
+    {
+      "name": "model_id",
+      "type": "string",
+      "doc": "Model identifier"
+    },
+    {
+      "name": "model_version",
+      "type": "string",
+      "doc": "Model version"
+    },
+    {
+      "name": "deployed_by",
+      "type": "string",
+      "doc": "Officer ID who deployed the model"
+    },
+    {
+      "name": "authority_level",
+      "type": {
+        "type": "enum",
+        "name": "ModelAuthority",
+        "symbols": ["SHADOW", "ADVISORY", "ENFORCEMENT"]
+      },
+      "doc": "Authority level: SHADOW (no impact), ADVISORY (human decides), ENFORCEMENT (bounded automation)"
+    }
+  ]
+}
