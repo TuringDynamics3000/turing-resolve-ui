@@ -360,6 +360,128 @@
             "id": "merge"
           }
         ]
+      },
+      {
+        "type": "stat",
+        "title": "Debit Auth Success %",
+        "gridPos": { "x": 0, "y": 26, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_debit_auth_success_rate{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 95 },
+                { "color": "green", "value": 98 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Debit Decline Rate %",
+        "gridPos": { "x": 5, "y": 26, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_debit_decline_rate{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 2 },
+                { "color": "red", "value": 5 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Debit Spend Today ($)",
+        "gridPos": { "x": 10, "y": 26, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_debit_spend_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud Flags (24h)",
+        "gridPos": { "x": 15, "y": 26, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_debit_fraud_flags{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 5 },
+                { "color": "red", "value": 20 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Debit Card Spend Over Time",
+        "gridPos": { "x": 0, "y": 30, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "rate(shadow_debit_spend_total{tenant=\"$tenant\"}[5m])",
+            "legendFormat": "Spend Rate ($/min)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Debit Card Authorisation Rate",
+        "gridPos": { "x": 10, "y": 30, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "rate(shadow_debit_auth_total{tenant=\"$tenant\",status=\"approved\"}[5m])",
+            "legendFormat": "Approved"
+          },
+          {
+            "expr": "rate(shadow_debit_auth_total{tenant=\"$tenant\",status=\"declined\"}[5m])",
+            "legendFormat": "Declined"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
       }
     ]
   }

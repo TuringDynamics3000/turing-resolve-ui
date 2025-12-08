@@ -217,6 +217,71 @@ def generate_shadow_report(json_path: str, output_pdf: str) -> None:
     story.append(Table(ledger_inv_rows, style=_table_style()))
     story.append(Spacer(1, 20))
     
+    # ========== DEBIT CARD METRICS (PHASE 1B) ==========
+    story.append(Paragraph("<b>Debit Card Metrics</b>", styles["Heading2"]))
+    story.append(Spacer(1, 6))
+    
+    debit_data = data.get("debit_cards", {})
+    if debit_data:
+        debit_table = [
+            ["Metric", "UltraData", "TuringCore", "Delta"],
+            [
+                "Total Transactions",
+                debit_data.get("ultra_tx_count", 0),
+                debit_data.get("turing_tx_count", 0),
+                debit_data.get("tx_delta", 0)
+            ],
+            [
+                "Total Spend",
+                f"${debit_data.get('ultra_spend', 0.0):,.2f}",
+                f"${debit_data.get('turing_spend', 0.0):,.2f}",
+                f"${debit_data.get('spend_delta', 0.0):,.2f}"
+            ],
+            [
+                "Authorisation Success %",
+                f"{debit_data.get('ultra_auth_success', 0.0):.1f}%",
+                f"{debit_data.get('turing_auth_success', 0.0):.1f}%",
+                f"{debit_data.get('auth_success_delta', 0.0):.1f}%"
+            ],
+            [
+                "Fraud Flags",
+                debit_data.get("ultra_fraud_flags", 0),
+                debit_data.get("turing_fraud_flags", 0),
+                debit_data.get("fraud_flags_delta", 0)
+            ],
+        ]
+        
+        story.append(Table(debit_table, style=_table_style()))
+        story.append(Spacer(1, 12))
+        
+        # Debit card invariants
+        debit_inv = debit_data.get("invariants", {})
+        if debit_inv:
+            debit_inv_rows = [["Invariant", "Status", "Violations"]]
+            
+            inv_names = {
+                "no_debit_overdraft": "No Debit Overdraft",
+                "daily_spend_limit": "Daily Spend Limit",
+                "mcc_blocking": "MCC Blocking",
+                "atm_withdrawal_limit": "ATM Withdrawal Limit",
+                "international_blocking": "International Blocking",
+            }
+            
+            for key, display_name in inv_names.items():
+                status = debit_inv.get(key, "N/A")
+                violations = "0" if status == "PASS" else "N/A"
+                debit_inv_rows.append([display_name, status, violations])
+            
+            story.append(Paragraph("<b>Debit Card Invariants</b>", styles["Normal"]))
+            story.append(Table(debit_inv_rows, style=_table_style()))
+    else:
+        story.append(Paragraph(
+            "Debit card shadow migration not yet active.",
+            styles["Normal"]
+        ))
+    
+    story.append(Spacer(1, 20))
+    
     # ========== ANOMALIES & EXCEPTIONS ==========
     story.append(Paragraph("<b>Anomalies & Exceptions</b>", styles["Heading2"]))
     story.append(Spacer(1, 6))
