@@ -257,3 +257,89 @@ def check_multi_tenant_isolation_on_accounts_and_events(
         details=f"All sampled accounts/events are either untagged or correctly tagged "
                 f"with tenantId={tenant_id}. Checked {len(accounts)} accounts.",
     )
+
+
+# ---------- Latency SLO Invariant ----------
+
+
+def check_latency_slo(
+    client: TuringCoreClient,
+) -> InvariantResult:
+    """
+    Invariant: Core operations satisfy basic latency SLOs during the CU-Digital run.
+
+    We check p95 / p99 for key op_types against configurable thresholds.
+    Units are seconds.
+    
+    This is a **critical operational invariant** that ensures the platform can handle
+    realistic workloads with acceptable performance.
+    
+    Args:
+        client: TuringCore API client with attached latency recorder
+        
+    Returns:
+        InvariantResult with pass/fail status and details
+    """
+    from metrics.latency_recorder import LatencyRecorder, LatencyStats
+    
+    recorder: LatencyRecorder | None = getattr(client, "latency_recorder", None)
+    if recorder is None:
+        return InvariantResult(
+            name="latency_slo",
+            passed=False,
+            details="No latency recorder attached to client.",
+        )
+
+    stats = recorder.get_stats()
+    if not stats:
+        return InvariantResult(
+            name="latency_slo",
+            passed=False,
+            details="No latency samples recorded.",
+        )
+
+    # SLO thresholds (tune these as you learn more)
+    # Values are in seconds.
+    slo: Dict[str, Dict[str, float]] = {
+        # Core posting path
+        "command:PostEntry": {"p95": 0.25, "p99": 0.75},
+
+        # Onboarding
+        "command:CreateCustomer": {"p95": 0.50, "p99": 1.50},
+        "command:OpenAccount": {"p95": 0.50, "p99": 1.50},
+
+        # Read paths – not critical for v0.1, but we track them anyway
+        "read:get_account": {"p95": 0.25, "p99": 0.75},
+        "read:list_accounts": {"p95": 0.50, "p99": 1.50},
+        "read:get_account_events": {"p95": 1.00, "p99": 3.00},
+    }
+
+    failures: List[str] = []
+
+    for op_type, thresholds in slo.items():
+        st: LatencyStats | None = stats.get(op_type)
+        if st is None or st.count == 0:
+            # If an op_type didn't occur in this run, we just skip it.
+            continue
+
+        p95_limit = thresholds["p95"]
+        p99_limit = thresholds["p99"]
+
+        if st.p95 > p95_limit or st.p99 > p99_limit:
+            failures.append(
+                f"{op_type}: p95={st.p95:.3f}s (limit {p95_limit:.3f}s), "
+                f"p99={st.p99:.3f}s (limit {p99_limit:.3f}s), count={st.count}"
+            )
+
+    if failures:
+        return InvariantResult(
+            name="latency_slo",
+            passed=False,
+            details="; ".join(failures[:3]),  # cap detail length
+        )
+
+    return InvariantResult(
+        name="latency_slo",
+        passed=True,
+        details="All measured core operations met latency SLOs.",
+    )

@@ -12,7 +12,10 @@ from dataclasses import dataclass
 from typing import List
 
 from api_client import TuringCoreClient
-from invariants.ledger_invariants import InvariantResult
+from invariants.ledger_invariants import (
+    InvariantResult,
+    check_latency_slo,
+)
 from models.scenario import SteadyStateScenarioConfig
 from models.tenant import TenantConfig
 
@@ -50,6 +53,7 @@ def run_cu_digital_invariants(
         "ledger_value_conserved_sampled",
         "no_negative_balances_without_overdraft",
         "multi_tenant_isolation_accounts_events",
+        "latency_slo",
     ]
 
     results: List[InvariantResult] = []
@@ -90,6 +94,8 @@ def run_cu_digital_invariants(
                     sample_size=100,
                 )
             )
+        elif name == "latency_slo":
+            results.append(check_latency_slo(client=client))
         else:
             results.append(
                 InvariantResult(

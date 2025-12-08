@@ -11,12 +11,15 @@ All interactions via public APIs.
 from __future__ import annotations
 
 import os
+import time
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 import httpx
+
+from metrics.latency_recorder import LatencyRecorder
 
 
 @dataclass
@@ -128,6 +131,7 @@ class TuringCoreClient:
         api_key: str | None = None,
         default_tenant: str | None = None,
         timeout: float = 10.0,
+        latency_recorder: LatencyRecorder | None = None,
     ) -> None:
         """
         Initialize TuringCore API client.
@@ -137,6 +141,7 @@ class TuringCoreClient:
             api_key: API key for authentication (or TURINGCORE_API_KEY env var)
             default_tenant: Default tenant ID (or TURINGCORE_TENANT_ID env var)
             timeout: Request timeout in seconds
+            latency_recorder: Optional latency recorder for performance tracking
 
         Raises:
             ValueError: If base_url or api_key not provided
@@ -144,6 +149,7 @@ class TuringCoreClient:
         self.base_url = base_url or os.environ.get("TURINGCORE_BASE_URL", "").rstrip("/")
         self.api_key = api_key or os.environ.get("TURINGCORE_API_KEY", "")
         self.default_tenant = default_tenant or os.environ.get("TURINGCORE_TENANT_ID", "")
+        self.latency_recorder = latency_recorder
 
         if not self.base_url:
             raise ValueError("TURINGCORE_BASE_URL must be set")
@@ -174,6 +180,35 @@ class TuringCoreClient:
             "Accept": "application/json",
         }
 
+    def _timed_request(
+        self,
+        method: str,
+        url: str,
+        *,
+        op_type: str,
+        **kwargs: Any,
+    ) -> httpx.Response:
+        """
+        Perform an HTTP request and record latency for the given op_type.
+        
+        Args:
+            method: HTTP method (GET, POST, etc.)
+            url: URL path (relative to base_url)
+            op_type: Operation type for latency tracking (e.g., "command:PostEntry")
+            **kwargs: Additional arguments passed to httpx.Client.request
+            
+        Returns:
+            httpx.Response object
+        """
+        start = time.perf_counter()
+        try:
+            resp = self._client.request(method, url, headers=self._headers(), **kwargs)
+        finally:
+            duration = time.perf_counter() - start
+            if self.latency_recorder is not None:
+                self.latency_recorder.record(op_type, duration)
+        return resp
+
     def submit_command(self, envelope: CommandEnvelope) -> Dict[str, Any]:
         """
         Submit a command to the Turing Protocol Gateway.
@@ -198,7 +233,8 @@ class TuringCoreClient:
         """
         tenant_id = envelope.tenantId
         url = f"/tenants/{tenant_id}/commands"
-        resp = self._client.post(url, json=envelope.to_dict(), headers=self._headers())
+        op_type = f"command:{envelope.commandType}"
+        resp = self._timed_request("POST", url, op_type=op_type, json=envelope.to_dict())
 
         # For v0.1, raise on non-2xx
         # You can handle 422 (invariant breach) separately for better error messages
@@ -469,10 +505,11 @@ class TuringCoreClient:
         if customer_id:
             params["customerId"] = customer_id
 
-        resp = self._client.get(
+        resp = self._timed_request(
+            "GET",
             f"/tenants/{t}/accounts",
+            op_type="read:list_accounts",
             params=params,
-            headers=self._headers(),
         )
         resp.raise_for_status()
         return resp.json()
@@ -500,10 +537,11 @@ class TuringCoreClient:
             >>> for event in result["events"]:
             ...     print(event["eventType"], event["occurredAt"])
         """
-        resp = self._client.get(
+        resp = self._timed_request(
+            "GET",
             f"/tenants/{tenant_id}/accounts/{account_id}/events",
+            op_type="read:get_account_events",
             params={"limit": limit},
-            headers=self._headers(),
         )
         resp.raise_for_status()
         return resp.json()
