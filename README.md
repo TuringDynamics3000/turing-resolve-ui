@@ -24,6 +24,10 @@ TuringCore-v3 itself lives in [`TuringCore-v3`](https://github.com/TuringDynamic
 
 👉 **[DOCKER_DEMO.md](DOCKER_DEMO.md)** — One-command Docker demo with Prometheus + Grafana
 
+**Want a desktop app?** Use the Windows launcher:
+
+👉 **[DESKTOP_APP_SETUP.md](DESKTOP_APP_SETUP.md)** — One-click Windows desktop app with cinematic boot
+
 **Want to know what's done?** Check the unified truth file:
 
 👉 **[STATUS.md](STATUS.md)** — Single authoritative status declaration for the platform
