@@ -1,0 +1,329 @@
+{
+  "dashboard": {
+    "title": "Payments RL Shadow — Operational Metrics",
+    "tags": ["payments", "rl", "risk-brain", "shadow-mode"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    
+    "panels": [
+      {
+        "id": 1,
+        "title": "RL Advisory Volume Over Time",
+        "type": "graph",
+        "gridPos": {"x": 0, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum by (tenant_id) (count_over_time(payments_rl_advisory_metric_total[1h]))",
+            "legendFormat": "{{tenant_id}}",
+            "refId": "A"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Advisory Count"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "lines": true,
+        "fill": 1,
+        "linewidth": 2,
+        "pointradius": 5,
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true,
+          "total": true
+        },
+        "description": "Number of RL advisories emitted per hour, grouped by tenant. This proves RL is alive and observing payment traffic."
+      },
+      
+      {
+        "id": 2,
+        "title": "RL Win/Loss/Neutral Share (Last 7 Days)",
+        "type": "piechart",
+        "gridPos": {"x": 12, "y": 0, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "sum by (direction) (increase(payments_rl_advisory_direction_total[7d]))",
+            "legendFormat": "{{direction}}",
+            "refId": "A"
+          }
+        ],
+        "pieType": "pie",
+        "legend": {
+          "show": true,
+          "values": true,
+          "percentage": true
+        },
+        "description": "Distribution of RL advisory directions over the last 7 days. RL_BETTER means RL would have improved outcome. This proves directional benefit even in shadow mode."
+      },
+      
+      {
+        "id": 3,
+        "title": "RL Confidence Distribution",
+        "type": "heatmap",
+        "gridPos": {"x": 0, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, sum(rate(payments_rl_confidence_bucket[1d])) by (le))",
+            "legendFormat": "p50",
+            "refId": "A"
+          },
+          {
+            "expr": "histogram_quantile(0.9, sum(rate(payments_rl_confidence_bucket[1d])) by (le))",
+            "legendFormat": "p90",
+            "refId": "B"
+          }
+        ],
+        "yAxis": {"format": "short", "label": "Confidence Score"},
+        "xAxis": {"mode": "time"},
+        "dataFormat": "tsbuckets",
+        "description": "Distribution of RL confidence scores. Shows model is not random. Higher confidence = more certain recommendations."
+      },
+      
+      {
+        "id": 4,
+        "title": "Latency & Cost Trend (7-Day Rolling Average)",
+        "type": "graph",
+        "gridPos": {"x": 12, "y": 8, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "avg_over_time(payments_rl_latency_ms_delta[7d])",
+            "legendFormat": "Latency Delta (ms)",
+            "refId": "A"
+          },
+          {
+            "expr": "avg_over_time(payments_rl_cost_cents_delta[7d])",
+            "legendFormat": "Cost Delta (cents)",
+            "refId": "B"
+          }
+        ],
+        "yaxes": [
+          {"format": "short", "label": "Delta"},
+          {"format": "short"}
+        ],
+        "xaxis": {"mode": "time"},
+        "lines": true,
+        "fill": 0,
+        "linewidth": 2,
+        "legend": {
+          "show": true,
+          "values": true,
+          "current": true,
+          "avg": true
+        },
+        "description": "7-day rolling average of latency and cost deltas. Negative latency delta = RL would have been faster. Positive cost delta = RL would have cost more."
+      },
+      
+      {
+        "id": 5,
+        "title": "Kill-Switch & Health Status",
+        "type": "stat",
+        "gridPos": {"x": 0, "y": 16, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "risk_brain_payments_rl_enabled",
+            "legendFormat": "RL Shadow Enabled",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "justifyMode": "center",
+          "textMode": "value_and_name"
+        },
+        "mappings": [
+          {"type": "value", "value": "0", "text": "DISABLED"},
+          {"type": "value", "value": "1", "text": "ENABLED"}
+        ],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"value": 0, "color": "red"},
+            {"value": 1, "color": "green"}
+          ]
+        },
+        "description": "RL Shadow kill-switch status. 1 = Enabled, 0 = Disabled. Boards and CROs will laser in on this."
+      },
+      
+      {
+        "id": 6,
+        "title": "Harness CI Status",
+        "type": "stat",
+        "gridPos": {"x": 6, "y": 16, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "payments_rl_harness_ci_pass",
+            "legendFormat": "Harness CI Passing",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "justifyMode": "center",
+          "textMode": "value_and_name"
+        },
+        "mappings": [
+          {"type": "value", "value": "0", "text": "FAILING"},
+          {"type": "value", "value": "1", "text": "PASSING"}
+        ],
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"value": 0, "color": "red"},
+            {"value": 1, "color": "green"}
+          ]
+        },
+        "description": "Harness CI pass/fail status. 1 = Passing, 0 = Failing. This proves safety invariants are maintained."
+      },
+      
+      {
+        "id": 7,
+        "title": "Enforcement Violations (Should Always Be 0)",
+        "type": "stat",
+        "gridPos": {"x": 12, "y": 16, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "sum(enforcement_ai_origin_violations_total + enforcement_schema_violations_total + enforcement_policy_violations_total)",
+            "legendFormat": "Total Violations",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "justifyMode": "center",
+          "textMode": "value_and_name"
+        },
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"value": 0, "color": "green"},
+            {"value": 1, "color": "red"}
+          ]
+        },
+        "description": "Total enforcement violations. Should ALWAYS be 0. If > 0, CRITICAL breach detected."
+      },
+      
+      {
+        "id": 8,
+        "title": "Customer Impact (Should Always Be 0)",
+        "type": "stat",
+        "gridPos": {"x": 18, "y": 16, "w": 6, "h": 4},
+        "targets": [
+          {
+            "expr": "0",
+            "legendFormat": "Customer Impact",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "graphMode": "none",
+          "colorMode": "value",
+          "justifyMode": "center",
+          "textMode": "value_and_name"
+        },
+        "thresholds": {
+          "mode": "absolute",
+          "steps": [
+            {"value": 0, "color": "green"}
+          ]
+        },
+        "description": "Customer impact from RL Shadow. Always 0 (no execution authority, advisory only)."
+      },
+      
+      {
+        "id": 9,
+        "title": "RL Advisory Rate (% of Payments Observed)",
+        "type": "gauge",
+        "gridPos": {"x": 0, "y": 20, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "(sum(rate(payments_rl_advisory_metric_total[1h])) / sum(rate(payments_total[1h]))) * 100",
+            "legendFormat": "Advisory Rate %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            }
+          }
+        },
+        "description": "Percentage of payments observed by RL Shadow. Should be close to 100% if RL is fully deployed."
+      },
+      
+      {
+        "id": 10,
+        "title": "RL Model Health Score",
+        "type": "gauge",
+        "gridPos": {"x": 12, "y": 20, "w": 12, "h": 8},
+        "targets": [
+          {
+            "expr": "(sum(rate(payments_rl_advisory_direction_total{direction=\"RL_BETTER\"}[7d])) / sum(rate(payments_rl_advisory_direction_total[7d]))) * 100",
+            "legendFormat": "Model Health %",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "showThresholdLabels": true,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 40, "color": "yellow"},
+                {"value": 60, "color": "green"}
+              ]
+            }
+          }
+        },
+        "description": "Model health score based on % of RL_BETTER advisories. > 60% = healthy model."
+      }
+    ],
+    
+    "templating": {
+      "list": [
+        {
+          "name": "tenant_id",
+          "type": "query",
+          "query": "label_values(payments_rl_advisory_metric_total, tenant_id)",
+          "current": {"text": "All", "value": "$__all"},
+          "multi": true,
+          "includeAll": true
+        }
+      ]
+    },
+    
+    "time": {
+      "from": "now-7d",
+      "to": "now"
+    },
+    
+    "timepicker": {
+      "refresh_intervals": ["30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+    }
+  }
+}
