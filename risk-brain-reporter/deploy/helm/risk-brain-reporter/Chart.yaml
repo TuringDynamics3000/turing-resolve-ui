@@ -1,0 +1,13 @@
+apiVersion: v2
+name: risk-brain-reporter
+description: Risk Brain Reporter - Weekly Board Pack and On-Demand Regulator Annex Generator
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - risk-brain
+  - governance
+  - reporting
+maintainers:
+  - name: TuringCore National Infrastructure Team
+    email: infra@turingcore.com
