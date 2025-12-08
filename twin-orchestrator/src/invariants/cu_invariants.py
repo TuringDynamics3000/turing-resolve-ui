@@ -49,6 +49,7 @@ def run_cu_digital_invariants(
     active_invariants = scenario_cfg.invariants or [
         "ledger_value_conserved_sampled",
         "no_negative_balances_without_overdraft",
+        "multi_tenant_isolation_accounts_events",
     ]
 
     results: List[InvariantResult] = []
@@ -75,6 +76,18 @@ def run_cu_digital_invariants(
                     client=client,
                     tenant_id=tenant_id,
                     sample_size=50,
+                )
+            )
+        elif name == "multi_tenant_isolation_accounts_events":
+            from invariants.ledger_invariants import (
+                check_multi_tenant_isolation_on_accounts_and_events,
+            )
+
+            results.append(
+                check_multi_tenant_isolation_on_accounts_and_events(
+                    client=client,
+                    tenant_id=tenant_id,
+                    sample_size=100,
                 )
             )
         else:

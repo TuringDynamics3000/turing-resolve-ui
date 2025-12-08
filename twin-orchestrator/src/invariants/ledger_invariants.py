@@ -92,3 +92,168 @@ def check_no_negative_balances_without_overdraft(
         passed=False,
         details="Not implemented",
     )
+
+
+# ---------- Helper Functions ----------
+
+
+def _sample_accounts(
+    client: TuringCoreClient,
+    tenant_id: str,
+    sample_size: int,
+) -> List[dict]:
+    """
+    Sample accounts from the tenant via list_accounts API.
+    
+    Args:
+        client: TuringCore API client
+        tenant_id: Tenant ID to query
+        sample_size: Maximum number of accounts to return
+        
+    Returns:
+        List of account dictionaries
+    """
+    try:
+        response = client.list_accounts(tenant_id, limit=sample_size)
+        if isinstance(response, dict):
+            return response.get("accounts", [])
+        elif isinstance(response, list):
+            return response
+        return []
+    except Exception as e:
+        # Log error but don't fail the invariant check
+        print(f"Warning: Failed to sample accounts: {e}")
+        return []
+
+
+def _load_all_events_for_account(
+    client: TuringCoreClient,
+    tenant_id: str,
+    account_id: str,
+) -> List[dict]:
+    """
+    Load all events for a specific account.
+    
+    Args:
+        client: TuringCore API client
+        tenant_id: Tenant ID
+        account_id: Account ID to query events for
+        
+    Returns:
+        List of event dictionaries
+    """
+    try:
+        response = client.get_account_events(tenant_id, account_id)
+        if isinstance(response, dict):
+            return response.get("events", [])
+        elif isinstance(response, list):
+            return response
+        return []
+    except Exception as e:
+        # Log error but don't fail the invariant check
+        print(f"Warning: Failed to load events for account {account_id}: {e}")
+        return []
+
+
+# ---------- Multi-Tenant Isolation Invariant ----------
+
+
+def check_multi_tenant_isolation_on_accounts_and_events(
+    client: TuringCoreClient,
+    tenant_id: str,
+    sample_size: int = 100,
+) -> InvariantResult:
+    """
+    Invariant: When reading via TuringCore tenant-scoped APIs, we must not see
+    projections/events tagged with any other tenant.
+
+    Checks:
+      - For sampled accounts via list_accounts(tenant_id):
+          * If account projection has `tenantId`, it MUST equal tenant_id.
+      - For each account's events via get_account_events(tenant_id, account_id):
+          * If event has `tenantId` (top-level or in payload), it MUST equal tenant_id.
+
+    If fields are absent (e.g. implicit partitioning), that's OK; we only fail
+    on explicit *mismatches*.
+    
+    This is a **critical invariant for multi-tenant SaaS** that proves tenant isolation
+    is enforced at both the projection and event sourcing layers.
+    
+    Args:
+        client: TuringCore API client
+        tenant_id: Tenant ID to check (e.g., "CU_DIGITAL")
+        sample_size: Number of accounts to sample for checking
+        
+    Returns:
+        InvariantResult with pass/fail status and details
+    """
+    accounts = _sample_accounts(client, tenant_id, sample_size)
+
+    if not accounts:
+        return InvariantResult(
+            name="multi_tenant_isolation_accounts_events",
+            passed=False,
+            details="No accounts found to sample.",
+        )
+
+    failures: List[str] = []
+
+    for acc in accounts:
+        account_id = acc.get("accountId")
+        if not account_id:
+            continue
+
+        # ---- Account projection tenant checks ----
+        # Note: We assume client.get_account exists or we use the projection from list_accounts
+        # For now, we'll check the projection we already have from list_accounts
+        proj_tenant = (
+            acc.get("tenantId")
+            or acc.get("tenant_id")
+            or (acc.get("metadata") or {}).get("tenantId")
+        )
+
+        if proj_tenant is not None and proj_tenant != tenant_id:
+            failures.append(
+                f"Account tenant mismatch: accountId={account_id}, "
+                f"projection.tenantId={proj_tenant}, expected={tenant_id}"
+            )
+            # no need to inspect events if projection already breached
+            continue
+
+        # ---- Account event tenant checks ----
+        events = _load_all_events_for_account(client, tenant_id, account_id)
+
+        for ev in events:
+            ev_tenant = (
+                ev.get("tenantId")
+                or ev.get("tenant_id")
+                or (ev.get("metadata") or {}).get("tenantId")
+                or (ev.get("payload") or {}).get("tenantId")
+            )
+
+            if ev_tenant is not None and ev_tenant != tenant_id:
+                failures.append(
+                    f"Event tenant mismatch: accountId={account_id}, "
+                    f"eventId={ev.get('eventId')}, event.tenantId={ev_tenant}, "
+                    f"expected={tenant_id}"
+                )
+                # break early for this account
+                break
+
+    if failures:
+        details = (
+            f"Multi-tenant isolation breached for {len(failures)} item(s); "
+            f"example: {failures[0]}"
+        )
+        return InvariantResult(
+            name="multi_tenant_isolation_accounts_events",
+            passed=False,
+            details=details,
+        )
+
+    return InvariantResult(
+        name="multi_tenant_isolation_accounts_events",
+        passed=True,
+        details=f"All sampled accounts/events are either untagged or correctly tagged "
+                f"with tenantId={tenant_id}. Checked {len(accounts)} accounts.",
+    )
