@@ -14,6 +14,18 @@ TuringCore-v3 itself lives in [`TuringCore-v3`](https://github.com/TuringDynamic
 
 ---
 
+## 🚀 Quick Start
+
+**New here?** Start with the end-to-end runbook:
+
+👉 **[QUICKSTART.md](QUICKSTART.md)** — Run the full CU Digital Twin scenario in 30 minutes
+
+**Want to know what's done?** Check the unified truth file:
+
+👉 **[STATUS.md](STATUS.md)** — Single authoritative status declaration for the platform
+
+---
+
 ## 1. Architecture Overview
 
 At a high level, the digital twin consists of:
@@ -49,408 +61,186 @@ Back-office web UI exposing:
 - **CPS 230/234 scenario visualization** (outage recovery, failover testing)
 - **Multi-tenant isolation verification** (PostgreSQL RLS enforcement)
 
-### Member Portal Demo
+### Member Portal
 
-Reference digital banking UI for CU-Digital tenant:
+Customer-facing web UI for each synthetic CU:
 
-- **Digital onboarding** with KYC/identity verification
-- **Everyday banking** (balances, transfers, BPAY, NPP payments)
-- **Loan applications** with AI-powered decisioning
-- **Personal finance management** (spending insights, budgeting)
-- **Real-time notifications** and alerts
-
-### Observability Stack
-
-Prometheus + Grafana + Loki providing "glass box" visibility:
-
-- **Per-tenant SLOs** (latency, error rate, availability)
-- **Event throughput and lag** (Kafka consumer metrics)
-- **Invariant breach detection** (automated compliance monitoring)
-- **Capacity planning** (resource utilization per tenant)
-- **Fault injection outcomes** (CPS 230 resilience testing)
-
-See [`docs/02-architecture.md`](docs/02-architecture.md) for detailed diagrams and component descriptions.
+- **Account balances and transaction history**
+- **Loan applications and statements**
+- **Card management**
+- **Payments and transfers**
+- **CDR consent management**
 
 ---
 
-## 2. Repo Structure
+## 2. National Risk Brain (B-Domains)
 
-```text
+The digital twin includes the **National Risk Brain** — four shadow AI domains that run in parallel with the core ledger:
+
+| Domain | Status | Description |
+|--------|--------|-------------|
+| **Payments RL Shadow** | ✅ Production-Ready | Advisory-only routing optimisation |
+| **Fraud Shadow** | ✅ Production-Ready | Transaction anomaly detection |
+| **AML Shadow** | ✅ Production-Ready | Behavioural AML/CTF detection |
+| **Treasury RL Shadow** | ✅ Production-Ready | Liquidity stress & buffer forecasting |
+
+**Key Properties:**
+
+- ✅ **Advisory-only** (no execution authority)
+- ✅ **Mechanically enforced** (IAM + network + CI + runtime guards)
+- ✅ **Board-visible** (weekly governance artefacts)
+- ✅ **Regulator-ready** (forensic replay packs)
+
+---
+
+## 3. Risk Brain Reporter (Governance Layer)
+
+The **Risk Brain Reporter** auto-generates weekly governance artefacts:
+
+- **Weekly Board Pack** (PDF) — Executive summary, domain summaries, governance attestation
+- **Regulator Forensic Annex** (PDF) — Safety invariants, risk bands, replay pointers
+- **Regulator Meeting Walkthrough Script** — Verbatim speaking guide for pre-engagement
+
+**Sample Outputs:**
+
+- [Week-0 Board Pack](risk-brain-reporter/samples/week-0/board-pack-network-2025-W49.pdf)
+- [Week-0 Regulator Annex](risk-brain-reporter/samples/week-0/regulator-annex-network-2025-W49.pdf)
+- [Regulator Meeting Script](risk-brain-reporter/samples/week-0/regulator-meeting-walkthrough-script.md)
+
+---
+
+## 4. Repository Structure
+
+```
 turingcore-cu-digital-twin/
-├── README.md                           # This file
-├── docs/                               # Design documentation
-│   ├── 01-overview.md                  # Digital twin concept and objectives
-│   ├── 02-architecture.md              # System architecture and diagrams
-│   ├── 03-scenarios.md                 # Scenario definitions and use cases
-│   ├── 04-demo-playbook.md             # Sales demo scripts and walkthroughs
-│   └── 05-apra-cps230-234-walkthrough.md # Regulatory compliance demonstrations
-├── infra/                              # Infrastructure as Code
-│   ├── terraform/                      # AWS infrastructure provisioning
-│   │   ├── main.tf                     # Main Terraform configuration
-│   │   ├── vpc.tf                      # VPC and networking
-│   │   ├── eks.tf                      # EKS cluster configuration
-│   │   ├── rds-aurora.tf               # Database infrastructure
-│   │   └── iam.tf                      # IAM roles and policies
-│   ├── helm/                           # Helm charts and values
-│   │   ├── Chart.yaml                  # Umbrella chart (optional)
-│   │   ├── values-turingcore.yaml      # TuringCore-v3 deployment config
-│   │   ├── values-monitoring.yaml      # Observability stack config
-│   │   ├── values-operator-console.yaml # Operator console config
-│   │   └── values-member-portal.yaml   # Member portal config
-│   └── k8s/                            # Kubernetes manifests
-│       ├── namespaces.yaml             # Namespace definitions
-│       ├── network-policies.yaml       # Network isolation policies
-│       └── ingress.yaml                # Ingress controller configuration
-├── twin-orchestrator/                  # Scenario engine and data generators
-│   ├── src/
-│   │   ├── __init__.py
-│   │   ├── main.py                     # CLI entrypoint
-│   │   ├── api_client.py               # TuringCore API wrapper
-│   │   ├── generators/                 # Synthetic data generators
-│   │   │   ├── customers.py            # Customer/member generation
-│   │   │   ├── accounts.py             # Account creation
-│   │   │   ├── loans.py                # Loan application and servicing
-│   │   │   ├── transactions.py         # Transaction generation
-│   │   │   └── events.py               # Event stream generation
-│   │   └── scenarios/                  # Scenario implementations
-│   │       ├── base.py                 # Base scenario class
-│   │       ├── scenario_recession.py   # Economic downturn simulation
-│   │       ├── scenario_fraud_spike.py # Fraud detection testing
-│   │       └── scenario_outage_recovery.py # CPS 230 resilience testing
-│   ├── config/
-│   │   ├── tenants/                    # Tenant configuration files
-│   │   │   ├── cu-small.yaml           # Small credit union (5K members)
-│   │   │   ├── cu-mid.yaml             # Medium credit union (25K members)
-│   │   │   ├── cu-large.yaml           # Large credit union (75K members)
-│   │   │   └── cu-digital.yaml         # Digital-only neobank (10K members)
-│   │   └── scenarios/                  # Scenario configuration files
-│   │       ├── recession.yaml          # Recession scenario parameters
-│   │       ├── fraud-spike.yaml        # Fraud spike scenario parameters
-│   │       └── outage-recovery.yaml    # Outage recovery scenario parameters
-│   └── tests/                          # Unit and integration tests
-├── operator-console/                   # Back-office UI (React/TypeScript)
-│   ├── README.md
-│   ├── package.json
-│   └── src/
-│       ├── App.tsx                     # Main application component
-│       ├── components/                 # Reusable UI components
-│       ├── pages/                      # Page components
-│       └── api/                        # API client for TuringCore + observability
-├── member-portal-demo/                 # Reference digital banking UI
-│   ├── README.md
-│   ├── package.json
-│   └── src/
-│       ├── App.tsx                     # Main application component
-│       ├── components/                 # Reusable UI components
-│       ├── pages/                      # Page components
-│       └── api/                        # API client for TuringCore
-├── observability/                      # Monitoring and observability
-│   ├── grafana/
-│   │   └── dashboards/                 # Grafana dashboard definitions
-│   │       ├── turingcore-overview.json # Platform-wide metrics
-│   │       ├── tenant-slo.json         # Per-tenant SLO tracking
-│   │       └── invariants.json         # Compliance invariant monitoring
-│   ├── prometheus/
-│   │   └── rules/                      # Prometheus rules
-│   │       ├── alerting-rules.yaml     # Alert definitions
-│   │       └── recording-rules.yaml    # Recording rules for aggregations
-│   └── loki/
-│       └── config.yaml                 # Loki logging configuration
-└── scripts/                            # Convenience scripts
-    ├── bootstrap_cluster.sh            # Initial cluster setup
-    ├── deploy_all.sh                   # Deploy all components
-    ├── seed_tenants.sh                 # Create and seed synthetic tenants
-    └── run_scenario.sh                 # Execute a specific scenario
+├── QUICKSTART.md                    # 🚀 Start here
+├── STATUS.md                        # Single authoritative status declaration
+├── README.md                        # This file
+│
+├── services/                        # B-Domain shadow consumers
+│   ├── payments_rl_shadow/          # Payments RL Shadow consumer
+│   ├── fraud_shadow/                # Fraud Shadow consumer
+│   ├── aml_shadow/                  # AML Shadow consumer
+│   └── treasury_rl_shadow/          # Treasury RL Shadow consumer
+│
+├── domains/                         # A-Domain policy gateways
+│   ├── payments/                    # Payments policy gateway
+│   ├── fraud/                       # Fraud policy gateway
+│   ├── aml/                         # AML policy gateway
+│   └── treasury/                    # Treasury policy gateway
+│
+├── enforcement/                     # Enforcement layer (AI origin blocker, schema guard, policy validator)
+│   ├── ai_origin_blocker.py
+│   ├── schema_version_guard.py
+│   └── policy_gateway_validator.py
+│
+├── risk_brain_reporter/            # Governance artefact generator
+│   ├── cmd/                         # Go entry points (weekly-job, api)
+│   ├── internal/                    # Internal packages (snapshot, renderer, storage, metrics)
+│   ├── deploy/                      # Helm charts and Terraform modules
+│   ├── samples/week-0/              # Week-0 sample outputs (board pack, regulator annex, meeting script)
+│   └── README.md
+│
+├── risk_metrics/                    # Ops metrics aggregators
+│   ├── payments_rl_metrics_aggregator.py
+│   └── weekly_board_report.py
+│
+├── risk_harness/                    # CI harness for safety validation
+│   ├── fraud/                       # Fraud shadow tests
+│   ├── aml/                         # AML shadow tests
+│   └── treasury/                    # Treasury shadow tests
+│
+├── twin-orchestrator/               # Digital twin orchestrator
+│   ├── cli.py                       # CLI entry point
+│   ├── scenarios/                   # Scenario definitions
+│   └── README.md
+│
+├── infra/                           # Infrastructure as code
+│   ├── aws/                         # Terraform modules (S3, IAM, EKS)
+│   └── k8s/                         # Kubernetes manifests (CronJob, Deployment, NetworkPolicy)
+│
+├── tests/                           # Test suites
+│   └── intelligence/                # Intelligence layer tests
+│
+└── docs/                            # Documentation
+    └── regulator-briefing/          # Regulator pre-engagement briefing pack
 ```
 
 ---
 
-## 3. Prerequisites
+## 5. Getting Started
 
-### Infrastructure
+### Prerequisites
 
-- **AWS account** with permissions to create:
-  - VPC, subnets, security groups
-  - EKS cluster (Kubernetes 1.28+)
-  - RDS/Aurora PostgreSQL (or equivalent)
-  - MSK (Managed Streaming for Kafka) or self-hosted Kafka
-  - IAM roles and policies
+- Python 3.10+
+- Docker + Docker Compose
+- Make
+- Git
+- Node.js 18+ (optional, for UI)
 
-### Local Tools
+### Quick Start
 
-- **kubectl** (1.28+) – Kubernetes CLI
-- **Helm** (3.12+) – Kubernetes package manager
-- **Terraform** (1.5+) – Infrastructure as Code (if using provided modules)
-- **Python** (3.11+) – For twin orchestrator
-- **Node.js** (18+) – For UI components
+Follow the [QUICKSTART.md](QUICKSTART.md) guide to run the full CU Digital Twin scenario in 30 minutes.
 
-### TuringCore-v3 Access
+### Status
 
-- Access to TuringCore-v3 container images:
-  - e.g., `xxx.dkr.ecr.ap-southeast-2.amazonaws.com/turingcore-v3:<tag>`
-- Access to TuringCore-v3 Helm chart repository
-- TuringCore CI/CD configured to publish images and chart versions
+Check [STATUS.md](STATUS.md) for the current platform status and what's done vs in progress vs out of scope.
 
 ---
 
-## 4. Getting Started
+## 6. Key Features
 
-### 4.1 Provision Infrastructure
+### For Boards
 
-From `infra/terraform`:
+✅ AI is clearly active  
+✅ AI is generating intelligence  
+✅ AI is not executing  
+✅ Risk posture is measurable  
+✅ Safety is mechanically enforced
 
-```bash
-cd infra/terraform
-terraform init
-terraform apply
-```
+### For Regulators
 
-This will create:
-- VPC with public and private subnets
-- EKS cluster with managed node groups
-- RDS/Aurora PostgreSQL cluster (optional, can use in-cluster PostgreSQL)
-- MSK cluster for Kafka (optional, can use in-cluster Kafka)
-- IAM roles for service accounts
+✅ Non-execution is provable  
+✅ Replay is available  
+✅ Escalation thresholds are explicit  
+✅ Behavioural drift is quantified
 
-Update your kubeconfig to point at the new cluster:
+### For Commercial Partners
 
-```bash
-aws eks update-kubeconfig --name turingcore-digital-twin --region ap-southeast-2
-```
-
-### 4.2 Deploy TuringCore-v3
-
-From `infra/helm`:
-
-```bash
-cd infra/helm
-
-# Add TuringCore Helm repository
-helm repo add turingcore https://charts.turingdynamics3000.com
-helm repo update
-
-# Deploy TuringCore-v3 to turingcore namespace
-helm upgrade --install turingcore turingcore/turingcore-v3 \
-  --namespace turingcore \
-  --create-namespace \
-  -f values-turingcore.yaml
-```
-
-**Note:** This repository does not contain TuringCore-v3 source code. It assumes TuringCore is published as a Helm chart and container image.
-
-### 4.3 Deploy Observability Stack
-
-```bash
-# Deploy Prometheus, Grafana, Loki
-helm upgrade --install observability prometheus-community/kube-prometheus-stack \
-  --namespace cu-digital-twin \
-  --create-namespace \
-  -f values-monitoring.yaml
-```
-
-### 4.4 Deploy Operator Console and Member Portal
-
-```bash
-# Deploy operator console (back-office UI)
-helm upgrade --install operator-console ./operator-console-helm \
-  --namespace cu-digital-twin \
-  -f values-operator-console.yaml
-
-# Deploy member portal (digital banking UI)
-helm upgrade --install member-portal ./member-portal-helm \
-  --namespace cu-digital-twin \
-  -f values-member-portal.yaml
-```
-
-### 4.5 Seed Tenants and Run Scenarios
-
-From `twin-orchestrator/`:
-
-```bash
-cd twin-orchestrator
-
-# Install Python dependencies
-pip install -r requirements.txt
-
-# Configure API endpoint and credentials for TuringCore-v3
-cp .env.example .env
-# Edit .env with TuringCore API endpoint and credentials
-
-# Create synthetic tenants and seed initial data
-python -m twin_orchestrator.main seed-tenants \
-  --config config/tenants/cu-small.yaml \
-  --config config/tenants/cu-mid.yaml \
-  --config config/tenants/cu-large.yaml \
-  --config config/tenants/cu-digital.yaml
-
-# Run a sample scenario (12 months of normal operations)
-python -m twin_orchestrator.main run-scenario \
-  --scenario config/scenarios/steady-state.yaml
-```
-
-### 4.6 Access the Digital Twin
-
-After deployment, you can access:
-
-- **Operator Console:** `https://operator.cu-digital-twin.example.com`
-- **Member Portal (CU-Digital):** `https://banking.cu-digital.example.com`
-- **Grafana Dashboards:** `https://grafana.cu-digital-twin.example.com`
+✅ This is category-leading governance  
+✅ This is not slide-deck AI  
+✅ This is operational AI oversight
 
 ---
 
-## 5. Scenarios
+## 7. Strategic Position
 
-The digital twin supports multiple pre-defined scenarios for demonstration and testing:
+> The system is **already regulator-pre-engagement grade** in shadow mode.  
+> The only remaining risk is **demo coherence**, not safety, legality, or governance.
 
-### Steady State
-Normal economic conditions with baseline performance metrics. Used for establishing performance benchmarks and SLO baselines.
-
-### Recession
-Simulates economic downturn with:
-- Rising loan arrears (3% → 8%)
-- Increased credit risk scores
-- Stress on capital and liquidity metrics
-- Member hardship requests
-- Portfolio rebalancing by AI agents
-
-### Fraud Spike
-Simulates coordinated fraud attack with:
-- Account takeover attempts
-- Suspicious transaction patterns
-- AML/CTF alert generation
-- Real-time fraud detection by Agentic AI
-- Compliance agent responses
-
-### Outage & Recovery (CPS 230 Alignment)
-Demonstrates operational resilience:
-- Simulated node/zone failure
-- Automated failover to secondary AZ
-- Event replay and state reconstruction
-- Zero data loss verification
-- Recovery time measurement
-
-Each scenario is defined declaratively under `twin-orchestrator/config/scenarios/*.yaml` and executed by the orchestrator purely through TuringCore commands and events.
-
-See [`docs/03-scenarios.md`](docs/03-scenarios.md) for detailed scenario descriptions and expected outcomes.
+You can safely:
+- Run CU board demos
+- Conduct APRA / AUSTRAC / ASIC pre-engagements
+- Use the Digital Twin as your default TuringCore integration gate
 
 ---
 
-## 6. Design Principles
+## 8. License
 
-### Consumer-First
-This repository behaves like a real credit union consuming TuringCore-v3. No special backdoors or privileged access.
-
-### Protocol Compliance
-All interactions follow the Turing Protocol. All changes go through public APIs and command/event flows.
-
-### Reproducible
-Entire environment is Infrastructure as Code. One command should recreate the entire digital twin from scratch.
-
-### Safe Data
-Only synthetic data is generated. No real PII ever touches this cluster. All data is clearly marked as synthetic.
-
-### Regulator-Friendly
-Everything needed to demonstrate CPS 230/234/CDR compliance is visible, auditable, and exportable.
-
-### Multi-Tenant Proof
-Demonstrates true multi-tenant SaaS capabilities with:
-- Sub-second tenant provisioning
-- PostgreSQL RLS isolation verification
-- Per-tenant performance metrics
-- Shared infrastructure economics
+Proprietary — Turing Dynamics 3000 Pty Ltd
 
 ---
 
-## 7. Use Cases
+## 9. Contact
 
-### Sales Demonstrations
-- **Live CU in a browser:** Show prospects a working credit union, not slides
-- **Multi-tenant isolation:** Prove data isolation with side-by-side tenant views
-- **Performance at scale:** Demonstrate 200K events/sec, 46K customers/sec
-- **Feature showcase:** Digital onboarding, AI lending, real-time payments
+For questions or access requests:
 
-### Regulatory Walkthroughs
-- **APRA CPS 230:** Operational resilience and outage recovery
-- **APRA CPS 234:** Information security and incident response
-- **CDR (Open Banking):** Data sharing consent flows and API compliance
-- **AML/CTF:** Transaction monitoring and suspicious activity reporting
-
-### Partner Integration Testing
-- **Fintech sandbox:** Allow partners to test integrations in safe environment
-- **API documentation:** Live API examples with real (synthetic) data
-- **Performance testing:** Validate integration performance under load
-- **Compliance testing:** Verify partner integrations maintain compliance
-
-### Internal Development
-- **Feature validation:** Test new features in realistic multi-tenant environment
-- **Performance benchmarking:** Establish baseline metrics for optimization
-- **Scenario testing:** Validate system behavior under various conditions
-- **Training environment:** Onboard new team members with realistic data
+- **Technical:** Platform Architecture Team
+- **Commercial:** Business Development Team
+- **Regulatory:** Chief Risk Officer
 
 ---
 
-## 8. Roadmap
-
-### v0.1 – Foundation (Current)
-- ✅ Repository structure and documentation
-- ✅ Infrastructure as Code (Terraform)
-- ✅ Single tenant (CU-Digital) with basic seeding
-- ✅ Steady-state scenario
-- ✅ Basic observability dashboards
-
-### v0.2 – Multi-Tenant Proof (Next)
-- 🔄 Four tenant archetypes (Small, Mid, Large, Digital)
-- 🔄 Recession and fraud spike scenarios
-- 🔄 Per-tenant SLO dashboards
-- 🔄 Operator console with multi-tenant views
-- 🔄 Member portal demo for CU-Digital
-
-### v0.3 – Regulatory Compliance (Q1 2026)
-- ⏳ CPS 230 outage and recovery scenarios
-- ⏳ CPS 234 security incident simulations
-- ⏳ CDR consent flows and data sharing
-- ⏳ APRA-style reporting extracts
-- ⏳ Compliance invariant monitoring
-
-### v1.0 – Production-Ready Demo (Q2 2026)
-- ⏳ Packaged "prospect demo" preset
-- ⏳ "Regulator walkthrough" preset
-- ⏳ Self-service scripts for common tasks
-- ⏳ Comprehensive documentation
-- ⏳ Video walkthroughs and tutorials
-
----
-
-## 9. Contributing
-
-This is an internal repository for TuringDynamics3000. Contributions should:
-
-1. Reference roadmap items and link to design docs in `docs/`
-2. Follow the Turing Protocol for all TuringCore interactions
-3. Include tests for new scenarios or generators
-4. Update documentation for new features
-5. Maintain the "consumer-first" principle (no backdoors)
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for detailed guidelines.
-
----
-
-## 10. License
-
-Copyright © 2025 TuringDynamics3000. All rights reserved.
-
-This repository contains proprietary software and documentation. Unauthorized copying, distribution, or use is strictly prohibited.
-
----
-
-## 11. Support
-
-For questions or issues:
-
-- **Internal Team:** Slack #turingcore-digital-twin
-- **Documentation:** See `docs/` directory
-- **Issues:** GitHub Issues in this repository
-
----
-
-**Built with TuringCore-v3** – The first true multi-tenant SaaS core banking platform for Australian credit unions.
+**Document Version:** 1.0  
+**Last Updated:** 09 Dec 2025  
+**Next Review:** After first production deployment
