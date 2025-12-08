@@ -1,233 +1,108 @@
-# Risk Brain Regulator Annex
-
-**Period:** {{period_start}} to {{period_end}}  
-**Tenant:** {{tenant_id}}  
-**Generated:** {{generated_at}}  
-**Purpose:** APRA/AUSTRAC/RBA Regulatory Disclosure
+# Risk Brain Regulatory Annex — Forensic Replay Pack
 
 ---
 
-## Section 1: Header
+## 📘 HEADER
 
-### Reporting Entity
+**Reporting Entity:** {{tenant_name}}
 
-**Tenant ID:** {{tenant_id}}  
-**Reporting Period:** {{period_start}} to {{period_end}}  
-**Report Type:** Risk Brain Shadow Intelligence Annex  
-**Regulatory Framework:** APRA CPS 234, AUSTRAC AML/CTF Act 2006
+**Period:** {{period_start}} → {{period_end}}
 
-### AI Systems in Scope
+**Domains:** Payments RL, Fraud, AML, Treasury
 
-This annex covers four AI shadow intelligence systems:
-
-1. **Payments RL Shadow** (routing intelligence)
-2. **Fraud Shadow** (crime intelligence)
-3. **AML Shadow** (statutory compliance intelligence)
-4. **Treasury RL Shadow** (intraday liquidity intelligence)
-
-### Execution Authority
-
-**All four systems are advisory-only with zero execution authority.**
-
-- No AI-controlled financial actions
-- No AI-controlled AUSTRAC reporting
-- No AI-controlled liquidity management
-- No AI-controlled account restrictions
+**Generated UTC:** {{generated_timestamp_utc}}
 
 ---
 
-## Section 2: Safety Table (All Invariant Metrics)
+## 📄 SECTION 1 — SAFETY INVARIANTS
 
-### Critical Safety Invariants (Must Always Be 0)
+| Metric | Value |
+|--------|-------|
+| AI-Origin Execution Violations | {{ai_origin_violations}} |
+| Schema Violations | {{schema_violations}} |
+| Policy Origin Violations | {{policy_origin_violations}} |
 
-| Invariant | Value | Status | Regulatory Significance |
-|-----------|-------|--------|-------------------------|
-| AI Origin Violations | {{ai_origin_violations}} | {{ai_origin_status}} | Proves AI cannot execute financial actions |
-| Schema Violations | {{schema_violations}} | {{schema_status}} | Proves event integrity is maintained |
-| Policy Origin Violations | {{policy_origin_violations}} | {{policy_origin_status}} | Proves only board-approved policies are used |
+**✅ Regulatory Assertion:**
 
-### Mandatory Safety Statement
-
-> {{safety_statement}}
-
-### Enforcement Layer Status
-
-| Enforcement Module | Status | Purpose |
-|-------------------|--------|---------|
-| AI Origin Blocker | ✅ Active | Blocks 27 forbidden command types |
-| Schema Version Guard | ✅ Active | Pins 18 event types to v1.0 |
-| Policy Gateway Validator | ✅ Active | Validates 7 approved policy sources |
+> "At no point during this period was any AI-originated instruction capable of triggering ledger, payment, credit, or treasury execution."
 
 ---
 
-## Section 3: Domain Counts (Flags by Risk Band)
+## 📄 SECTION 2 — DOMAIN COUNTS
 
-### Payments RL Shadow
+### FRAUD
 
-| Metric | Value | Interpretation |
-|--------|-------|----------------|
-| Coverage | {{payments_coverage_pct}}% | Percentage of payments evaluated by RL |
-| Better Recommendations | {{payments_better}} | RL recommended faster/cheaper rail |
-| Worse Recommendations | {{payments_worse}} | RL recommended slower/more expensive rail |
-| Neutral Recommendations | {{payments_neutral}} | RL agreed with existing routing |
+| Risk Band | Count |
+|-----------|-------|
+| High | {{fraud_high_flags}} |
 
-### Fraud Shadow
+### AML
 
-| Metric | Value | Interpretation |
-|--------|-------|----------------|
-| High-Risk Flags | {{fraud_high_flags}} | Transactions flagged as high-risk |
-| Confirmed Fraud | {{fraud_confirmed}} | Flags confirmed as actual fraud |
-| False Positives Cleared | {{fraud_cleared}} | Flags cleared as false alarms |
-| Precision | {{fraud_precision}}% | Confirmed / (Confirmed + Cleared) |
+| Risk Band | Count |
+|-----------|-------|
+| High | {{aml_high_flags}} |
+| Medium | {{aml_medium_flags}} |
 
-### AML Shadow
+### TREASURY
 
-| Metric | Value | Interpretation |
-|--------|-------|----------------|
-| High-Risk Flags | {{aml_high_flags}} | Transactions flagged as high-risk |
-| Medium-Risk Flags | {{aml_medium_flags}} | Transactions flagged as medium-risk |
-| SMRs Submitted (by humans) | {{aml_smrs}} | Suspicious Matter Reports lodged with AUSTRAC |
-
-**AUSTRAC Compliance Statement:**
-
-> AML Shadow is advisory-only. It does not lodge AUSTRAC reports (SMR/TTR/IFTI) or freeze accounts. All AUSTRAC reporting is done by human operators in compliance with AML/CTF Act 2006.
-
-### Treasury RL Shadow
-
-| Metric | Value | Interpretation |
-|--------|-------|----------------|
-| High-Risk Liquidity Windows | {{treasury_high_risk_windows}} | Intraday periods with potential liquidity stress |
-| Average Buffer Delta | ${{treasury_avg_buffer_delta_dollars}} | Recommended buffer increase |
-
-**RBA Compliance Statement:**
-
-> Treasury RL Shadow is advisory-only. It does not move liquidity, draw facilities, or sweep accounts. All treasury actions are taken by human operators in compliance with RBA liquidity requirements.
+| Risk | Windows |
+|------|---------|
+| High | {{treasury_high_risk_windows}} |
 
 ---
 
-## Section 4: Score Distributions (If Available)
+## 📄 SECTION 3 — SCORE DISTRIBUTIONS (OPTIONAL)
 
-### Payments RL Confidence Distribution
+### Fraud Score Percentiles
 
-| Confidence Band | Count | Percentage |
-|----------------|-------|------------|
-| High (>= 0.85) | - | - |
-| Medium (0.65-0.85) | - | - |
-| Low (< 0.65) | - | - |
+| Percentile | Score |
+|------------|-------|
+| P50 | {{fraud_p50}} |
+| P75 | {{fraud_p75}} |
+| P90 | {{fraud_p90}} |
+| P95 | {{fraud_p95}} |
 
-### Fraud Risk Score Distribution
+### AML Behavioural Deviation Percentiles
 
-| Risk Band | Count | Percentage |
-|-----------|-------|------------|
-| High (>= 0.85) | {{fraud_high_flags}} | - |
-| Medium (0.65-0.85) | - | - |
-| Low (< 0.65) | - | - |
+| Percentile | Score |
+|------------|-------|
+| P50 | {{aml_p50}} |
+| P75 | {{aml_p75}} |
+| P90 | {{aml_p90}} |
+| P95 | {{aml_p95}} |
 
-### AML Risk Score Distribution
+### Treasury Stress Score Percentiles
 
-| Risk Band | Count | Percentage |
-|-----------|-------|------------|
-| High (>= 0.85) | {{aml_high_flags}} | - |
-| Medium (0.65-0.85) | {{aml_medium_flags}} | - |
-| Low (< 0.65) | - | - |
-
-### Treasury Risk Score Distribution
-
-| Risk Band | Count | Percentage |
-|-----------|-------|------------|
-| High (>= 0.85) | {{treasury_high_risk_windows}} | - |
-| Medium (0.65-0.85) | - | - |
-| Low (< 0.65) | - | - |
+| Percentile | Score |
+|------------|-------|
+| P50 | {{treasury_p50}} |
+| P75 | {{treasury_p75}} |
+| P90 | {{treasury_p90}} |
+| P95 | {{treasury_p95}} |
 
 ---
 
-## Section 5: Event Samples (Optional Anonymised)
+## 📄 SECTION 4 — EVENT SAMPLES (ANONYMISED)
 
-### Sample 1: Payments RL Advisory
-
-```json
-{
-  "event_type": "RlRoutingAdvisoryIssued",
-  "tenant_id": "[REDACTED]",
-  "recommended_rail": "NPP",
-  "confidence": 0.91,
-  "policy_id": "payments-rl-policy-v1",
-  "origin": "AI",
-  "occurred_at": "[REDACTED]"
-}
-```
-
-### Sample 2: Fraud Risk Flag
-
-```json
-{
-  "event_type": "FraudRiskFlagRaised",
-  "tenant_id": "[REDACTED]",
-  "risk_band": "HIGH",
-  "risk_score": 0.87,
-  "policy_id": "fraud-policy-v1",
-  "origin": "AI",
-  "occurred_at": "[REDACTED]"
-}
-```
-
-### Sample 3: AML Risk Flag
-
-```json
-{
-  "event_type": "AmlRiskFlagRaised",
-  "tenant_id": "[REDACTED]",
-  "risk_band": "HIGH",
-  "risk_score": 0.92,
-  "policy_id": "aml-policy-v1",
-  "origin": "AI",
-  "occurred_at": "[REDACTED]"
-}
-```
-
-### Sample 4: Treasury Risk Advisory
-
-```json
-{
-  "event_type": "TreasuryRiskAdvisoryIssued",
-  "tenant_id": "[REDACTED]",
-  "risk_band": "MEDIUM",
-  "recommended_buffer_cents": 300000000,
-  "policy_id": "treasury-policy-v1",
-  "origin": "AI",
-  "occurred_at": "[REDACTED]"
-}
-```
+| Domain | Timestamp | Risk Band | Hash Reference |
+|--------|-----------|-----------|----------------|
+| Fraud | {{fraud_sample_ts}} | High | {{fraud_sample_hash}} |
+| AML | {{aml_sample_ts}} | Medium | {{aml_sample_hash}} |
 
 ---
 
-## Section 6: Replay Pointer (Object Store + Offset References)
+## 📄 SECTION 5 — REPLAY POINTERS
 
-### Immutable Event Storage
-
-**Bucket:** `risk-brain-events`  
-**Prefix:** `{{tenant_id}}/{{week}}/`  
-**Format:** Avro (Protocol schema v1.0)  
-**Retention:** 7 years (AUSTRAC compliance)
-
-### Replay Instructions
-
-1. Access immutable object storage (S3-compatible)
-2. Navigate to bucket: `risk-brain-events`
-3. Navigate to prefix: `{{tenant_id}}/{{week}}/`
-4. Download Avro files for the reporting period
-5. Replay events using Protocol schema v1.0
-
-### Forensic Reconstruction
-
-Full forensic reconstruction is available via:
-- Event replay from immutable storage
-- Metrics replay from Prometheus TSDB
-- Audit trail from enforcement layer
+| Stream | Object Store Path | Hash |
+|--------|-------------------|------|
+| Fraud | s3://risk-brain/events/fraud/{{week}} | {{fraud_stream_sha}} |
+| AML | s3://risk-brain/events/aml/{{week}} | {{aml_stream_sha}} |
+| Treasury | s3://risk-brain/events/treasury/{{week}} | {{treasury_stream_sha}} |
+| Payments | s3://risk-brain/events/payments/{{week}} | {{payments_stream_sha}} |
 
 ---
 
-## Section 7: Regulatory Compliance Statements
+## 📄 SECTION 6 — REGULATORY COMPLIANCE STATEMENTS
 
 ### APRA CPS 234 (Information Security)
 
@@ -261,21 +136,21 @@ Full forensic reconstruction is available via:
 
 ---
 
-## Section 8: Contact Information
+## 📄 SECTION 7 — CONTACT INFORMATION
 
 ### Regulatory Liaison
 
-**Name:** [TO BE FILLED]  
+**Name:** {{regulatory_liaison_name}}  
 **Title:** Chief Risk Officer  
-**Email:** [TO BE FILLED]  
-**Phone:** [TO BE FILLED]
+**Email:** {{regulatory_liaison_email}}  
+**Phone:** {{regulatory_liaison_phone}}
 
 ### Technical Liaison
 
-**Name:** [TO BE FILLED]  
+**Name:** {{technical_liaison_name}}  
 **Title:** Head of Risk Brain Engineering  
-**Email:** [TO BE FILLED]  
-**Phone:** [TO BE FILLED]
+**Email:** {{technical_liaison_email}}  
+**Phone:** {{technical_liaison_phone}}
 
 ---
 

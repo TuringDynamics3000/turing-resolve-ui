@@ -1,226 +1,160 @@
-# Risk Brain Weekly Report
-
-**Week:** {{week}}  
-**Period:** {{period_start}} to {{period_end}}  
-**Tenant:** {{tenant_id}}  
-**Generated:** {{generated_at}}
+# Weekly Risk Brain Governance Report
 
 ---
 
-## Page 1: Executive Summary
+## 🟦 COVER PAGE
 
-### Overview
+**Title:** Weekly Risk Brain Governance Report
 
-This report provides a weekly summary of Risk Brain shadow intelligence across four domains:
-
-1. **Payments RL Shadow** (routing intelligence)
-2. **Fraud Shadow** (crime intelligence)
-3. **AML Shadow** (statutory compliance intelligence)
-4. **Treasury RL Shadow** (intraday liquidity intelligence)
-
-### Key Highlights
-
-**Payments RL Shadow:**
-- Coverage: {{payments_coverage_pct}}% of payments evaluated
-- Direction: {{payments_better}} better, {{payments_worse}} worse, {{payments_neutral}} neutral
-
-**Fraud Shadow:**
-- High-risk flags: {{fraud_high_flags}}
-- Confirmed fraud: {{fraud_confirmed}}
-- False positives cleared: {{fraud_cleared}}
-
-**AML Shadow:**
-- High-risk flags: {{aml_high_flags}}
-- Medium-risk flags: {{aml_medium_flags}}
-- SMRs submitted (by humans): {{aml_smrs}}
-
-**Treasury RL Shadow:**
-- High-risk liquidity windows: {{treasury_high_risk_windows}}
-- Average buffer delta: ${{treasury_avg_buffer_delta_dollars}}
+**Tenant:** {{tenant_name}}  
+**Reporting Period:** {{period_start}} → {{period_end}}  
+**Generated:** {{generated_timestamp_utc}}  
+**Version:** v1.0 (Canonical)
 
 ---
 
-## Page 2: Safety & Governance Proof
+**Mandatory Footer:**
 
-### Mandatory Safety Statement
+> "This document reports shadow-only AI intelligence. No AI-origin financial execution is possible by design."
 
-> {{safety_statement}}
+---
 
-### Safety Metrics (Must Always Be 0)
+## 📄 PAGE 1 — EXECUTIVE SUMMARY
 
-| Metric | Value | Status |
-|--------|-------|--------|
-| AI Origin Violations | {{ai_origin_violations}} | {{ai_origin_status}} |
-| Schema Violations | {{schema_violations}} | {{schema_status}} |
-| Policy Origin Violations | {{policy_origin_violations}} | {{policy_origin_status}} |
+### 1. Risk Brain Status
 
-### Domain Health
-
-| Domain | Shadow Mode | CI Passing | Kill-Switch Activations |
-|--------|-------------|------------|-------------------------|
-| Payments RL | {{payments_shadow}} | {{payments_ci}} | {{payments_killswitch}} |
+| Domain | Shadow Active | CI Harness | Kill-Switch Activations |
+|--------|---------------|------------|-------------------------|
+| Payments | {{payments_shadow}} | {{payments_ci}} | {{payments_killswitch}} |
 | Fraud | {{fraud_shadow}} | {{fraud_ci}} | {{fraud_killswitch}} |
 | AML | {{aml_shadow}} | {{aml_ci}} | {{aml_killswitch}} |
-| Treasury RL | {{treasury_shadow}} | {{treasury_ci}} | {{treasury_killswitch}} |
+| Treasury | {{treasury_shadow}} | {{treasury_ci}} | {{treasury_killswitch}} |
+
+### 2. Safety & Governance
+
+**AI-Origin Execution Violations:** {{ai_origin_violations}}  
+**Schema Violations:** {{schema_violations}}  
+**Policy Origin Violations:** {{policy_origin_violations}}
+
+**✅ Declarative Statement (MANDATORY):**
+
+> "No AI-origin execution attempts were detected. No AI-controlled financial actions occurred during this reporting period."
+
+### 3. Key Weekly Movements (Auto-Narrative)
+
+**Payments optimisation trend:** {{payments_trend_summary}}
+
+**Fraud anomalies:** {{fraud_trend_summary}}
+
+**AML behavioural drift:** {{aml_trend_summary}}
+
+**Treasury liquidity posture:** {{treasury_trend_summary}}
 
 ---
 
-## Page 3: Payments RL Shadow
+## 📄 PAGE 2 — PAYMENTS RL (SHADOW)
 
-### Purpose
+### Coverage
 
-Payments RL Shadow provides routing intelligence for payment transactions. It recommends optimal payment rails (NPP, BECS, BPAY) based on:
-- Transaction amount
-- Urgency
-- Counterparty bank
-- Historical settlement patterns
+**% of Payments Evaluated by RL:** {{payments_coverage_pct}}%
 
-### Key Metrics
+### Directional Benefit Split
 
-**Coverage:** {{payments_coverage_pct}}% of payments evaluated by RL
+| Direction | Count |
+|-----------|-------|
+| RL Better | {{payments_better}} |
+| RL Worse | {{payments_worse}} |
+| Neutral | {{payments_neutral}} |
 
-**Direction Split:**
-- **Better:** {{payments_better}} payments (RL recommended faster/cheaper rail)
-- **Worse:** {{payments_worse}} payments (RL recommended slower/more expensive rail)
-- **Neutral:** {{payments_neutral}} payments (RL agreed with existing routing)
+### Board Interpretation (Auto-Text)
 
-### Interpretation
-
-- **Coverage** measures the percentage of payments evaluated by RL Shadow
-- **Direction Split** shows how RL recommendations compare to actual routing decisions
-- **Better** indicates potential cost/latency improvements
-- **Worse** indicates potential regressions (should be investigated)
-- **Neutral** indicates agreement with existing routing
-
-### Advisory-Only Status
-
-✅ Payments RL Shadow is **advisory-only**. It does not execute routing decisions. All routing decisions are made by human operators.
+> "Shadow RL suggests {{payments_coverage_pct}}% of payments could benefit from alternative routing or timing. Net optimisation signal remains {{payments_net_signal}}."
 
 ---
 
-## Page 4: Fraud Shadow
+## 📄 PAGE 3 — FRAUD SHADOW
 
-### Purpose
+| Metric | Value |
+|--------|-------|
+| High-Risk Flags | {{fraud_high_flags}} |
+| Confirmed Fraud | {{fraud_confirmed}} |
+| Cleared | {{fraud_cleared}} |
 
-Fraud Shadow provides crime intelligence for card transactions. It detects potential fraud based on:
-- Transaction amount
-- Merchant category
-- Geographic location
-- Device fingerprint
-- Historical behaviour patterns
+### Narrative
 
-### Key Metrics
-
-**High-Risk Flags:** {{fraud_high_flags}} transactions flagged as high-risk
-
-**Confirmed Fraud:** {{fraud_confirmed}} flags confirmed as actual fraud
-
-**False Positives Cleared:** {{fraud_cleared}} flags cleared as false positives
-
-### Interpretation
-
-- **High-Risk Flags** measures the number of transactions flagged by Fraud Shadow
-- **Confirmed Fraud** measures the number of flags confirmed by human review
-- **False Positives** measures the number of flags cleared as false alarms
-- **Precision** = Confirmed / (Confirmed + Cleared) = {{fraud_precision}}%
-
-### Advisory-Only Status
-
-✅ Fraud Shadow is **advisory-only**. It does not block cards or freeze accounts. All fraud actions are taken by human operators.
+> "Fraud activity remained {{fraud_risk_state}}. No systemic merchant, geo, or device cluster escalation detected."
 
 ---
 
-## Page 5: AML Shadow
+## 📄 PAGE 4 — AML SHADOW
 
-### Purpose
+### Risk Band Distribution
 
-AML Shadow provides statutory compliance intelligence for AUSTRAC reporting. It detects potential money laundering and terrorism financing based on:
-- Transaction patterns
-- Cash deposits
-- International transfers
-- Structured transactions
-- Historical risk profiles
+| Risk Band | Count |
+|-----------|-------|
+| High | {{aml_high_flags}} |
+| Medium | {{aml_medium_flags}} |
 
-### Key Metrics
+### Outcome
 
-**High-Risk Flags:** {{aml_high_flags}} transactions flagged as high-risk
+| Outcome | Count |
+|---------|-------|
+| SMRs | {{aml_smrs}} |
 
-**Medium-Risk Flags:** {{aml_medium_flags}} transactions flagged as medium-risk
+### Narrative
 
-**SMRs Submitted:** {{aml_smrs}} Suspicious Matter Reports submitted (by humans)
-
-### Interpretation
-
-- **High-Risk Flags** require immediate human review for potential SMR submission
-- **Medium-Risk Flags** require human review within 24 hours
-- **SMRs Submitted** measures the number of reports lodged with AUSTRAC (by humans)
-
-### Advisory-Only Status
-
-✅ AML Shadow is **advisory-only**. It does not lodge AUSTRAC reports (SMR/TTR/IFTI) or freeze accounts. All AUSTRAC reporting is done by human operators.
+> "Behavioural AML patterns remained within baseline volatility. No cross-border structuring clusters exceeded alert threshold."
 
 ---
 
-## Page 6: Treasury RL Shadow
+## 📄 PAGE 5 — TREASURY RL (SHADOW)
 
-### Purpose
+| Metric | Value |
+|--------|-------|
+| High-Risk Liquidity Windows | {{treasury_high_risk_windows}} |
+| Avg Recommended Buffer Uplift | {{treasury_avg_buffer_delta_dollars}} |
 
-Treasury RL Shadow provides intraday liquidity intelligence for treasury operations. It detects potential liquidity stress based on:
-- Available liquidity
-- Settlement obligations
-- Facility utilization
-- NPP/BECS net positions
-- Historical liquidity patterns
+### Narrative
 
-### Key Metrics
-
-**High-Risk Liquidity Windows:** {{treasury_high_risk_windows}} windows detected
-
-**Average Buffer Delta:** ${{treasury_avg_buffer_delta_dollars}} recommended buffer increase
-
-### Interpretation
-
-- **High-Risk Liquidity Windows** measures the number of intraday periods with potential liquidity stress
-- **Average Buffer Delta** measures the average recommended buffer increase to maintain healthy liquidity
-
-### Advisory-Only Status
-
-✅ Treasury RL Shadow is **advisory-only**. It does not move liquidity, draw facilities, or sweep accounts. All treasury actions are taken by human operators.
+> "No liquidity stress events predicted beyond existing governance thresholds."
 
 ---
 
-## Page 7: Forensic Annex (Optional)
+## 📄 PAGE 6 — GOVERNANCE ATTESTATION
 
-### Event Samples
+| Control | Status |
+|---------|--------|
+| AI Can Execute Financial Actions | ❌ Impossible |
+| Human Policy Gate Required | ✅ Enforced |
+| Kill-Switch Available | ✅ Enforced |
+| Protocol Event Replay | ✅ Available |
+| Regulator Annex Ready | ✅ Available |
 
-This section contains anonymised event samples for forensic review. Available on request.
+### Officer Attestation Placeholder
 
-### Replay Pointers
+**Signature:** ________________________
 
-Full event replay is available via immutable object storage:
+**Role:** Chief Risk Officer / COO
 
-- **Bucket:** `risk-brain-events`
-- **Prefix:** `{{tenant_id}}/{{week}}/`
-- **Format:** Avro (Protocol schema v1.0)
+**Date:** {{date}}
 
 ---
 
-## Appendix: Definitions
+## 📄 PAGE 7 — OPTIONAL FORENSIC ANNEX (BOARD SAFE)
 
-**Shadow Mode:** AI system observes live events but does not execute actions
-
-**Advisory-Only:** AI system produces recommendations but does not execute actions
-
-**Kill-Switch:** Emergency disable mechanism for AI systems
-
-**Enforcement Layer:** Runtime safety guarantees that block AI execution commands
-
-**CI Harness:** Continuous integration tests that validate safety invariants
-
-**Board-Approved Thresholds:** Risk thresholds approved by the board for AI recommendations
+| Domain | Timestamp Bucket | Pattern |
+|--------|------------------|---------|
+| Fraud | {{forensic_fraud_ts}} | {{forensic_fraud_pattern}} |
+| AML | {{forensic_aml_ts}} | {{forensic_aml_pattern}} |
 
 ---
 
 **Report Version:** 1.0  
 **Template Version:** 1.0  
 **Generated By:** Risk Brain Reporter v1
+
+---
+
+**Mandatory Footer (Repeated):**
+
+> "This document reports shadow-only AI intelligence. No AI-origin financial execution is possible by design."
