@@ -4,6 +4,14 @@ global:
 
 scrape_configs:
 
+  # Synthetic metrics generator (demo traffic)
+  - job_name: "risk-brain-metrics-generator"
+    static_configs:
+      - targets: ["metrics-generator:9100"]
+        labels:
+          service: "metrics-generator"
+          environment: "demo"
+
   # UI Gateway (mock metrics)
   - job_name: "risk-brain-ui-gateway"
     static_configs:

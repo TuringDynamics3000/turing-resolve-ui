@@ -50,6 +50,20 @@ services:
       - "9090:9090"
 
   # -------------------------
+  # METRICS GENERATOR (SYNTHETIC)
+  # -------------------------
+  metrics-generator:
+    image: python:3.11-slim
+    container_name: risk-brain-metrics-generator
+    working_dir: /app
+    volumes:
+      - ./demo/metrics-generator:/app
+    command: sh -c "pip install -q -r requirements.txt && python generator.py"
+    ports:
+      - "9100:9100"  # Prometheus metrics
+      - "9200:9200"  # Demo traffic control API
+
+  # -------------------------
   # GRAFANA (DASHBOARDS)
   # -------------------------
   grafana:
@@ -67,3 +81,4 @@ services:
       - "3001:3000"
     depends_on:
       - prometheus
+      - metrics-generator

@@ -105,6 +105,24 @@ docker compose -f docker-compose.demo.yml up
 
 ---
 
+## 🎛️ Demo Traffic Control
+
+**Live mode switching** for controlled demo narratives:
+
+```bash
+# Check current mode
+curl http://localhost:9200/mode
+
+# Switch modes (quiet, normal, stressed, crisis)
+curl -X POST http://localhost:9200/mode/stressed
+curl -X POST http://localhost:9200/mode/crisis
+curl -X POST http://localhost:9200/mode/normal
+```
+
+**See [demo/DEMO_CONTROL.md](demo/DEMO_CONTROL.md) for full documentation.**
+
+---
+
 ## 🔧 Advanced Usage
 
 ### Customize Demo Data
