@@ -1,0 +1,447 @@
+# CU-Digital Product Catalog
+#
+# This file contains CU-DIGITAL's actual product configurations.
+# It lives in the CUSTOMER repository (turingcore-cu-digital-twin) because:
+# - Product pricing is CU-specific
+# - Product features are CU-specific
+# - Product eligibility is CU-specific
+#
+# The schema is defined in TuringCore-v3 (domains/product_configuration/product_schema.py)
+# and enforced by the platform.
+
+products:
+  # ========== TRANSACTION ACCOUNTS ==========
+  
+  - code: "TXN_ACCOUNT_BASIC"
+    name: "Everyday Transaction Account"
+    product_type: "DEPOSIT_TRANSACTION"
+    description: "No-fee everyday banking with unlimited transactions"
+    
+    interest_rate:
+      base_rate: 0.0
+      calculation_method: "DAILY_BALANCE"
+    
+    fees:
+      monthly_fee: 0.0
+      atm_fee_domestic: 2.50
+      atm_fee_international: 5.00
+      overdraft_fee: 15.0
+    
+    limits:
+      min_opening_balance: 0.0
+      daily_withdrawal_limit: 2000.0
+      daily_transfer_limit: 10000.0
+    
+    features:
+      supports_npp: true
+      supports_bpay: true
+      supports_apple_pay: true
+      supports_google_pay: true
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  - code: "TXN_ACCOUNT_PREMIUM"
+    name: "Premium Transaction Account"
+    product_type: "DEPOSIT_TRANSACTION"
+    description: "Premium account with travel insurance and fee rebates"
+    
+    interest_rate:
+      base_rate: 0.005
+      calculation_method: "DAILY_BALANCE"
+    
+    fees:
+      monthly_fee: 10.0
+      monthly_fee_waiver_conditions:
+        min_monthly_deposits: 2000.0
+      atm_fee_domestic: 0.0
+      atm_fee_international: 0.0
+    
+    limits:
+      min_opening_balance: 1000.0
+      daily_withdrawal_limit: 5000.0
+      daily_transfer_limit: 50000.0
+    
+    features:
+      supports_npp: true
+      supports_bpay: true
+      supports_apple_pay: true
+      supports_google_pay: true
+      supports_international_transfers: true
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  # ========== SAVINGS ACCOUNTS ==========
+  
+  - code: "SAVINGS_STANDARD"
+    name: "Online Saver"
+    product_type: "DEPOSIT_SAVINGS"
+    description: "High-interest savings with bonus rate for regular deposits"
+    
+    interest_rate:
+      base_rate: 0.015
+      bonus_rate: 0.030
+      bonus_conditions:
+        min_monthly_deposit: 200.0
+        max_monthly_withdrawals: 1
+      calculation_method: "DAILY_BALANCE"
+    
+    fees:
+      monthly_fee: 0.0
+    
+    limits:
+      min_opening_balance: 0.0
+      max_balance: 250000.0
+    
+    features:
+      supports_npp: true
+      supports_bpay: true
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  - code: "SAVINGS_YOUTH"
+    name: "Youth Saver"
+    product_type: "DEPOSIT_SAVINGS"
+    description: "High-interest savings for members under 25"
+    
+    interest_rate:
+      base_rate: 0.040
+      calculation_method: "DAILY_BALANCE"
+    
+    fees:
+      monthly_fee: 0.0
+    
+    limits:
+      min_opening_balance: 0.0
+      max_balance: 50000.0
+    
+    features:
+      supports_npp: true
+    
+    constraints:
+      overdraft_allowed: false
+      age_restricted: true
+      max_age_for_product: 25
+    
+    active: true
+
+  # ========== TERM DEPOSITS ==========
+  
+  - code: "TERM_3M"
+    name: "3 Month Term Deposit"
+    product_type: "DEPOSIT_TERM"
+    description: "Fixed rate term deposit for 3 months"
+    
+    interest_rate:
+      base_rate: 0.038
+      calculation_method: "SIMPLE"
+    
+    fees:
+      monthly_fee: 0.0
+    
+    limits:
+      min_opening_balance: 1000.0
+      max_balance: 2000000.0
+      min_term_months: 3
+      max_term_months: 3
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  - code: "TERM_6M"
+    name: "6 Month Term Deposit"
+    product_type: "DEPOSIT_TERM"
+    description: "Fixed rate term deposit for 6 months"
+    
+    interest_rate:
+      base_rate: 0.045
+      calculation_method: "SIMPLE"
+    
+    fees:
+      monthly_fee: 0.0
+    
+    limits:
+      min_opening_balance: 1000.0
+      max_balance: 2000000.0
+      min_term_months: 6
+      max_term_months: 6
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  - code: "TERM_12M"
+    name: "12 Month Term Deposit"
+    product_type: "DEPOSIT_TERM"
+    description: "Fixed rate term deposit for 12 months"
+    
+    interest_rate:
+      base_rate: 0.050
+      calculation_method: "SIMPLE"
+    
+    fees:
+      monthly_fee: 0.0
+    
+    limits:
+      min_opening_balance: 1000.0
+      max_balance: 2000000.0
+      min_term_months: 12
+      max_term_months: 12
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  # ========== PERSONAL LOANS ==========
+  
+  - code: "PL_CLASSIC"
+    name: "Personal Loan Classic"
+    product_type: "LOAN_PERSONAL"
+    description: "Unsecured personal loan for general purposes"
+    
+    interest_rate:
+      base_rate: 0.1199
+      calculation_method: "COMPOUND"
+      compounding_frequency_days: 30
+    
+    fees:
+      monthly_fee: 10.0
+    
+    limits:
+      min_loan_amount: 2000.0
+      max_loan_amount: 50000.0
+      min_term_months: 12
+      max_term_months: 60
+    
+    credit_criteria:
+      min_age: 18
+      max_age: 75
+      min_income_annual: 30000.0
+      min_credit_score: 600
+      max_dti_ratio: 0.40
+      employment_required: true
+    
+    loan_config:
+      amortisation_method: "PRINCIPAL_AND_INTEREST"
+      repayment_frequency_days: 30
+      establishment_fee: 250.0
+      early_repayment_fee: 0.0
+    
+    features:
+      supports_redraw: false
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  - code: "PL_GREEN"
+    name: "Green Personal Loan"
+    product_type: "LOAN_PERSONAL"
+    description: "Discounted rate for solar panels, EVs, and energy efficiency"
+    
+    interest_rate:
+      base_rate: 0.0899
+      calculation_method: "COMPOUND"
+      compounding_frequency_days: 30
+    
+    fees:
+      monthly_fee: 5.0
+    
+    limits:
+      min_loan_amount: 5000.0
+      max_loan_amount: 75000.0
+      min_term_months: 12
+      max_term_months: 84
+    
+    credit_criteria:
+      min_age: 18
+      max_age: 75
+      min_income_annual: 40000.0
+      min_credit_score: 650
+      max_dti_ratio: 0.35
+      employment_required: true
+    
+    loan_config:
+      amortisation_method: "PRINCIPAL_AND_INTEREST"
+      repayment_frequency_days: 30
+      establishment_fee: 150.0
+      early_repayment_fee: 0.0
+    
+    features:
+      supports_redraw: false
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  # ========== HOME LOANS ==========
+  
+  - code: "HOME_VARIABLE"
+    name: "Home Loan Variable"
+    product_type: "LOAN_HOME"
+    description: "Variable rate owner-occupier home loan"
+    
+    interest_rate:
+      base_rate: 0.0629
+      calculation_method: "COMPOUND"
+      compounding_frequency_days: 30
+    
+    fees:
+      monthly_fee: 15.0
+    
+    limits:
+      min_loan_amount: 100000.0
+      max_loan_amount: 2000000.0
+      min_term_months: 60
+      max_term_months: 360
+    
+    credit_criteria:
+      min_age: 21
+      max_age: 65
+      min_income_annual: 60000.0
+      min_credit_score: 700
+      max_dti_ratio: 0.30
+      employment_required: true
+    
+    loan_config:
+      amortisation_method: "PRINCIPAL_AND_INTEREST"
+      repayment_frequency_days: 30
+      establishment_fee: 600.0
+      early_repayment_fee: 0.0
+      ongoing_fee_monthly: 15.0
+    
+    features:
+      supports_redraw: true
+      supports_offset: true
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  - code: "HOME_FIXED_3Y"
+    name: "Home Loan Fixed 3 Year"
+    product_type: "LOAN_HOME"
+    description: "Fixed rate owner-occupier home loan for 3 years"
+    
+    interest_rate:
+      base_rate: 0.0599
+      calculation_method: "COMPOUND"
+      compounding_frequency_days: 30
+    
+    fees:
+      monthly_fee: 15.0
+    
+    limits:
+      min_loan_amount: 100000.0
+      max_loan_amount: 2000000.0
+      min_term_months: 60
+      max_term_months: 360
+    
+    credit_criteria:
+      min_age: 21
+      max_age: 65
+      min_income_annual: 60000.0
+      min_credit_score: 700
+      max_dti_ratio: 0.30
+      employment_required: true
+    
+    loan_config:
+      amortisation_method: "PRINCIPAL_AND_INTEREST"
+      repayment_frequency_days: 30
+      establishment_fee: 600.0
+      early_repayment_fee: 2000.0
+      ongoing_fee_monthly: 15.0
+    
+    features:
+      supports_redraw: false
+      supports_offset: false
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  # ========== CREDIT CARDS ==========
+  
+  - code: "CARD_LOW_RATE"
+    name: "Low Rate Credit Card"
+    product_type: "CARD_CREDIT"
+    description: "Low interest rate credit card with no annual fee"
+    
+    interest_rate:
+      base_rate: 0.1299
+      calculation_method: "DAILY_BALANCE"
+    
+    fees:
+      monthly_fee: 0.0
+      late_payment_fee: 25.0
+    
+    limits:
+      min_loan_amount: 500.0
+      max_loan_amount: 20000.0
+    
+    credit_criteria:
+      min_age: 18
+      max_age: 75
+      min_income_annual: 25000.0
+      min_credit_score: 550
+      max_dti_ratio: 0.50
+    
+    features:
+      supports_apple_pay: true
+      supports_google_pay: true
+      supports_international_transfers: true
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
+
+  - code: "CARD_REWARDS"
+    name: "Rewards Credit Card"
+    product_type: "CARD_CREDIT"
+    description: "Premium rewards card with 1.5 points per dollar"
+    
+    interest_rate:
+      base_rate: 0.1999
+      calculation_method: "DAILY_BALANCE"
+    
+    fees:
+      monthly_fee: 12.50
+      late_payment_fee: 30.0
+    
+    limits:
+      min_loan_amount: 1000.0
+      max_loan_amount: 50000.0
+    
+    credit_criteria:
+      min_age: 18
+      max_age: 75
+      min_income_annual: 50000.0
+      min_credit_score: 650
+      max_dti_ratio: 0.40
+    
+    features:
+      supports_apple_pay: true
+      supports_google_pay: true
+      supports_international_transfers: true
+    
+    constraints:
+      overdraft_allowed: false
+    
+    active: true
