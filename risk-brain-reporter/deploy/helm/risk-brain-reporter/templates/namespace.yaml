@@ -1,0 +1,15 @@
+# Risk Brain Reporter — Kubernetes Namespace
+#
+# This namespace isolates Risk Brain Reporter from other services.
+#
+# Author: TuringCore National Infrastructure Team
+# Version: 1.0
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: risk-brain-reporter
+  labels:
+    system: risk-brain
+    tier: governance
+    environment: prod

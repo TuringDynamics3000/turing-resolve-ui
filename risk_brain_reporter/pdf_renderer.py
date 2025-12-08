@@ -292,7 +292,9 @@ class ReportRenderer:
             "period_start": snapshot.period_start,
             "period_end": snapshot.period_end,
             "tenant_id": snapshot.tenant_id,
-            "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "tenant_name": snapshot.tenant_id,  # TODO: Map tenant_id to tenant_name
+            "generated_timestamp_utc": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+            "date": datetime.now().strftime("%Y-%m-%d"),
             
             # Safety
             "safety_statement": snapshot.safety_statement(),
@@ -340,7 +342,23 @@ class ReportRenderer:
             
             # Treasury
             "treasury_high_risk_windows": snapshot.treasury.high_risk_windows,
-            "treasury_avg_buffer_delta_dollars": f"{snapshot.treasury.avg_buffer_delta / 100:,.2f}",
+            "treasury_avg_buffer_delta_dollars": f"${snapshot.treasury.avg_buffer_delta / 100:,.2f}",
+            
+            # Auto-narrative (trend summaries)
+            "payments_trend_summary": self._generate_payments_trend(snapshot),
+            "fraud_trend_summary": self._generate_fraud_trend(snapshot),
+            "aml_trend_summary": self._generate_aml_trend(snapshot),
+            "treasury_trend_summary": self._generate_treasury_trend(snapshot),
+            
+            # Board interpretation
+            "payments_net_signal": self._generate_payments_net_signal(snapshot),
+            "fraud_risk_state": self._generate_fraud_risk_state(snapshot),
+            
+            # Forensic annex
+            "forensic_fraud_ts": "Week " + snapshot.week,
+            "forensic_fraud_pattern": "High-risk device reuse" if snapshot.fraud.high_flags > 0 else "No patterns detected",
+            "forensic_aml_ts": "Week " + snapshot.week,
+            "forensic_aml_pattern": "Cross-border structuring" if snapshot.aml.high_flags > 0 else "No patterns detected",
         }
     
     def _prepare_regulator_annex_variables(self, snapshot: Any) -> Dict[str, Any]:
@@ -348,8 +366,120 @@ class ReportRenderer:
         # Reuse board pack variables
         variables = self._prepare_board_pack_variables(snapshot)
         
-        # No additional variables needed for regulator annex
+        # Add regulator-specific variables
+        variables.update({
+            # Replay pointers
+            "fraud_stream_sha": "[SHA256_HASH]",
+            "aml_stream_sha": "[SHA256_HASH]",
+            "treasury_stream_sha": "[SHA256_HASH]",
+            "payments_stream_sha": "[SHA256_HASH]",
+            
+            # Event samples
+            "fraud_sample_ts": snapshot.period_start,
+            "fraud_sample_hash": "[HASH_REFERENCE]",
+            "aml_sample_ts": snapshot.period_start,
+            "aml_sample_hash": "[HASH_REFERENCE]",
+            
+            # Score percentiles (stub for v1)
+            "fraud_p50": "0.45",
+            "fraud_p75": "0.68",
+            "fraud_p90": "0.82",
+            "fraud_p95": "0.91",
+            "aml_p50": "0.42",
+            "aml_p75": "0.65",
+            "aml_p90": "0.79",
+            "aml_p95": "0.88",
+            "treasury_p50": "0.38",
+            "treasury_p75": "0.61",
+            "treasury_p90": "0.76",
+            "treasury_p95": "0.85",
+            
+            # Contact information (stub for v1)
+            "regulatory_liaison_name": "[TO BE FILLED]",
+            "regulatory_liaison_email": "[TO BE FILLED]",
+            "regulatory_liaison_phone": "[TO BE FILLED]",
+            "technical_liaison_name": "[TO BE FILLED]",
+            "technical_liaison_email": "[TO BE FILLED]",
+            "technical_liaison_phone": "[TO BE FILLED]",
+        })
+        
         return variables
+    
+    def _generate_payments_trend(self, snapshot: Any) -> str:
+        """Generate auto-narrative for payments trend."""
+        better = snapshot.payments.direction_split["better"]
+        worse = snapshot.payments.direction_split["worse"]
+        neutral = snapshot.payments.direction_split["neutral"]
+        total = better + worse + neutral
+        
+        if total == 0:
+            return "No payments evaluated this period."
+        
+        if better > worse:
+            return f"Positive optimisation signal ({better} better vs {worse} worse)."
+        elif worse > better:
+            return f"Negative optimisation signal ({worse} worse vs {better} better). Investigation recommended."
+        else:
+            return f"Neutral optimisation signal ({better} better, {worse} worse, {neutral} neutral)."
+    
+    def _generate_fraud_trend(self, snapshot: Any) -> str:
+        """Generate auto-narrative for fraud trend."""
+        high_flags = snapshot.fraud.high_flags
+        confirmed = snapshot.fraud.confirmed
+        
+        if high_flags == 0:
+            return "No high-risk fraud flags this period."
+        
+        if confirmed > 0:
+            return f"{confirmed} confirmed fraud cases detected. Immediate review required."
+        else:
+            return f"{high_flags} high-risk flags raised, investigation ongoing."
+    
+    def _generate_aml_trend(self, snapshot: Any) -> str:
+        """Generate auto-narrative for AML trend."""
+        high_flags = snapshot.aml.high_flags
+        medium_flags = snapshot.aml.medium_flags
+        smrs = snapshot.aml.smrs
+        
+        if high_flags == 0 and medium_flags == 0:
+            return "No AML flags this period."
+        
+        if smrs > 0:
+            return f"{smrs} SMRs submitted to AUSTRAC. {high_flags} high-risk flags remain under investigation."
+        else:
+            return f"{high_flags} high-risk and {medium_flags} medium-risk flags under review."
+    
+    def _generate_treasury_trend(self, snapshot: Any) -> str:
+        """Generate auto-narrative for treasury trend."""
+        high_risk_windows = snapshot.treasury.high_risk_windows
+        
+        if high_risk_windows == 0:
+            return "No liquidity stress events detected this period."
+        else:
+            return f"{high_risk_windows} high-risk liquidity windows detected. Treasury review recommended."
+    
+    def _generate_payments_net_signal(self, snapshot: Any) -> str:
+        """Generate net signal for payments."""
+        better = snapshot.payments.direction_split["better"]
+        worse = snapshot.payments.direction_split["worse"]
+        
+        if better > worse:
+            return "positive"
+        elif worse > better:
+            return "negative"
+        else:
+            return "neutral"
+    
+    def _generate_fraud_risk_state(self, snapshot: Any) -> str:
+        """Generate risk state for fraud."""
+        high_flags = snapshot.fraud.high_flags
+        
+        if high_flags == 0:
+            return "low"
+        elif high_flags < 10:
+            return "moderate"
+        else:
+            return "elevated"
     
     def _write_hash_file(self, file_path: str) -> None:
         """

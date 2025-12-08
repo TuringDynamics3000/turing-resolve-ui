@@ -1,0 +1,233 @@
+# PromQL Query Manifest v1
+# 
+# This file declares all Prometheus queries used by Risk Brain Reporter.
+# No inline ad-hoc PromQL is permitted in code.
+#
+# Version: 1.0
+# Last Updated: 2025-12-08
+
+version: 1.0
+
+# Safety Metrics (Must Always Be 0)
+safety_metrics:
+  ai_origin_violations:
+    metric: risk_brain_ai_origin_block_violations_total
+    window: 7d
+    group_by: [domain]
+    aggregation: increase
+    query: 'increase(risk_brain_ai_origin_block_violations_total{tenant_id="{{tenant_id}}"}[7d])'
+    
+  schema_violations:
+    metric: risk_brain_schema_version_violations_total
+    window: 7d
+    group_by: [domain]
+    aggregation: increase
+    query: 'increase(risk_brain_schema_version_violations_total{tenant_id="{{tenant_id}}"}[7d])'
+    
+  policy_origin_violations:
+    metric: risk_brain_policy_origin_violations_total
+    window: 7d
+    group_by: [domain]
+    aggregation: increase
+    query: 'increase(risk_brain_policy_origin_violations_total{tenant_id="{{tenant_id}}"}[7d])'
+
+# Health Metrics
+health_metrics:
+  shadow_enabled:
+    metric: risk_brain_shadow_enabled
+    window: instant
+    group_by: [domain, tenant_id]
+    aggregation: last
+    query: 'risk_brain_shadow_enabled{tenant_id="{{tenant_id}}", domain="{{domain}}"}'
+    
+  ci_pass:
+    metric: risk_brain_harness_ci_pass
+    window: instant
+    group_by: [domain]
+    aggregation: last
+    query: 'risk_brain_harness_ci_pass{domain="{{domain}}"}'
+    
+  killswitch_activations:
+    metric: risk_brain_killswitch_activations_total
+    window: 7d
+    group_by: [domain]
+    aggregation: increase
+    query: 'increase(risk_brain_killswitch_activations_total{tenant_id="{{tenant_id}}", domain="{{domain}}"}[7d])'
+
+# Payments RL Metrics
+payments_metrics:
+  policy_evaluated:
+    metric: payments_rl_policy_evaluated_total
+    window: 7d
+    group_by: [tenant_id]
+    aggregation: increase
+    query: 'increase(payments_rl_policy_evaluated_total{tenant_id="{{tenant_id}}"}[7d])'
+    
+  advisory_direction:
+    metric: payments_rl_advisory_direction_total
+    window: 7d
+    group_by: [direction, tenant_id]
+    aggregation: increase
+    query: 'increase(payments_rl_advisory_direction_total{tenant_id="{{tenant_id}}", direction="{{direction}}"}[7d])'
+    
+  coverage:
+    metric: payments_rl_coverage_pct
+    window: instant
+    group_by: [tenant_id]
+    aggregation: avg
+    query: 'avg_over_time(payments_rl_coverage_pct{tenant_id="{{tenant_id}}"}[7d])'
+
+# Fraud Metrics
+fraud_metrics:
+  risk_flag_raised:
+    metric: fraud_risk_flag_raised_total
+    window: 7d
+    group_by: [risk_band, tenant_id]
+    aggregation: increase
+    query: 'increase(fraud_risk_flag_raised_total{tenant_id="{{tenant_id}}", risk_band="{{risk_band}}"}[7d])'
+    
+  flags_outcome:
+    metric: fraud_flags_total
+    window: 7d
+    group_by: [outcome, tenant_id]
+    aggregation: increase
+    query: 'increase(fraud_flags_total{tenant_id="{{tenant_id}}", outcome="{{outcome}}"}[7d])'
+
+# AML Metrics
+aml_metrics:
+  risk_flag_raised:
+    metric: aml_risk_flag_raised_total
+    window: 7d
+    group_by: [risk_band, tenant_id]
+    aggregation: increase
+    query: 'increase(aml_risk_flag_raised_total{tenant_id="{{tenant_id}}", risk_band="{{risk_band}}"}[7d])'
+    
+  flags_outcome:
+    metric: aml_flags_total
+    window: 7d
+    group_by: [outcome, tenant_id]
+    aggregation: increase
+    query: 'increase(aml_flags_total{tenant_id="{{tenant_id}}", outcome="{{outcome}}"}[7d])'
+    
+  smrs_submitted:
+    metric: aml_smrs_submitted_total
+    window: 7d
+    group_by: [tenant_id]
+    aggregation: increase
+    query: 'increase(aml_smrs_submitted_total{tenant_id="{{tenant_id}}"}[7d])'
+
+# Treasury Metrics
+treasury_metrics:
+  risk_advisories:
+    metric: treasury_risk_advisories_total
+    window: 7d
+    group_by: [risk_band, tenant_id]
+    aggregation: increase
+    query: 'increase(treasury_risk_advisories_total{tenant_id="{{tenant_id}}", risk_band="{{risk_band}}"}[7d])'
+    
+  recommended_buffer_delta:
+    metric: treasury_recommended_buffer_delta_cents
+    window: 7d
+    group_by: [tenant_id]
+    aggregation: avg
+    query: 'avg_over_time(treasury_recommended_buffer_delta_cents{tenant_id="{{tenant_id}}"}[7d])'
+
+# Query Validation Rules
+validation_rules:
+  - name: no_inline_queries
+    description: All queries must be declared in this manifest
+    enforcement: CI test must fail if inline PromQL detected in code
+    
+  - name: tenant_id_required
+    description: All queries must include tenant_id filter
+    enforcement: CI test must fail if tenant_id not in query
+    
+  - name: window_required
+    description: All queries must specify time window (7d or instant)
+    enforcement: CI test must fail if window not specified
+    
+  - name: aggregation_required
+    description: All queries must specify aggregation function
+    enforcement: CI test must fail if aggregation not specified
+
+# Metric Export Requirements
+export_requirements:
+  - metric: risk_brain_ai_origin_block_violations_total
+    type: counter
+    labels: [domain, tenant_id]
+    description: AI origin block violations (must always be 0)
+    
+  - metric: risk_brain_schema_version_violations_total
+    type: counter
+    labels: [domain, tenant_id]
+    description: Schema version violations (must always be 0)
+    
+  - metric: risk_brain_policy_origin_violations_total
+    type: counter
+    labels: [domain, tenant_id]
+    description: Policy origin violations (must always be 0)
+    
+  - metric: risk_brain_shadow_enabled
+    type: gauge
+    labels: [domain, tenant_id]
+    description: Shadow mode enabled (1 = enabled, 0 = disabled)
+    
+  - metric: risk_brain_harness_ci_pass
+    type: gauge
+    labels: [domain]
+    description: CI harness pass status (1 = pass, 0 = fail)
+    
+  - metric: risk_brain_killswitch_activations_total
+    type: counter
+    labels: [domain, tenant_id]
+    description: Kill-switch activations
+    
+  - metric: payments_rl_policy_evaluated_total
+    type: counter
+    labels: [tenant_id]
+    description: Payments RL policy evaluations
+    
+  - metric: payments_rl_advisory_direction_total
+    type: counter
+    labels: [direction, tenant_id]
+    description: Payments RL advisory direction (better/worse/neutral)
+    
+  - metric: payments_rl_coverage_pct
+    type: gauge
+    labels: [tenant_id]
+    description: Payments RL coverage percentage
+    
+  - metric: fraud_risk_flag_raised_total
+    type: counter
+    labels: [risk_band, tenant_id]
+    description: Fraud risk flags raised
+    
+  - metric: fraud_flags_total
+    type: counter
+    labels: [outcome, tenant_id]
+    description: Fraud flag outcomes (confirmed/cleared)
+    
+  - metric: aml_risk_flag_raised_total
+    type: counter
+    labels: [risk_band, tenant_id]
+    description: AML risk flags raised
+    
+  - metric: aml_flags_total
+    type: counter
+    labels: [outcome, tenant_id]
+    description: AML flag outcomes (smr/cleared)
+    
+  - metric: aml_smrs_submitted_total
+    type: counter
+    labels: [tenant_id]
+    description: SMRs submitted to AUSTRAC
+    
+  - metric: treasury_risk_advisories_total
+    type: counter
+    labels: [risk_band, tenant_id]
+    description: Treasury risk advisories issued
+    
+  - metric: treasury_recommended_buffer_delta_cents
+    type: gauge
+    labels: [tenant_id]
+    description: Recommended buffer delta (cents)
