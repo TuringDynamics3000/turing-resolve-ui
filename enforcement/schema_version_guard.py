@@ -51,6 +51,7 @@ PINNED_SCHEMAS = {
     "AmlRiskScoreProduced": "1.0",
     "AmlSignalDetected": "1.0",
     "AmlAdvisoryIssued": "1.0",
+    "AmlRiskFlagRaised": "1.0",
     
     # Hardship detection
     "HardshipRiskScoreProduced": "1.0",
