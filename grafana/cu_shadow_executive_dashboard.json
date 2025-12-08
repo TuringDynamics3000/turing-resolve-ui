@@ -1,0 +1,366 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "cu-shadow-exec",
+    "title": "TuringCore – CU Shadow Migration Executive Dashboard",
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "tags": ["shadow", "cutover", "cps230", "credit-union"],
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "tenant",
+          "type": "query",
+          "label": "Shadow Tenant",
+          "query": "label_values(shadow_status, tenant)",
+          "current": {
+            "text": "CU_ALPHA_SHADOW",
+            "value": "CU_ALPHA_SHADOW"
+          }
+        }
+      ]
+    },
+    "panels": [
+      {
+        "type": "stat",
+        "title": "Shadow Health Status",
+        "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_status{tenant=\"$tenant\"}",
+            "legendFormat": "Status"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "RED", "color": "red" }, "1": { "text": "GREEN", "color": "green" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Transaction Delta",
+        "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_transaction_delta{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Balance Mismatches",
+        "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_balance_mismatches{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "GL Delta ($)",
+        "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_gl_delta{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Consecutive GREEN Days",
+        "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_consecutive_green_days{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 15 },
+                { "color": "green", "value": 30 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Product Invariants",
+        "gridPos": { "x": 0, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_product_invariant_pass{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "FAIL", "color": "red" }, "1": { "text": "PASS", "color": "green" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Ledger Invariants",
+        "gridPos": { "x": 4, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_ledger_invariant_pass{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "FAIL", "color": "red" }, "1": { "text": "PASS", "color": "green" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "CPS-230 Data Integrity",
+        "gridPos": { "x": 8, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_cps230_integrity{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "FAIL", "color": "red" }, "1": { "text": "PASS", "color": "green" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "CPS-230 RTO (Hours)",
+        "gridPos": { "x": 12, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_cps230_rto_hours{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "h",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 4 },
+                { "color": "red", "value": 6 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Interest Delta ($)",
+        "gridPos": { "x": 16, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_interest_delta{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "gauge",
+        "title": "Cutover Readiness Score",
+        "gridPos": { "x": 0, "y": 8, "w": 8, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_cutover_score{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 70 },
+                { "color": "green", "value": 90 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Shadow GL Delta Over Time",
+        "gridPos": { "x": 8, "y": 8, "w": 12, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_gl_delta{tenant=\"$tenant\"}",
+            "legendFormat": "GL Delta"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Transaction Mirroring Rate",
+        "gridPos": { "x": 0, "y": 14, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "rate(shadow_transactions_mirrored_total{tenant=\"$tenant\"}[5m])",
+            "legendFormat": "Transactions/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Invariant Violations Over Time",
+        "gridPos": { "x": 10, "y": 14, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_product_invariant_violations{tenant=\"$tenant\"}",
+            "legendFormat": "Product Invariants"
+          },
+          {
+            "expr": "shadow_ledger_invariant_violations{tenant=\"$tenant\"}",
+            "legendFormat": "Ledger Invariants"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "type": "table",
+        "title": "Cutover Gate Checklist",
+        "gridPos": { "x": 0, "y": 20, "w": 20, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_cutover_gate_30_days{tenant=\"$tenant\"}",
+            "legendFormat": "30 Consecutive GREEN Days",
+            "format": "table"
+          },
+          {
+            "expr": "shadow_cutover_gate_gl_zero{tenant=\"$tenant\"}",
+            "legendFormat": "Zero GL Variance",
+            "format": "table"
+          },
+          {
+            "expr": "shadow_cutover_gate_product_zero{tenant=\"$tenant\"}",
+            "legendFormat": "Zero Product Breaches",
+            "format": "table"
+          },
+          {
+            "expr": "shadow_cutover_gate_ledger_zero{tenant=\"$tenant\"}",
+            "legendFormat": "Zero Ledger Breaches",
+            "format": "table"
+          },
+          {
+            "expr": "shadow_cutover_gate_change_freeze{tenant=\"$tenant\"}",
+            "legendFormat": "Change Freeze Active",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge"
+          }
+        ]
+      }
+    ]
+  }
+}
