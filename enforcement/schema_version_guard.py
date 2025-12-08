@@ -45,11 +45,13 @@ PINNED_SCHEMAS = {
     "FraudRiskScoreProduced": "1.0",
     "FraudSignalDetected": "1.0",
     "FraudAdvisoryIssued": "1.0",
+    "FraudRiskFlagRaised": "1.0",
     
     # AML compliance
     "AmlRiskScoreProduced": "1.0",
     "AmlSignalDetected": "1.0",
     "AmlAdvisoryIssued": "1.0",
+    "AmlRiskFlagRaised": "1.0",
     
     # Hardship detection
     "HardshipRiskScoreProduced": "1.0",
