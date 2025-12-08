@@ -1,0 +1,58 @@
+# Risk Brain Reporter — Kubernetes CronJob (Weekly Board Pack)
+#
+# This CronJob runs every Sunday at 23:00 UTC to generate weekly board packs
+# for all tenants.
+#
+# Author: TuringCore National Infrastructure Team
+# Version: 1.0
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: risk-brain-weekly
+  namespace: risk-brain-reporter
+  labels:
+    app: risk-brain-reporter
+    component: cronjob
+spec:
+  schedule: "0 23 * * 0"  # Sunday 23:00 UTC
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: risk-brain-reporter
+            component: cronjob
+        spec:
+          serviceAccountName: risk-brain-reporter-sa
+          restartPolicy: Never
+          containers:
+            - name: reporter
+              image: risk-brain-reporter:latest
+              imagePullPolicy: Always
+              command:
+                - python3
+                - -m
+                - reporter
+              args:
+                - run-weekly
+              env:
+                - name: PROMETHEUS_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: reporter-secrets
+                      key: prom_url
+                - name: S3_BUCKET
+                  value: risk-brain-reports-prod
+                - name: ENVIRONMENT
+                  value: prod
+              resources:
+                requests:
+                  memory: "512Mi"
+                  cpu: "500m"
+                limits:
+                  memory: "1Gi"
+                  cpu: "1000m"
