@@ -189,7 +189,9 @@ class TuringCoreClient:
         **kwargs: Any,
     ) -> httpx.Response:
         """
-        Perform an HTTP request and record latency for the given op_type.
+        Perform an HTTP request and record latency + outcome for the given op_type.
+        
+        Records success/failure and status code for RTO invariant analysis.
         
         Args:
             method: HTTP method (GET, POST, etc.)
@@ -199,15 +201,39 @@ class TuringCoreClient:
             
         Returns:
             httpx.Response object
+            
+        Raises:
+            httpx.HTTPStatusError: If response has 4xx/5xx status
+            httpx.HTTPError: For network/timeout/connection errors
         """
         start = time.perf_counter()
+        success = False
+        status_code = 0
         try:
             resp = self._client.request(method, url, headers=self._headers(), **kwargs)
+            status_code = resp.status_code
+            # Check for HTTP errors
+            resp.raise_for_status()
+            success = True
+            return resp
+        except httpx.HTTPStatusError as e:
+            # HTTP error (4xx/5xx)
+            resp = e.response
+            if resp is not None:
+                status_code = resp.status_code
+            raise
+        except httpx.HTTPError:
+            # Network/timeout/connection errors
+            raise
         finally:
             duration = time.perf_counter() - start
             if self.latency_recorder is not None:
-                self.latency_recorder.record(op_type, duration)
-        return resp
+                self.latency_recorder.record(
+                    op_type,
+                    duration_seconds=duration,
+                    success=success,
+                    status_code=status_code,
+                )
 
     def submit_command(self, envelope: CommandEnvelope) -> Dict[str, Any]:
         """
