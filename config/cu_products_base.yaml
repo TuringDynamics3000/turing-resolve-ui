@@ -102,6 +102,55 @@ products:
 
   # ========== TERM DEPOSITS ==========
   
+  - product_code: TD_6M
+    name: 6 Month Term Deposit
+    family: TERM_DEPOSIT
+    currency: AUD
+    effective_from: "2025-01-01"
+    effective_to: null
+    status: ACTIVE
+
+    term_deposit_rules:
+      min_term_months: 6
+      max_term_months: 6
+      min_principal: 1000.0
+      allow_break: true
+      break_penalty_bps: 200
+      allow_auto_rollover: true
+
+    interest:
+      applies: true
+      side: CREDIT
+      method: DAILY_SIMPLE
+      accrual_frequency: DAILY
+      posting_frequency: MATURITY
+      base_rate: 0.042
+
+    fees:
+      account_keeping_fee: 0.0
+
+    limits:
+      min_opening_balance: 1000.0
+      min_ongoing_balance: 1000.0
+      max_balance: 2000000.0
+      overdraft_allowed: false
+
+    eligibility:
+      min_age: 18
+      residency_required: true
+
+    accounting:
+      gl_open_debit: GL_CASH_AT_BANK
+      gl_open_credit: GL_MEMBER_DEPOSITS_TERM
+      gl_interest_debit: GL_INTEREST_EXPENSE
+      gl_interest_credit: GL_MEMBER_DEPOSITS_TERM
+      gl_fee_debit: GL_MEMBER_DEPOSITS_TERM
+      gl_fee_credit: GL_FEE_INCOME
+
+    apra_risk_class: RETAIL_DEPOSITS
+    ifrs9_stage: STAGE_1
+    allowed_channels: [BRANCH, ONLINE]
+  
   - product_code: TERM_12M
     name: 12 Month Term Deposit
     family: TERM_DEPOSIT
@@ -109,6 +158,14 @@ products:
     effective_from: "2025-01-01"
     effective_to: null
     status: ACTIVE
+
+    term_deposit_rules:
+      min_term_months: 12
+      max_term_months: 12
+      min_principal: 1000.0
+      allow_break: true
+      break_penalty_bps: 250
+      allow_auto_rollover: true
 
     interest:
       applies: true

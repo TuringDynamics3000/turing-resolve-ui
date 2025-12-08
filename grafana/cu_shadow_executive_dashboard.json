@@ -482,6 +482,134 @@
             "unit": "ops"
           }
         }
+      },
+      {
+        "type": "stat",
+        "title": "Term Deposit Book ($)",
+        "gridPos": { "x": 0, "y": 36, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_td_total_balance{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "TD Maturities (30d)",
+        "gridPos": { "x": 5, "y": 36, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_td_maturities_30d{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 1000000 },
+                { "color": "red", "value": 5000000 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "TD Breaks Today",
+        "gridPos": { "x": 10, "y": 36, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_td_breaks_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 5 },
+                { "color": "red", "value": 20 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Avg TD Cost of Funds %",
+        "gridPos": { "x": 15, "y": 36, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_td_avg_rate{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "TD Maturity Ladder",
+        "gridPos": { "x": 0, "y": 40, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_td_maturity_0_30d{tenant=\"$tenant\"}",
+            "legendFormat": "0-30 days"
+          },
+          {
+            "expr": "shadow_td_maturity_31_60d{tenant=\"$tenant\"}",
+            "legendFormat": "31-60 days"
+          },
+          {
+            "expr": "shadow_td_maturity_61_90d{tenant=\"$tenant\"}",
+            "legendFormat": "61-90 days"
+          },
+          {
+            "expr": "shadow_td_maturity_91_plus{tenant=\"$tenant\"}",
+            "legendFormat": "91+ days"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "TD Book Growth",
+        "gridPos": { "x": 10, "y": 40, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_td_total_balance{tenant=\"$tenant\"}",
+            "legendFormat": "Total TD Book"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
       }
     ]
   }

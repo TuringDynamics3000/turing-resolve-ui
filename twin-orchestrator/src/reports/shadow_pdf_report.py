@@ -282,6 +282,81 @@ def generate_shadow_report(json_path: str, output_pdf: str) -> None:
     
     story.append(Spacer(1, 20))
     
+    # ========== TERM DEPOSIT METRICS (PHASE 2A) ==========
+    story.append(Paragraph("<b>Term Deposit Metrics</b>", styles["Heading2"]))
+    story.append(Spacer(1, 6))
+    
+    td_data = data.get("term_deposits", {})
+    if td_data:
+        td_table = [
+            ["Metric", "UltraData", "TuringCore", "Delta"],
+            [
+                "Total TD Count",
+                td_data.get("ultra_td_count", 0),
+                td_data.get("turing_td_count", 0),
+                td_data.get("td_count_delta", 0)
+            ],
+            [
+                "Total TD Book",
+                f"${td_data.get('ultra_total_balance', 0.0):,.2f}",
+                f"${td_data.get('turing_total_balance', 0.0):,.2f}",
+                f"${td_data.get('balance_delta', 0.0):,.2f}"
+            ],
+            [
+                "Avg Cost of Funds",
+                f"{td_data.get('ultra_avg_rate', 0.0):.2f}%",
+                f"{td_data.get('turing_avg_rate', 0.0):.2f}%",
+                f"{td_data.get('rate_delta', 0.0):.2f}%"
+            ],
+        ]
+        
+        story.append(Table(td_table, style=_table_style()))
+        story.append(Spacer(1, 12))
+        
+        # Maturity ladder
+        ladder = td_data.get("maturity_ladder", {})
+        if ladder:
+            ladder_table = [
+                ["Maturity Bucket", "Amount ($)"],
+                ["0-30 days", f"${ladder.get('0_30_days', 0.0):,.2f}"],
+                ["31-60 days", f"${ladder.get('31_60_days', 0.0):,.2f}"],
+                ["61-90 days", f"${ladder.get('61_90_days', 0.0):,.2f}"],
+                ["91+ days", f"${ladder.get('91_plus_days', 0.0):,.2f}"],
+            ]
+            
+            story.append(Paragraph("<b>Maturity Ladder (30/60/90 days)</b>", styles["Normal"]))
+            story.append(Table(ladder_table, style=_table_style()))
+            story.append(Spacer(1, 12))
+        
+        # TD invariants
+        td_inv = td_data.get("invariants", {})
+        if td_inv:
+            td_inv_rows = [["Invariant", "Status", "Violations"]]
+            
+            inv_names = {
+                "td_principal_locked": "Principal Locked",
+                "td_maturity_payout": "Maturity Payout Correct",
+                "td_break_penalty": "Break Penalty Correct",
+                "td_rollover_integrity": "Rollover Integrity",
+                "td_interest_accrual": "Interest Accrual Correct",
+                "no_premature_maturity": "No Premature Maturity",
+            }
+            
+            for key, display_name in inv_names.items():
+                status = td_inv.get(key, "N/A")
+                violations = "0" if status == "PASS" else "N/A"
+                td_inv_rows.append([display_name, status, violations])
+            
+            story.append(Paragraph("<b>Term Deposit Invariants</b>", styles["Normal"]))
+            story.append(Table(td_inv_rows, style=_table_style()))
+    else:
+        story.append(Paragraph(
+            "Term deposit shadow migration not yet active.",
+            styles["Normal"]
+        ))
+    
+    story.append(Spacer(1, 20))
+    
     # ========== ANOMALIES & EXCEPTIONS ==========
     story.append(Paragraph("<b>Anomalies & Exceptions</b>", styles["Heading2"]))
     story.append(Spacer(1, 6))
