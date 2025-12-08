@@ -45,6 +45,16 @@ from policy_gateway import (
     FORBIDDEN_COMMAND_TYPES
 )
 
+# Import enforcement layer
+from enforced_policy_adapter import (
+    enforce_payments_rl_advisory,
+    enforce_with_audit,
+    get_enforcement_statistics,
+    AiOriginViolation,
+    SchemaVersionViolation,
+    PolicyGatewayViolation
+)
+
 
 # ============================================================================
 # KILL-SWITCH & AUTHORITY GUARD
@@ -99,18 +109,32 @@ def emit_advisory_event(
     - NO PostingCommand
     - NO execution authority
     
+    ENFORCEMENT LAYERS:
+    1. enforce_payments_rl_advisory() - Runtime enforcement (schema, policy, AI origin)
+    2. assert_advisory_only() - Legacy defense in depth
+    
     Args:
         producer: Kafka producer for Protocol events
         advisory_dict: Advisory event dictionary
+        
+    Raises:
+        SchemaVersionViolation: If schema version mismatch (FATAL)
+        PolicyGatewayViolation: If unapproved policy source (FATAL)
+        AiOriginViolation: If AI attempts forbidden action (FATAL)
     """
-    # Double-check advisory-only invariant (defense in depth)
-    assert_advisory_only(advisory_dict)
+    # ENFORCEMENT LAYER: Runtime-enforced safety guarantees
+    # This is the FINAL gate before Kafka emit
+    # If this raises, the process dies (fail-fast)
+    enforced_advisory = enforce_with_audit(advisory_dict)
+    
+    # Legacy defense in depth (should never fail if enforcement passed)
+    assert_advisory_only(enforced_advisory)
     
     # Emit to Protocol bus
-    producer.send("protocol.payments.rl.advisory", advisory_dict)
+    producer.send("protocol.payments.rl.advisory", enforced_advisory)
     
     # Log for observability (non-PII)
-    print(f"✅ RlRoutingAdvisoryIssued: {advisory_dict['payment_id']} → {advisory_dict['recommended_rail']} (confidence={advisory_dict['confidence_score']:.2f})")
+    print(f"✅ RlRoutingAdvisoryIssued: {enforced_advisory['payment_id']} → {enforced_advisory['recommended_rail']} (confidence={enforced_advisory['confidence_score']:.2f})")
 
 
 # ============================================================================
@@ -259,6 +283,9 @@ def main():
                 advisories = evaluate_batch(batch)
                 stats = compute_statistics(batch, advisories)
                 
+                # Get enforcement statistics
+                enforcement_stats = get_enforcement_statistics()
+                
                 emit_statistics(producer, {
                     "timestamp": int(time.time() * 1000),
                     "total_events": stats.total_events,
@@ -267,7 +294,13 @@ def main():
                     "rejected_high_variance": stats.rejected_high_variance,
                     "rejected_invalid_rail": stats.rejected_invalid_rail,
                     "advisory_rate": stats.advisory_rate,
-                    "rejection_rate": stats.rejection_rate
+                    "rejection_rate": stats.rejection_rate,
+                    # Enforcement statistics
+                    "enforcement_checks": enforcement_stats["total_checks"],
+                    "enforcement_pass_rate": enforcement_stats["pass_rate"],
+                    "schema_violations": enforcement_stats["schema_violations"],
+                    "policy_violations": enforcement_stats["policy_violations"],
+                    "ai_origin_violations": enforcement_stats["ai_origin_violations"]
                 })
                 
                 # Reset batch
@@ -278,8 +311,17 @@ def main():
             print(f"⚠️  Missing required field in RL event {event_dict.get('payment_id', 'UNKNOWN')}: {e}")
         except ValueError as e:
             print(f"⚠️  Invalid data in RL event {event_dict.get('payment_id', 'UNKNOWN')}: {e}")
+        except (SchemaVersionViolation, PolicyGatewayViolation, AiOriginViolation) as e:
+            # CRITICAL: Enforcement violation detected
+            print(f"🚨 CRITICAL ENFORCEMENT VIOLATION: {type(e).__name__}")
+            print(f"🚨 {e}")
+            print(f"🚨 Disabling Policy Gateway immediately")
+            os.environ["RISK_BRAIN_POLICY_GATEWAY_ENABLED"] = "false"
+            # Notify emergency contacts
+            print(f"🚨 NOTIFY: APRA, AUSTRAC, board, insurers immediately")
+            break
         except RuntimeError as e:
-            # CRITICAL: Forbidden command detected
+            # CRITICAL: Legacy forbidden command detected
             print(f"🚨 CRITICAL SAFETY BREACH: {e}")
             print(f"🚨 Disabling Policy Gateway immediately")
             os.environ["RISK_BRAIN_POLICY_GATEWAY_ENABLED"] = "false"
