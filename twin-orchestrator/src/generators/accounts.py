@@ -265,6 +265,7 @@ def build_open_account_payloads(
                 "incomeBand": getattr(cust_seed, "income_band", None),
                 "employmentStatus": getattr(cust_seed, "employment_status", None),
                 "source": "CU_DIGITAL_TWIN",
+                "customerExternalRef": plan.customer_external_ref,  # Key for account resolution
             }
 
             payload = {

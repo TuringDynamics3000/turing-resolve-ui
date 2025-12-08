@@ -393,3 +393,11 @@ integrations:
   card_network: "VISA"
   credit_bureau: "EQUIFAX"
   identity_verification: "GREEN_ID"
+
+# General Ledger accounts (for transaction simulation)
+# These are symbolic GL accounts used by the transaction generator
+# In production, these would be real GL accounts in the chart of accounts
+glAccounts:
+  GL_SALARY_CLEARING: "GL_ACC_001"
+  GL_MERCHANT: "GL_ACC_002"
+  GL_BILLER: "GL_ACC_003"

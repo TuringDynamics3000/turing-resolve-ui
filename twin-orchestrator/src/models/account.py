@@ -31,8 +31,12 @@ class AccountHandle:
     
     After calling OpenAccount, we store this handle to track
     the mapping from customer to their accounts.
+    
+    Includes customer_external_ref to enable account resolution
+    mapping for transaction generation.
     """
     
+    customer_external_ref: str
     customer_id: str
     account_id: str
     product_code: str
