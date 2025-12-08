@@ -1,11 +1,12 @@
 name: CI - Platform Guardrails
 
 on:
-  pull_request:
   push:
-  branches:
-    - "**"
-
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - '**'
 
 jobs:
   infra-validation:
@@ -32,22 +33,18 @@ jobs:
         run: terraform validate
 
   docker-sanity:
-    name: Docker Build Sanity
+    name: Docker Compose Validation
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Validate docker-compose
         run: docker compose -f docker-compose.demo.yml config
 
   security-scan:
-    name: Supply Chain & Dependency Scan
+    name: Supply Chain Scan
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
       - name: Trivy FS Scan
         uses: aquasecurity/trivy-action@0.20.0
         with:
