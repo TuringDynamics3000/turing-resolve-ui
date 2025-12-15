@@ -1,8 +1,9 @@
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { fetchDecisionDetail } from "@/lib/api";
+import { fetchDecisionDetail, fetchDecisionEvidence } from "@/lib/api";
 import { Decision } from "@/lib/mockData";
 import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -15,6 +16,7 @@ import {
   Download,
   FileText,
   Shield,
+  ShieldCheck,
   XCircle
 } from "lucide-react";
 import { toast } from "sonner";
@@ -24,14 +26,18 @@ export default function DecisionDetail() {
   const [, params] = useRoute("/decisions/:id");
   const decisionId = params?.id;
   const [decision, setDecision] = useState<Decision | null>(null);
+  const [evidence, setEvidence] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (decisionId) {
-      fetchDecisionDetail(decisionId)
-        .then(setDecision)
-        .catch(console.error)
-        .finally(() => setLoading(false));
+      setLoading(true);
+      Promise.all([
+        fetchDecisionDetail(decisionId).then(setDecision),
+        fetchDecisionEvidence(decisionId).then(setEvidence).catch((e: any) => console.warn("Evidence fetch failed", e))
+      ])
+      .catch(console.error)
+      .finally(() => setLoading(false));
     }
   }, [decisionId]);
 
@@ -100,6 +106,13 @@ export default function DecisionDetail() {
         
         {/* Left Column: Explanation Tree (2/3 width) */}
         <div className="lg:col-span-2 space-y-6">
+        <Tabs defaultValue="explanation">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="explanation">Explanation</TabsTrigger>
+                <TabsTrigger value="evidence">Evidence Pack</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="explanation" className="space-y-6">
           <Card className="border-l-4 border-l-primary">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -152,6 +165,63 @@ export default function DecisionDetail() {
               ))}
             </CardContent>
           </Card>
+          </TabsContent>
+
+          <TabsContent value="evidence">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5 text-green-500" />
+                    Regulator Evidence Pack
+                </CardTitle>
+                <div className="text-sm text-muted-foreground">Cryptographically verifiable audit trail</div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {evidence ? (
+                    <>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="p-4 bg-muted/50 rounded-lg">
+                                <div className="text-sm font-medium text-muted-foreground mb-1">Replay Hash (SHA-256)</div>
+                                <code className="text-xs break-all font-mono text-primary">{evidence.replay_hash}</code>
+                            </div>
+                            <div className="p-4 bg-muted/50 rounded-lg">
+                                <div className="text-sm font-medium text-muted-foreground mb-1">Schema Version</div>
+                                <div className="font-mono">{evidence.manifest?.schema_version}</div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 className="text-sm font-medium mb-3">Manifest Components</h4>
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-sm p-2 border rounded">
+                                    <span className="text-muted-foreground">Facts Hash</span>
+                                    <code className="font-mono text-xs">{evidence.manifest?.facts_hash}</code>
+                                </div>
+                                <div className="flex justify-between text-sm p-2 border rounded">
+                                    <span className="text-muted-foreground">Decision Hash</span>
+                                    <code className="font-mono text-xs">{evidence.manifest?.decision_hash}</code>
+                                </div>
+                                <div className="flex justify-between text-sm p-2 border rounded">
+                                    <span className="text-muted-foreground">History Hash</span>
+                                    <code className="font-mono text-xs">{evidence.manifest?.history_hash}</code>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div className="pt-4">
+                            <Button variant="outline" className="w-full gap-2">
+                                <Download className="h-4 w-4" />
+                                Download Full Evidence Pack (JSON)
+                            </Button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="text-center py-8 text-muted-foreground">Loading evidence...</div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
         </div>
 
         {/* Right Column: Context & Metadata (1/3 width) */}

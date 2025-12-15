@@ -63,3 +63,11 @@ export async function fetchDecisionDetail(decisionId: string): Promise<Decision>
     ]
   };
 }
+
+export async function fetchDecisionEvidence(decisionId: string): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/decisions/${decisionId}/evidence`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch decision evidence");
+  }
+  return response.json();
+}
