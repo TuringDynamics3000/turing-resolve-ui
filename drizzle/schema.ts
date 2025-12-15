@@ -94,6 +94,11 @@ export const ledgerPostings = mysqlTable("ledger_postings", {
   metadata: json("metadata"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   committedAt: timestamp("committedAt"),
+  
+  // Reversal Tracking
+  reversesPostingId: varchar("reversesPostingId", { length: 64 }), // If this posting reverses another
+  reversedBy: varchar("reversedBy", { length: 64 }), // The posting that reversed this one
+  reversedAt: timestamp("reversedAt"),
 });
 
 export type LedgerPosting = typeof ledgerPostings.$inferSelect;

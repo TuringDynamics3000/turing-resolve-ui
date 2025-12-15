@@ -11,6 +11,7 @@ import {
   commitPosting,
   getPosting,
   listPostings,
+  reversePosting,
 } from "./db";
 
 export const appRouter = router({
@@ -93,6 +94,24 @@ export const appRouter = router({
           throw new Error(result.error || "Failed to commit posting");
         }
         return { success: true, postingId: input.postingId };
+      }),
+
+    reversePosting: publicProcedure
+      .input(z.object({
+        postingId: z.string(),
+        reason: z.string(),
+        reversedBy: z.string().nullish(),
+      }))
+      .mutation(async ({ input }) => {
+        const result = await reversePosting({
+          postingId: input.postingId,
+          reason: input.reason,
+          reversedBy: input.reversedBy ?? undefined,
+        });
+        if (!result.success) {
+          throw new Error(result.error || "Failed to reverse posting");
+        }
+        return { success: true, reversalPostingId: result.reversalPostingId };
       }),
 
     getPosting: publicProcedure

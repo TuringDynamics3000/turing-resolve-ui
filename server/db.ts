@@ -297,6 +297,95 @@ export async function getPosting(postingId: string): Promise<{ posting: LedgerPo
 }
 
 /**
+ * Reverse a committed posting (create a counter-posting).
+ * This is the proper way to handle corrections and refunds.
+ * 
+ * The original posting is marked as REVERSED and a new posting is created
+ * with the opposite direction entries, maintaining a complete audit trail.
+ */
+export async function reversePosting(input: {
+  postingId: string;
+  reason: string;
+  reversedBy?: string;
+}): Promise<{ success: boolean; reversalPostingId?: string; error?: string }> {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, error: "Database not available" };
+  }
+
+  // Get original posting
+  const postingResult = await db.select().from(ledgerPostings).where(eq(ledgerPostings.postingId, input.postingId)).limit(1);
+  if (postingResult.length === 0) {
+    return { success: false, error: "Posting not found" };
+  }
+  const originalPosting = postingResult[0];
+
+  // Can only reverse COMMITTED postings
+  if (originalPosting.status !== "COMMITTED") {
+    return { success: false, error: `Cannot reverse posting with status: ${originalPosting.status}. Only COMMITTED postings can be reversed.` };
+  }
+
+  // Check if already reversed
+  if (originalPosting.reversedBy) {
+    return { success: false, error: `Posting already reversed by: ${originalPosting.reversedBy}` };
+  }
+
+  // Get original entries
+  const originalEntries = await db.select().from(ledgerEntries).where(eq(ledgerEntries.postingId, input.postingId));
+  if (originalEntries.length === 0) {
+    return { success: false, error: "No entries found for posting" };
+  }
+
+  // Create reversal posting ID
+  const reversalPostingId = `POST-REV-${nanoid(12)}`;
+
+  // Create reversal posting record
+  await db.insert(ledgerPostings).values({
+    postingId: reversalPostingId,
+    status: "PENDING",
+    description: `REVERSAL: ${input.reason} (Original: ${input.postingId})`,
+    decisionId: originalPosting.decisionId,
+    loanId: originalPosting.loanId,
+    idempotencyKey: `REV-${input.postingId}`, // Prevent double-reversal
+    reversesPostingId: input.postingId,
+  });
+
+  // Create reversed entries (opposite direction)
+  for (const entry of originalEntries) {
+    const entryId = `ENT-REV-${nanoid(12)}`;
+    const reversedDirection = entry.direction === "DEBIT" ? "CREDIT" : "DEBIT";
+    
+    await db.insert(ledgerEntries).values({
+      entryId,
+      postingId: reversalPostingId,
+      accountId: entry.accountId,
+      direction: reversedDirection,
+      amount: entry.amount,
+      description: `REVERSAL: ${entry.description || 'Original entry'}`,
+      decisionId: entry.decisionId,
+      loanId: entry.loanId,
+    });
+  }
+
+  // Commit the reversal posting (apply balance changes)
+  const commitResult = await commitPosting(reversalPostingId);
+  if (!commitResult.success) {
+    return { success: false, error: `Failed to commit reversal: ${commitResult.error}` };
+  }
+
+  // Mark original posting as reversed
+  await db.update(ledgerPostings)
+    .set({ 
+      status: "REVERSED",
+      reversedBy: reversalPostingId,
+      reversedAt: new Date(),
+    })
+    .where(eq(ledgerPostings.postingId, input.postingId));
+
+  return { success: true, reversalPostingId };
+}
+
+/**
  * List all postings (for audit/debugging).
  */
 export async function listPostings(limit = 100): Promise<LedgerPosting[]> {
