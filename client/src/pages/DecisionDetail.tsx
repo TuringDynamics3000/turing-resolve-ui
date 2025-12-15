@@ -1,26 +1,57 @@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { StatusBadge } from "@/components/ui/status-badge";
+import { RiskIndicator } from "@/components/ui/risk-indicator";
+import { ExplanationTree, ExplanationTreeSkeleton } from "@/components/ui/explanation-tree";
+import { EvidencePanel, EvidencePanelSkeleton, EvidenceItem } from "@/components/ui/evidence-panel";
+import { Timeline, TimelineSkeleton, TimelineEvent } from "@/components/ui/timeline";
 import { fetchDecisionDetail, fetchDecisionEvidence } from "@/lib/api";
 import { Decision } from "@/lib/mockData";
 import { useEffect, useState } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format } from "date-fns";
 import {
   AlertTriangle,
   ArrowLeft,
-  CheckCircle,
-  ChevronRight,
+  CheckCircle2,
+  ChevronDown,
   Clock,
+  Copy,
   Download,
   FileText,
   Shield,
   ShieldCheck,
-  XCircle
+  XCircle,
+  Zap
 } from "lucide-react";
 import { toast } from "sonner";
 import { Link, useRoute } from "wouter";
+import { cn } from "@/lib/utils";
+
+// Loading skeleton
+function DecisionDetailSkeleton() {
+  return (
+    <div className="space-y-6 animate-pulse">
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 bg-muted rounded" />
+        <div className="flex-1 space-y-2">
+          <div className="h-6 w-48 bg-muted rounded" />
+          <div className="h-4 w-32 bg-muted rounded" />
+        </div>
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-6">
+          <ExplanationTreeSkeleton />
+        </div>
+        <div className="space-y-6">
+          <div className="h-48 bg-muted/30 rounded-lg" />
+          <TimelineSkeleton count={4} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DecisionDetail() {
   const [, params] = useRoute("/decisions/:id");
@@ -28,27 +59,78 @@ export default function DecisionDetail() {
   const [decision, setDecision] = useState<Decision | null>(null);
   const [evidence, setEvidence] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("explanation");
 
   useEffect(() => {
     if (decisionId) {
       setLoading(true);
       Promise.all([
         fetchDecisionDetail(decisionId).then(setDecision),
-        fetchDecisionEvidence(decisionId).then(setEvidence).catch((e: any) => console.warn("Evidence fetch failed", e))
+        fetchDecisionEvidence(decisionId).then(setEvidence).catch((e: unknown) => console.warn("Evidence fetch failed", e))
       ])
       .catch(console.error)
       .finally(() => setLoading(false));
     }
   }, [decisionId]);
 
+  const handleExportProof = () => {
+    toast.success("Evidence package downloaded", { 
+      description: `SHA-256: ${decision?.decision_id}-proof.pdf` 
+    });
+  };
+
+  const handleCopyId = () => {
+    if (decision) {
+      navigator.clipboard.writeText(decision.decision_id);
+      toast.success("Decision ID copied to clipboard");
+    }
+  };
+
+  const getOutcomeConfig = (outcome: string) => {
+    switch (outcome) {
+      case "APPROVED":
+        return {
+          variant: "success" as const,
+          icon: <CheckCircle2 className="w-6 h-6" />,
+          label: "Approved",
+          bgClass: "bg-success/10 border-success/30"
+        };
+      case "REJECTED":
+        return {
+          variant: "destructive" as const,
+          icon: <XCircle className="w-6 h-6" />,
+          label: "Rejected",
+          bgClass: "bg-destructive/10 border-destructive/30"
+        };
+      case "FLAGGED_FOR_REVIEW":
+        return {
+          variant: "warning" as const,
+          icon: <AlertTriangle className="w-6 h-6" />,
+          label: "Flagged for Review",
+          bgClass: "bg-warning/10 border-warning/30"
+        };
+      default:
+        return {
+          variant: "muted" as const,
+          icon: <Clock className="w-6 h-6" />,
+          label: outcome,
+          bgClass: "bg-muted/10 border-muted/30"
+        };
+    }
+  };
+
   if (loading) {
-    return <div className="flex justify-center p-8">Loading...</div>;
+    return <DecisionDetailSkeleton />;
   }
 
   if (!decision) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh] space-y-4">
+        <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center">
+          <FileText className="w-8 h-8 text-muted-foreground" />
+        </div>
         <h2 className="text-2xl font-bold">Decision Not Found</h2>
+        <p className="text-muted-foreground">The requested decision could not be located.</p>
         <Link href="/decisions">
           <Button variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -59,236 +141,241 @@ export default function DecisionDetail() {
     );
   }
 
+  const outcomeConfig = getOutcomeConfig(decision.outcome);
+
+  // Transform timeline events for the Timeline component
+  const timelineEvents: TimelineEvent[] = decision.timeline.map((event, idx) => ({
+    id: event.id || `evt-${idx}`,
+    title: event.type.replace(/_/g, " "),
+    description: event.description,
+    timestamp: formatDistanceToNow(new Date(event.timestamp)) + " ago",
+    status: idx === decision.timeline.length - 1 ? "current" : "complete",
+    metadata: event.details ? { 
+      ...Object.fromEntries(
+        Object.entries(event.details).slice(0, 2).map(([k, v]) => [k, String(v)])
+      )
+    } : undefined
+  }));
+
+  // Transform evidence for the EvidencePanel component
+  const evidenceItems: EvidenceItem[] = evidence ? [
+    {
+      id: "facts",
+      type: "fact",
+      label: "Application Facts",
+      value: `${Object.keys(decision.facts).length} facts collected`,
+      hash: evidence.manifest?.facts_hash
+    },
+    {
+      id: "policy",
+      type: "policy",
+      label: "Policy Decision",
+      value: `Policy ${decision.policy_version}`,
+      hash: evidence.manifest?.decision_hash
+    },
+    {
+      id: "history",
+      type: "ledger",
+      label: "Event History",
+      value: `${decision.timeline.length} events recorded`,
+      hash: evidence.manifest?.history_hash
+    }
+  ] : [];
+
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header Navigation */}
-      <div className="flex items-center gap-4">
-        <Link href="/decisions">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight font-mono">
-              {decision.decision_id}
-            </h1>
-            <Badge variant="outline" className="font-mono">
-              {decision.policy_version}
-            </Badge>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <Link href="/decisions">
+            <Button variant="ghost" size="icon" className="shrink-0">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 
+                className="text-xl lg:text-2xl font-bold tracking-tight font-mono cursor-pointer hover:text-primary transition-colors"
+                onClick={handleCopyId}
+                title="Click to copy"
+              >
+                {decision.decision_id}
+              </h1>
+              <Badge variant="outline" className="font-mono text-xs">
+                {decision.policy_version}
+              </Badge>
+              <StatusBadge variant={outcomeConfig.variant}>
+                {outcomeConfig.label}
+              </StatusBadge>
+            </div>
+            <p className="text-muted-foreground flex items-center gap-2 text-sm mt-1">
+              <span className="font-mono">{decision.entity_id}</span>
+              <span className="text-muted-foreground/50">•</span>
+              <Clock className="w-3 h-3" />
+              {formatDistanceToNow(new Date(decision.timestamp))} ago
+            </p>
           </div>
-          <p className="text-muted-foreground flex items-center gap-2 text-sm">
-            Entity: <span className="font-mono text-foreground">{decision.entity_id}</span>
-            <span className="text-muted-foreground/50">•</span>
-            {formatDistanceToNow(new Date(decision.timestamp))} ago
-          </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => toast.success("Evidence package downloaded", { description: `SHA-256: ${decision.decision_id}-proof.pdf` })}>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button variant="outline" onClick={handleExportProof}>
             <Download className="mr-2 h-4 w-4" />
             Export Proof
           </Button>
-          <Separator orientation="vertical" className="h-6 mx-2" />
-          <Button variant="outline" className="border-red-200 hover:bg-red-50 text-red-600">
-            Reject
-          </Button>
-          <Button variant="outline" className="border-yellow-200 hover:bg-yellow-50 text-yellow-600">
-            Escalate
-          </Button>
-          <Button className="bg-green-600 hover:bg-green-700">
-            Approve
-          </Button>
+          <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="border-destructive/30 hover:bg-destructive/10 text-destructive"
+              onClick={() => toast.info("Reject action", { description: "This would reject the decision" })}
+            >
+              Reject
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-warning/30 hover:bg-warning/10 text-warning"
+              onClick={() => toast.info("Escalate action", { description: "This would escalate to senior review" })}
+            >
+              Escalate
+            </Button>
+            <Button 
+              className="bg-success hover:bg-success/90"
+              onClick={() => toast.success("Decision approved", { description: "The decision has been approved" })}
+            >
+              Approve
+            </Button>
+          </div>
         </div>
+      </div>
+
+      {/* Outcome Banner */}
+      <div className={cn(
+        "rounded-lg border p-4 flex items-center gap-4",
+        outcomeConfig.bgClass
+      )}>
+        <div className={cn(
+          "shrink-0",
+          outcomeConfig.variant === "success" && "text-success",
+          outcomeConfig.variant === "destructive" && "text-destructive",
+          outcomeConfig.variant === "warning" && "text-warning"
+        )}>
+          {outcomeConfig.icon}
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold">{outcomeConfig.label}</h3>
+          <p className="text-sm text-muted-foreground">{decision.summary}</p>
+        </div>
+        <RiskIndicator value={decision.risk_score} size="lg" showLabel />
       </div>
 
       {/* Main Content Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        
-        {/* Left Column: Explanation Tree (2/3 width) */}
-        <div className="lg:col-span-2 space-y-6">
-        <Tabs defaultValue="explanation">
-            <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="explanation">Explanation</TabsTrigger>
-                <TabsTrigger value="evidence">Evidence Pack</TabsTrigger>
+        {/* Left Column: Explanation & Evidence (2/3 width) */}
+        <div className="lg:col-span-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="explanation" className="gap-2">
+                <Zap className="w-4 h-4" />
+                Explanation
+              </TabsTrigger>
+              <TabsTrigger value="evidence" className="gap-2">
+                <ShieldCheck className="w-4 h-4" />
+                Evidence Pack
+              </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="explanation" className="space-y-6">
-          <Card className="border-l-4 border-l-primary">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Decision Outcome
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start gap-4">
-                {decision.outcome === 'APPROVED' && <CheckCircle className="h-8 w-8 text-green-500 mt-1" />}
-                {decision.outcome === 'REJECTED' && <XCircle className="h-8 w-8 text-red-500 mt-1" />}
-                {decision.outcome === 'FLAGGED_FOR_REVIEW' && <AlertTriangle className="h-8 w-8 text-yellow-500 mt-1" />}
-                
-                <div className="space-y-1">
-                  <h3 className="text-xl font-semibold">{decision.outcome.replace(/_/g, ' ')}</h3>
-                  <p className="text-muted-foreground">{decision.summary}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <TabsContent value="explanation" className="space-y-4 mt-0">
+              <ExplanationTree
+                nodes={decision.explanation_tree.flatMap(node => [
+                  {
+                    id: node.title,
+                    label: node.title,
+                    status: "info" as const,
+                    description: node.content,
+                    children: node.children.map((child, idx) => ({
+                      id: `${node.title}-${idx}`,
+                      label: child.title,
+                      status: child.title.includes("PASSED") ? "pass" as const : 
+                              child.title.includes("FAILED") ? "fail" as const : 
+                              child.title.includes("WARNING") ? "warn" as const : "info" as const,
+                      description: child.content,
+                      value: Object.keys(child.evidence).length > 0 ? JSON.stringify(child.evidence) : undefined,
+                      children: []
+                    }))
+                  }
+                ])}
+              />
+            </TabsContent>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Explanation Trace
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {decision.explanation_tree.map((node, idx) => (
-                <div key={idx} className="space-y-4">
-                  <div className="flex items-center gap-2 font-medium">
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    {node.title}
-                  </div>
-                  <div className="pl-6 space-y-2 border-l-2 border-muted ml-2">
-                    {node.children.map((child, cIdx) => (
-                      <div key={cIdx} className="p-3 bg-muted/30 rounded-md border text-sm">
-                        <div className="font-medium mb-1">{child.title}</div>
-                        <div className="text-muted-foreground mb-2">{child.content}</div>
-                        {Object.keys(child.evidence).length > 0 && (
-                          <div className="bg-background p-2 rounded border font-mono text-xs">
-                            {JSON.stringify(child.evidence, null, 2)}
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-          </TabsContent>
-
-          <TabsContent value="evidence">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                    <ShieldCheck className="h-5 w-5 text-green-500" />
-                    Regulator Evidence Pack
-                </CardTitle>
-                <div className="text-sm text-muted-foreground">Cryptographically verifiable audit trail</div>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {evidence ? (
-                    <>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="p-4 bg-muted/50 rounded-lg">
-                                <div className="text-sm font-medium text-muted-foreground mb-1">Replay Hash (SHA-256)</div>
-                                <code className="text-xs break-all font-mono text-primary">{evidence.replay_hash}</code>
-                            </div>
-                            <div className="p-4 bg-muted/50 rounded-lg">
-                                <div className="text-sm font-medium text-muted-foreground mb-1">Schema Version</div>
-                                <div className="font-mono">{evidence.manifest?.schema_version}</div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 className="text-sm font-medium mb-3">Manifest Components</h4>
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm p-2 border rounded">
-                                    <span className="text-muted-foreground">Facts Hash</span>
-                                    <code className="font-mono text-xs">{evidence.manifest?.facts_hash}</code>
-                                </div>
-                                <div className="flex justify-between text-sm p-2 border rounded">
-                                    <span className="text-muted-foreground">Decision Hash</span>
-                                    <code className="font-mono text-xs">{evidence.manifest?.decision_hash}</code>
-                                </div>
-                                <div className="flex justify-between text-sm p-2 border rounded">
-                                    <span className="text-muted-foreground">History Hash</span>
-                                    <code className="font-mono text-xs">{evidence.manifest?.history_hash}</code>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="pt-4">
-                            <Button variant="outline" className="w-full gap-2">
-                                <Download className="h-4 w-4" />
-                                Download Full Evidence Pack (JSON)
-                            </Button>
-                        </div>
-                    </>
-                ) : (
-                    <div className="text-center py-8 text-muted-foreground">Loading evidence...</div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="evidence" className="mt-0">
+              {evidence ? (
+                <EvidencePanel
+                  title="Regulator Evidence Pack"
+                  items={evidenceItems}
+                  replayHash={evidence.replay_hash}
+                  manifestHash={evidence.manifest?.schema_version}
+                />
+              ) : (
+                <EvidencePanelSkeleton />
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
 
-        {/* Right Column: Context & Metadata (1/3 width) */}
+        {/* Right Column: Context & Timeline (1/3 width) */}
         <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Risk Score</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-center py-4">
-                <div className="relative flex items-center justify-center h-24 w-24 rounded-full border-8 border-muted">
-                  <span className="text-3xl font-bold">{decision.risk_score}</span>
-                  <div 
-                    className="absolute inset-0 rounded-full border-8 border-transparent border-t-primary rotate-45"
-                    style={{ 
-                      borderColor: decision.risk_score > 80 ? 'rgb(239 68 68)' : 
-                                  decision.risk_score > 50 ? 'rgb(234 179 8)' : 'rgb(34 197 94)',
-                      transform: `rotate(${(decision.risk_score / 100) * 360}deg)`
-                    }}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">Key Facts</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
+          {/* Key Facts */}
+          <div className="glass-panel p-4">
+            <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-primary" />
+              Key Facts
+            </h3>
+            <div className="space-y-2">
               {Object.entries(decision.facts).map(([key, value]) => (
-                <div key={key} className="flex justify-between text-sm border-b pb-2 last:border-0">
-                  <span className="text-muted-foreground capitalize">{key.replace(/_/g, ' ')}</span>
-                  <span className="font-mono font-medium text-right">{String(value)}</span>
+                <div key={key} className="flex justify-between text-sm py-2 border-b border-border/50 last:border-0">
+                  <span className="text-muted-foreground capitalize">{key.replace(/_/g, " ")}</span>
+                  <span className="font-mono font-medium text-right">
+                    {typeof value === "number" && key.includes("amount") 
+                      ? `$${value.toLocaleString()}`
+                      : String(value)}
+                  </span>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                Timeline
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="relative border-l border-muted ml-2 space-y-6 py-2">
-                {decision.timeline.map((event, idx) => (
-                  <div key={idx} className="ml-4 relative">
-                    <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-primary ring-4 ring-background" />
-                    <div className="text-xs font-medium text-muted-foreground mb-0.5">
-                      {formatDistanceToNow(new Date(event.timestamp))} ago
-                    </div>
-                    <div className="text-sm font-medium">{event.type.replace(/_/g, ' ')}</div>
-                    <div className="text-xs text-muted-foreground">{event.description}</div>
-                  </div>
-                ))}
-                {decision.timeline.length === 0 && (
-                  <div className="ml-4 text-sm text-muted-foreground italic">
-                    No timeline events recorded.
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Timeline */}
+          <div className="glass-panel p-4">
+            <h3 className="font-semibold text-sm mb-4 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-primary" />
+              Decision Timeline
+            </h3>
+            {timelineEvents.length > 0 ? (
+              <Timeline events={timelineEvents} />
+            ) : (
+              <p className="text-sm text-muted-foreground italic text-center py-4">
+                No timeline events recorded.
+              </p>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* Keyboard shortcuts hint */}
+      <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-4">
+        <span className="flex items-center gap-1">
+          <kbd className="kbd">Esc</kbd>
+          Back
+        </span>
+        <span className="flex items-center gap-1">
+          <kbd className="kbd">E</kbd>
+          Export
+        </span>
+        <span className="flex items-center gap-1">
+          <kbd className="kbd">A</kbd>
+          Approve
+        </span>
       </div>
     </div>
   );
