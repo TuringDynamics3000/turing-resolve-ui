@@ -2,7 +2,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { mockDecisions } from "@/lib/mockData";
+import { fetchDecisionDetail } from "@/lib/api";
+import { Decision } from "@/lib/mockData";
+import { useEffect, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
   AlertTriangle,
@@ -21,7 +23,21 @@ import { Link, useRoute } from "wouter";
 export default function DecisionDetail() {
   const [, params] = useRoute("/decisions/:id");
   const decisionId = params?.id;
-  const decision = mockDecisions.find((d) => d.decision_id === decisionId);
+  const [decision, setDecision] = useState<Decision | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (decisionId) {
+      fetchDecisionDetail(decisionId)
+        .then(setDecision)
+        .catch(console.error)
+        .finally(() => setLoading(false));
+    }
+  }, [decisionId]);
+
+  if (loading) {
+    return <div className="flex justify-center p-8">Loading...</div>;
+  }
 
   if (!decision) {
     return (

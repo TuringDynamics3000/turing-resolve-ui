@@ -9,14 +9,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { mockDecisions } from "@/lib/mockData";
+import { fetchDecisions } from "@/lib/api";
+import { Decision } from "@/lib/mockData";
 import { formatDistanceToNow } from "date-fns";
 import { AlertCircle, CheckCircle, Clock, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 
 export default function OpsInbox() {
   const [filter, setFilter] = useState<'ALL' | 'CRITICAL' | 'HIGH' | 'MEDIUM'>('ALL');
+  const [decisions, setDecisions] = useState<Decision[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDecisions()
+      .then(setDecisions)
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -104,7 +114,7 @@ export default function OpsInbox() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockDecisions.map((decision) => (
+              {decisions.map((decision) => (
                 <TableRow key={decision.decision_id}>
                   <TableCell className="font-mono">{decision.decision_id}</TableCell>
                   <TableCell className="font-mono">{decision.entity_id}</TableCell>
