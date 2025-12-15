@@ -10,6 +10,9 @@ import OpsInbox from "@/pages/OpsInbox";
 import DecisionDetail from "@/pages/DecisionDetail";
 import PolicyViewer from "@/pages/PolicyViewer";
 import EvidenceVault from "@/pages/EvidenceVault";
+import ExposureDashboard from "@/pages/ExposureDashboard";
+import ExposureDetail from "@/pages/ExposureDetail";
+import EvidenceDetail from "@/pages/EvidenceDetail";
 import NotFound from "@/pages/NotFound";
 
 function Router() {
@@ -21,6 +24,9 @@ function Router() {
         <Route path="/decisions/:id" component={DecisionDetail} />
         <Route path="/policies" component={PolicyViewer} />
         <Route path="/evidence" component={EvidenceVault} />
+        <Route path="/exposure" component={ExposureDashboard} />
+        <Route path="/exposure/:id" component={ExposureDetail} />
+        <Route path="/evidence/:id" component={EvidenceDetail} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

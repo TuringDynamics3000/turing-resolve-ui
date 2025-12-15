@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { LayoutDashboard, Shield, Gavel, FileText, Settings, User, Lock } from "lucide-react";
+import { LayoutDashboard, Shield, Gavel, FileText, Settings, User, Lock, TrendingUp } from "lucide-react";
 
 export function GlobalNav() {
   const { role, setRole, environment, setEnvironment, isLedgerFrozen } = useRole();
@@ -22,6 +22,7 @@ export function GlobalNav() {
     { href: "/decisions", label: "Decisions", icon: Gavel, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/policies", label: "Policies", icon: Shield, roles: ['POLICY_AUTHOR', 'COMPLIANCE_VIEWER', 'SYSTEM_ADMIN'] },
     { href: "/evidence", label: "Evidence", icon: FileText, roles: ['COMPLIANCE_VIEWER', 'OPS_SUPERVISOR'] },
+    { href: "/exposure", label: "Exposure", icon: TrendingUp, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'BOARD_VIEWER'] },
     { href: "/settings", label: "Settings", icon: Settings, roles: ['SYSTEM_ADMIN'] },
   ];
 
