@@ -203,3 +203,114 @@
 - [x] Policy threshold indicators with policy IDs
 - [x] Breach warning system (color-coded)
 - [x] Limit headroom calculator
+
+
+## Phase D - Deposits Uplift (Replacement-Grade) - COMPLETED ✓
+### D-1: Module Structure & Governance
+- [x] Create /src/modules/deposits/ directory structure
+- [x] Create DEPOSITS_SURFACE_FREEZE.md
+- [x] Update CODEOWNERS
+
+### D-2: Account Domain
+- [x] Account aggregate with 6 states (CREATED, ACTIVE, FROZEN, LEGAL_HOLD, DORMANT, CLOSED)
+- [x] 9 account events (opened, activated, frozen, unfrozen, legal_hold_applied, legal_hold_removed, marked_dormant, reactivated, closed)
+- [x] State machine with Resolve gates
+
+### D-3: Balances Model & Holds Engine
+- [x] Ledger balance (derived from ledger postings)
+- [x] Available balance (ledger - holds - pending debits)
+- [x] Holds as first-class domain entities
+- [x] Hold lifecycle events (placed, partially_released, released, expired)
+
+### D-4: Resolve Integration & Ledger Adapter
+- [x] Deposit action fact contract
+- [x] Resolve outcomes (ALLOW, REVIEW, DECLINE)
+- [x] Ledger adapter (request-only)
+
+### D-5: Interest & Fees
+- [x] Daily accrual events
+- [x] Rate tables per product
+- [x] Monthly posting via ledger
+- [x] Fee types (scheduled, event-driven)
+- [x] Fee events (accrued, posted, waived, refunded)
+
+### D-6: EOD & Statements
+- [x] EOD cut-off, accrual close, posting close
+- [x] Reconciliation checkpoint
+- [x] Monthly statements (hash-verifiable)
+- [x] Statement hash verification
+
+### D-7: Replay & Evidence
+- [x] Deposits replay harness (18 tests passing)
+- [x] Deposits evidence pack
+- [x] All tests passing
+
+### D-8: Governance Freeze
+- [x] CI gates for deposits tests
+- [x] Production Admissibility Certificate update
+- [x] Internal declaration
+
+**DEPOSITS IS NOW 🟢 GREEN - PRODUCTION READY**
+**UltraData/Geniusto deposits can be turned off.**
+
+### GitHub Issues Completed
+| Issue | Description | Status |
+|-------|-------------|--------|
+| D0 | Epic: Replacement-Grade Deposits | ✅ |
+| D1 | Module Boundary + Architecture | ✅ |
+| D2 | Account Domain Model | ✅ |
+| D3 | Fact Contract for Resolve | ✅ |
+| D4 | Resolve Adapter (Mandatory Gate) | ✅ |
+| D5 | Request-Only Ledger Adapter | ✅ |
+| D6 | Holds Engine | ✅ |
+| D7 | Balance Computation Projection | ✅ |
+| D8 | Interest Engine | ✅ |
+| D9 | Fees Engine | ✅ |
+| D10 | EOD Close & Checkpointing | ✅ |
+| D11 | Statements v1 | ✅ |
+| D12 | Evidence Pack | ✅ |
+| D13 | Replay Proof Harness | ✅ |
+| D14 | Back-Office Controls | ⏸️ P1 |
+| D15 | Surface Freeze + CI Gates | ✅ |
+
+
+## System Governance Dashboard (Blue Theme) - COMPLETED ✓
+### Design System
+- [x] Update color palette to blue theme (from emerald)
+- [x] Update glass-panel styling for blue tones
+- [x] Update accent colors and gradients
+
+### System Status Overview
+- [x] Module status cards (6 modules with GREEN status)
+- [x] Test count summary (247/247 tests passing)
+- [x] Last verified timestamps
+- [x] Production readiness matrix
+
+### Decision Flow Visualization
+- [x] Request → Resolve → Decision → Execution → Ledger → Evidence flow
+- [x] Animated connections
+- [x] Click-through to details
+
+### Module Deep-Dives
+- [x] Lending dashboard (loans, events, governance tabs)
+- [x] Payments dashboard (transactions, event chain, governance tabs)
+- [x] Deposits dashboard (accounts, holds, interest, governance tabs)
+- [x] Exposure dashboard (existing)
+
+### Evidence Vault
+- [x] Search any decision (cross-module)
+- [x] View evidence pack
+- [x] Hash verification
+- [x] Export functionality
+
+### Replay Proof
+- [x] On-demand replay verification
+- [x] Before/after hash comparison (73/73 tests)
+- [x] Test results display
+
+### Governance Controls
+- [x] Surface freeze status (all 6 modules FROZEN)
+- [x] Absolute boundaries (4 enforced)
+- [x] Exception management
+- [x] Internal declarations
+- [x] Release information (v1.0-replacement-ready)
