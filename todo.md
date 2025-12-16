@@ -1854,4 +1854,15 @@
 - [x] Add mandatory checks: batch totals reconcile, late returns reverse ledger
 - [x] Add replay tests pass, no settlement finality assumptions
 - [x] Write tests for BECS evidence pack builder (11 tests)
+- [x] Save checkpoint and push to GitHub
+
+
+## NPP Evidence Pack & BECS Operator Actions - COMPLETED ✓
+- [x] NPP evidence pack builder already exists (exports/nppEvidencePack.ts)
+- [x] Includes payment intent, rail decision, attempts, ops actions, replay proof
+- [x] Create BECS operator action: Batch resubmission (application/payments/becs/ops/ResubmitBatchHandler.ts)
+- [x] Create BECS operator action: Manual return processing (application/payments/becs/ops/ProcessReturnHandler.ts)
+- [x] Create BECS operator action: Batch cancellation (application/payments/becs/ops/CancelBatchHandler.ts)
+- [x] Add policy-gated authorization for all BECS ops actions
+- [x] Write tests for BECS operator actions (16 tests - 3 resubmit, 3 return, 4 cancel, 6 policy)
 - [ ] Save checkpoint and push to GitHub
