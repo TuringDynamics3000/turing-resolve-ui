@@ -1839,8 +1839,19 @@
 - [x] Write BECS diff documentation (vs NPP)
 - [x] Write BECS invariant tests (16 tests - batch reconciliation, return handling, economic invariants)
 - [x] Write BECS replay tests (6 tests - deterministic state reconstruction, late returns)
-- [ ] Save checkpoint and push to GitHub
+- [x] Save checkpoint and push to GitHub
 
 ## Future Rails (RTGS & Cards) - Deferred
 - [ ] RTGS: Governance-first, approval-heavy rail
 - [ ] Cards: Auth/clearing/chargeback rail
+
+
+## BECS Evidence Pack & CI/CD Guardrails - COMPLETED ✓
+- [x] Create BECS evidence pack builder (exports/becsEvidencePack.ts)
+- [x] Include batch metadata, return codes, settlement timelines
+- [x] Add SHA-256 replay proof for batch reconciliation
+- [x] Create BECS CI/CD guardrails workflow (.github/workflows/becs-guardrails.yml)
+- [x] Add mandatory checks: batch totals reconcile, late returns reverse ledger
+- [x] Add replay tests pass, no settlement finality assumptions
+- [x] Write tests for BECS evidence pack builder (11 tests)
+- [ ] Save checkpoint and push to GitHub
