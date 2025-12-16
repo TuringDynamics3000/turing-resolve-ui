@@ -3,12 +3,18 @@ import cors from "cors"
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
+import { FactConsumer } from "./fact-consumer.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const app = express()
 app.use(cors())
+
+// Initialize fact consumer to stream from TuringCore-v3
+const turingCoreUrl = process.env.TURINGCORE_URL || "http://localhost:3000";
+const factConsumer = new FactConsumer(turingCoreUrl);
+factConsumer.start();
 
 function load(file) {
   return JSON.parse(fs.readFileSync(path.join(__dirname, "mock", file)))
@@ -29,6 +35,25 @@ app.get("/api/v1/ui/system/core-status", (_, res) => {
     shadowParity: process.env.SHADOW_PARITY || "UNKNOWN"
   })
 })
+
+// Fact streaming endpoints for Member Portal
+app.get("/api/v1/ui/facts/payment", (req, res) => {
+  const paymentId = req.query.paymentId;
+  res.json(factConsumer.getPaymentFacts(paymentId));
+});
+
+app.get("/api/v1/ui/facts/deposit", (req, res) => {
+  const accountId = req.query.accountId;
+  res.json(factConsumer.getDepositFacts(accountId));
+});
+
+app.get("/api/v1/ui/facts/safeguards", (req, res) => {
+  res.json(factConsumer.getSafeguardChanges());
+});
+
+app.get("/api/v1/ui/facts/status", (req, res) => {
+  res.json(factConsumer.getStatus());
+});
 
 app.use("/documents", express.static(path.join(__dirname, "demo-pdfs")))
 
