@@ -388,3 +388,13 @@
 - [x] Add tooltips to Module cards (Resolve, Ledger, Lending, Payments, Exposure, Deposits)
 - [x] Add tooltips to Live Decisions items (explains ALLOW/REVIEW/DECLINE outcomes)
 - [x] Add help icons with "Why it matters" explanations for non-technical viewers
+
+
+## Realistic Test Data - COMPLETED ✓
+- [x] Add more decisions (30 with varied outcomes: 14 allowed, 9 review, 7 declined)
+- [x] Add realistic customer names and IDs (30 unique Australian names)
+- [x] Add varied financial amounts ($500 - $150,000 AUD)
+- [x] Add realistic timestamps (spread over past 30 days)
+- [x] Add more evidence packs with varied modules (12 packs)
+- [x] Add more replay proof entries (12 proofs across 4 modules)
+- [x] Add realistic policy evaluations (6 AU v1 policies)

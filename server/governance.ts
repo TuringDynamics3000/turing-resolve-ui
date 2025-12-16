@@ -20,6 +20,9 @@ export interface Decision {
   decisionId: string;
   entityId: string;
   entityType: "LOAN" | "PAYMENT" | "DEPOSIT" | "EXPOSURE";
+  customerName: string;
+  amount: number | null;
+  currency: string;
   outcome: "ALLOW" | "REVIEW" | "DECLINE";
   policiesFired: string[];
   policyResults: PolicyResult[];
@@ -126,6 +129,9 @@ export async function getDecisions(): Promise<Decision[]> {
     decision_id: string;
     entity_id: string;
     entity_type: string;
+    customer_name: string;
+    amount: number | null;
+    currency: string;
     outcome: string;
     policies_fired: string[];
     policy_results: Array<{
@@ -145,6 +151,9 @@ export async function getDecisions(): Promise<Decision[]> {
     decisionId: d.decision_id,
     entityId: d.entity_id,
     entityType: d.entity_type as Decision["entityType"],
+    customerName: d.customer_name,
+    amount: d.amount,
+    currency: d.currency,
     outcome: d.outcome as Decision["outcome"],
     policiesFired: d.policies_fired,
     policyResults: d.policy_results.map(pr => ({
@@ -165,6 +174,9 @@ export async function getDecision(decisionId: string): Promise<Decision | null> 
       decision_id: string;
       entity_id: string;
       entity_type: string;
+      customer_name: string;
+      amount: number | null;
+      currency: string;
       outcome: string;
       policies_fired: string[];
       policy_results: Array<{
@@ -184,6 +196,9 @@ export async function getDecision(decisionId: string): Promise<Decision | null> 
       decisionId: d.decision_id,
       entityId: d.entity_id,
       entityType: d.entity_type as Decision["entityType"],
+      customerName: d.customer_name,
+      amount: d.amount,
+      currency: d.currency,
       outcome: d.outcome as Decision["outcome"],
       policiesFired: d.policies_fired,
       policyResults: d.policy_results.map(pr => ({

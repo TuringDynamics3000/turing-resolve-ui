@@ -554,16 +554,16 @@ function SystemSummaryHeader() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Decisions</p>
-                <p className="text-2xl font-bold">7</p>
+                <p className="text-2xl font-bold">{summary?.decisions?.total || 0}</p>
               </div>
               <div className="p-3 rounded-full bg-primary/10">
                 <Activity className="h-5 w-5 text-primary" />
               </div>
             </div>
             <div className="flex gap-2 mt-2 text-xs">
-              <span className="text-emerald-400">3 allowed</span>
-              <span className="text-amber-400">2 review</span>
-              <span className="text-red-400">2 declined</span>
+              <span className="text-emerald-400">{summary?.decisions?.allowed || 0} allowed</span>
+              <span className="text-amber-400">{summary?.decisions?.reviewed || 0} review</span>
+              <span className="text-red-400">{summary?.decisions?.declined || 0} declined</span>
             </div>
           </CardContent>
         </Card>
