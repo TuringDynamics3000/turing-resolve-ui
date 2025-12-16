@@ -1,0 +1,30 @@
+{
+  "payments": {
+    "enabled": true,
+    "events_24h": 14892,
+    "advisories_24h": 10693,
+    "coverage": "71.8%",
+    "avg_confidence": "0.73"
+  },
+  "fraud": {
+    "enabled": true,
+    "events_24h": 8234,
+    "advisories_24h": 37,
+    "coverage": "100%",
+    "avg_confidence": "0.89"
+  },
+  "aml": {
+    "enabled": true,
+    "events_24h": 1456,
+    "advisories_24h": 56,
+    "coverage": "100%",
+    "avg_confidence": "0.81"
+  },
+  "treasury": {
+    "enabled": true,
+    "events_24h": 672,
+    "advisories_24h": 0,
+    "coverage": "100%",
+    "avg_confidence": "N/A"
+  }
+}

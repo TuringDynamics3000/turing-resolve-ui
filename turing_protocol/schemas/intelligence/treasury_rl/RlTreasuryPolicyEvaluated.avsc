@@ -1,0 +1,47 @@
+{
+  "type": "record",
+  "name": "RlTreasuryPolicyEvaluated",
+  "namespace": "turing.protocol.intelligence.treasury",
+  "doc": "Treasury RL policy evaluated. This is the FIRST protocol treasury RL event from Layer B → Layer A. Zero authority, shadow only.",
+  "fields": [
+    {
+      "name": "base",
+      "type": "turing.protocol.intelligence.IntelligenceEventBase",
+      "doc": "Base intelligence event fields"
+    },
+    {
+      "name": "state_hash",
+      "type": "string",
+      "doc": "Hash of state vector for provenance"
+    },
+    {
+      "name": "proposed_action",
+      "type": {
+        "type": "enum",
+        "name": "TreasuryRlAction",
+        "symbols": ["PROPOSE_TOPUP", "PROPOSE_THROTTLE", "PROPOSE_RAIL_SHIFT", "PROPOSE_BATCH_DEFERRAL_30M", "PROPOSE_BATCH_DEFERRAL_60M"]
+      },
+      "doc": "Proposed action (proposals only, no execution)"
+    },
+    {
+      "name": "policy_id",
+      "type": "string",
+      "doc": "Policy identifier for provenance"
+    },
+    {
+      "name": "policy_version",
+      "type": "string",
+      "doc": "Policy version for provenance"
+    },
+    {
+      "name": "confidence_score",
+      "type": "double",
+      "doc": "Confidence score (0.0 to 1.0)"
+    },
+    {
+      "name": "reward_estimate",
+      "type": "double",
+      "doc": "Estimated reward for proposed action"
+    }
+  ]
+}

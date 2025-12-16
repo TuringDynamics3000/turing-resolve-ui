@@ -1,0 +1,140 @@
+# Risk Brain Reporter — Prometheus Monitoring & Alerts
+#
+# This configuration defines Prometheus alerts for Risk Brain Reporter:
+# - Report generation failures
+# - AI origin violations (MUST be 0)
+# - Missed CronJob runs
+#
+# Author: TuringCore National Infrastructure Team
+# Version: 1.0
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: risk-brain-reporter-alerts
+  namespace: risk-brain-reporter
+data:
+  alerts.yaml: |
+    groups:
+      - name: risk_brain_reporter
+        interval: 60s
+        rules:
+          # P1 Alert: AI Origin Violations (MUST be 0)
+          - alert: RiskBrainAIOriginViolation
+            expr: risk_brain_ai_origin_violations_total > 0
+            for: 1m
+            labels:
+              severity: P1
+              system: risk-brain-reporter
+            annotations:
+              summary: "AI origin violation detected"
+              description: "AI origin violations detected: {{ $value }}. This MUST be 0."
+          
+          # P1 Alert: Schema Violations (MUST be 0)
+          - alert: RiskBrainSchemaViolation
+            expr: risk_brain_schema_version_violations_total > 0
+            for: 1m
+            labels:
+              severity: P1
+              system: risk-brain-reporter
+            annotations:
+              summary: "Schema version violation detected"
+              description: "Schema violations detected: {{ $value }}. This MUST be 0."
+          
+          # P1 Alert: Policy Origin Violations (MUST be 0)
+          - alert: RiskBrainPolicyOriginViolation
+            expr: risk_brain_policy_origin_violations_total > 0
+            for: 1m
+            labels:
+              severity: P1
+              system: risk-brain-reporter
+            annotations:
+              summary: "Policy origin violation detected"
+              description: "Policy origin violations detected: {{ $value }}. This MUST be 0."
+          
+          # P2 Alert: Report Generation Failure
+          - alert: RiskBrainReportFailure
+            expr: risk_brain_report_failure_total > 0
+            for: 5m
+            labels:
+              severity: P2
+              system: risk-brain-reporter
+            annotations:
+              summary: "Risk Brain report generation failed"
+              description: "Report generation failures: {{ $value }}"
+          
+          # P2 Alert: Missed CronJob
+          - alert: RiskBrainCronJobMissed
+            expr: time() - kube_cronjob_status_last_schedule_time{cronjob="risk-brain-weekly"} > 604800
+            for: 1h
+            labels:
+              severity: P2
+              system: risk-brain-reporter
+            annotations:
+              summary: "Risk Brain weekly CronJob missed"
+              description: "Weekly CronJob has not run in the last 7 days"
+          
+          # P2 Alert: API Unavailable
+          - alert: RiskBrainAPIUnavailable
+            expr: up{job="risk-brain-reporter-api"} == 0
+            for: 5m
+            labels:
+              severity: P2
+              system: risk-brain-reporter
+            annotations:
+              summary: "Risk Brain Reporter API unavailable"
+              description: "Risk Brain Reporter API is unavailable"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: risk-brain-reporter-dashboards
+  namespace: risk-brain-reporter
+data:
+  dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Risk Brain Reporter",
+        "panels": [
+          {
+            "title": "Report Generation Status",
+            "targets": [
+              {
+                "expr": "risk_brain_report_generation_total"
+              }
+            ]
+          },
+          {
+            "title": "Safety Violations (MUST be 0)",
+            "targets": [
+              {
+                "expr": "risk_brain_ai_origin_violations_total"
+              },
+              {
+                "expr": "risk_brain_schema_version_violations_total"
+              },
+              {
+                "expr": "risk_brain_policy_origin_violations_total"
+              }
+            ]
+          },
+          {
+            "title": "CronJob Status",
+            "targets": [
+              {
+                "expr": "kube_cronjob_status_last_schedule_time{cronjob=\"risk-brain-weekly\"}"
+              }
+            ]
+          },
+          {
+            "title": "API Health",
+            "targets": [
+              {
+                "expr": "up{job=\"risk-brain-reporter-api\"}"
+              }
+            ]
+          }
+        ]
+      }
+    }

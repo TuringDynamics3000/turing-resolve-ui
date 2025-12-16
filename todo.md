@@ -1779,14 +1779,19 @@
 - [x] Write CI tests for all invariants (20 tests passing)
 - [x] All 202 tests passing (182 existing + 20 new NPP invariant tests)
 
-### Phase 3: Ops Actions
-- [ ] Create application/payments/npp/ops/ directory
-- [ ] Implement RetryPaymentHandler.ts (FAILED/EXPIRED → new attempt)
-- [ ] Implement CancelPaymentHandler.ts (AUTHORISED only)
-- [ ] Implement MarkFailedHandler.ts (SENT/ACKNOWLEDGED with reason)
-- [ ] Implement OpsOverrideHandler.ts (policy-gated, emits OpsOverrideApplied)
-- [ ] All ops actions emit immutable events
-- [ ] All ops actions appear in evidence pack
+### Phase 3: Ops Actions - COMPLETED ✅
+- [x] Create application/payments/npp/ops/ directory
+- [x] Implement RetryPaymentHandler.ts (FAILED/EXPIRED → new attempt)
+- [x] Implement CancelPaymentHandler.ts (AUTHORISED only)
+- [x] Implement MarkFailedHandler.ts (SENT/ACKNOWLEDGED with reason)
+- [x] Add CANCELLED to NPPFailureReason enum
+- [x] All ops actions emit immutable events
+- [x] All ops actions require policy approval
+- [x] All ops actions enforce state guards
+- [x] Write CI tests for ops actions (11 tests passing)
+- [x] All 213 tests passing (202 existing + 11 new ops tests)
+- [ ] Implement OpsOverrideHandler.ts (policy-gated, emits OpsOverrideApplied) - DEFERRED to Phase 4
+- [ ] All ops actions appear in evidence pack - DEFERRED to Phase 4
 
 ### Phase 4: Evidence Pack Schema
 - [ ] Create exports/nppEvidencePack.ts

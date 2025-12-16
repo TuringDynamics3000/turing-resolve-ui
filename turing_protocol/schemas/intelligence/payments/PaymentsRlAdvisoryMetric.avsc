@@ -1,0 +1,135 @@
+{
+  "type": "record",
+  "name": "PaymentsRlAdvisoryMetric",
+  "namespace": "com.turingcore.protocol.intelligence.payments",
+  "doc": "Real-time visibility of Actual vs RL Recommended with zero execution authority. Used for Grafana/Kibana/CSV/Board reporting.",
+  "fields": [
+    {
+      "name": "event_type",
+      "type": "string",
+      "default": "PaymentsRlAdvisoryMetric",
+      "doc": "Event type identifier"
+    },
+    {
+      "name": "schema_version",
+      "type": "string",
+      "default": "1.0",
+      "doc": "Schema version for compatibility tracking"
+    },
+    {
+      "name": "event_id",
+      "type": "string",
+      "doc": "Unique event identifier (UUID)"
+    },
+    {
+      "name": "tenant_id",
+      "type": "string",
+      "doc": "Tenant identifier (e.g., CU-12345)"
+    },
+    {
+      "name": "payment_id",
+      "type": "string",
+      "doc": "Payment identifier from core system"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "doc": "Unix timestamp in milliseconds when metric was generated"
+    },
+    {
+      "name": "actual",
+      "type": {
+        "type": "record",
+        "name": "ActualPaymentOutcome",
+        "fields": [
+          {
+            "name": "rail_used",
+            "type": "string",
+            "doc": "Actual rail used (NPP, BECS, BPAY)"
+          },
+          {
+            "name": "latency_ms",
+            "type": "int",
+            "doc": "Actual settlement latency in milliseconds"
+          },
+          {
+            "name": "cost_cents",
+            "type": "double",
+            "doc": "Actual cost in cents"
+          },
+          {
+            "name": "success",
+            "type": "boolean",
+            "doc": "Whether payment succeeded"
+          },
+          {
+            "name": "retry_count",
+            "type": "int",
+            "doc": "Number of retries required"
+          }
+        ]
+      },
+      "doc": "Actual payment outcome from core system"
+    },
+    {
+      "name": "rl_recommendation",
+      "type": {
+        "type": "record",
+        "name": "RlRecommendation",
+        "fields": [
+          {
+            "name": "proposed_rail",
+            "type": "string",
+            "doc": "RL recommended rail (NPP, BECS, BPAY)"
+          },
+          {
+            "name": "expected_latency_ms",
+            "type": "int",
+            "doc": "RL expected latency in milliseconds"
+          },
+          {
+            "name": "expected_cost_cents",
+            "type": "double",
+            "doc": "RL expected cost in cents"
+          },
+          {
+            "name": "confidence",
+            "type": "double",
+            "doc": "RL confidence score (0.0-1.0)"
+          },
+          {
+            "name": "reward_estimate",
+            "type": "double",
+            "doc": "RL expected reward"
+          }
+        ]
+      },
+      "doc": "RL recommendation (advisory only, no execution authority)"
+    },
+    {
+      "name": "delta",
+      "type": {
+        "type": "record",
+        "name": "PaymentDelta",
+        "fields": [
+          {
+            "name": "latency_improvement_ms",
+            "type": "int",
+            "doc": "Latency improvement in milliseconds (positive = improvement)"
+          },
+          {
+            "name": "cost_delta_cents",
+            "type": "double",
+            "doc": "Cost delta in cents (positive = more expensive, negative = cheaper)"
+          },
+          {
+            "name": "retry_avoided",
+            "type": "boolean",
+            "doc": "Whether RL recommendation would have avoided retry"
+          }
+        ]
+      },
+      "doc": "Delta between actual and RL recommendation"
+    }
+  ]
+}

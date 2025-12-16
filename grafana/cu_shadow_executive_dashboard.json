@@ -1,0 +1,1270 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "cu-shadow-exec",
+    "title": "TuringCore – CU Shadow Migration Executive Dashboard",
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "30s",
+    "tags": ["shadow", "cutover", "cps230", "credit-union"],
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "tenant",
+          "type": "query",
+          "label": "Shadow Tenant",
+          "query": "label_values(shadow_status, tenant)",
+          "current": {
+            "text": "CU_ALPHA_SHADOW",
+            "value": "CU_ALPHA_SHADOW"
+          }
+        }
+      ]
+    },
+    "panels": [
+      {
+        "type": "stat",
+        "title": "Shadow Health Status",
+        "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_status{tenant=\"$tenant\"}",
+            "legendFormat": "Status"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "RED", "color": "red" }, "1": { "text": "GREEN", "color": "green" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Transaction Delta",
+        "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_transaction_delta{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "none",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Balance Mismatches",
+        "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_balance_mismatches{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "GL Delta ($)",
+        "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_gl_delta{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Consecutive GREEN Days",
+        "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_consecutive_green_days{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 15 },
+                { "color": "green", "value": 30 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Product Invariants",
+        "gridPos": { "x": 0, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_product_invariant_pass{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "FAIL", "color": "red" }, "1": { "text": "PASS", "color": "green" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Ledger Invariants",
+        "gridPos": { "x": 4, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_ledger_invariant_pass{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "FAIL", "color": "red" }, "1": { "text": "PASS", "color": "green" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "CPS-230 Data Integrity",
+        "gridPos": { "x": 8, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_cps230_integrity{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "FAIL", "color": "red" }, "1": { "text": "PASS", "color": "green" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "green", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "CPS-230 RTO (Hours)",
+        "gridPos": { "x": 12, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_cps230_rto_hours{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "h",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 4 },
+                { "color": "red", "value": 6 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Interest Delta ($)",
+        "gridPos": { "x": 16, "y": 4, "w": 4, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_interest_delta{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "gauge",
+        "title": "Cutover Readiness Score",
+        "gridPos": { "x": 0, "y": 8, "w": 8, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_cutover_score{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 100,
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 70 },
+                { "color": "green", "value": 90 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Shadow GL Delta Over Time",
+        "gridPos": { "x": 8, "y": 8, "w": 12, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_gl_delta{tenant=\"$tenant\"}",
+            "legendFormat": "GL Delta"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Transaction Mirroring Rate",
+        "gridPos": { "x": 0, "y": 14, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "rate(shadow_transactions_mirrored_total{tenant=\"$tenant\"}[5m])",
+            "legendFormat": "Transactions/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Invariant Violations Over Time",
+        "gridPos": { "x": 10, "y": 14, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_product_invariant_violations{tenant=\"$tenant\"}",
+            "legendFormat": "Product Invariants"
+          },
+          {
+            "expr": "shadow_ledger_invariant_violations{tenant=\"$tenant\"}",
+            "legendFormat": "Ledger Invariants"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "type": "table",
+        "title": "Cutover Gate Checklist",
+        "gridPos": { "x": 0, "y": 20, "w": 20, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_cutover_gate_30_days{tenant=\"$tenant\"}",
+            "legendFormat": "30 Consecutive GREEN Days",
+            "format": "table"
+          },
+          {
+            "expr": "shadow_cutover_gate_gl_zero{tenant=\"$tenant\"}",
+            "legendFormat": "Zero GL Variance",
+            "format": "table"
+          },
+          {
+            "expr": "shadow_cutover_gate_product_zero{tenant=\"$tenant\"}",
+            "legendFormat": "Zero Product Breaches",
+            "format": "table"
+          },
+          {
+            "expr": "shadow_cutover_gate_ledger_zero{tenant=\"$tenant\"}",
+            "legendFormat": "Zero Ledger Breaches",
+            "format": "table"
+          },
+          {
+            "expr": "shadow_cutover_gate_change_freeze{tenant=\"$tenant\"}",
+            "legendFormat": "Change Freeze Active",
+            "format": "table"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "Debit Auth Success %",
+        "gridPos": { "x": 0, "y": 26, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_debit_auth_success_rate{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 95 },
+                { "color": "green", "value": 98 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Debit Decline Rate %",
+        "gridPos": { "x": 5, "y": 26, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_debit_decline_rate{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 2 },
+                { "color": "red", "value": 5 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Debit Spend Today ($)",
+        "gridPos": { "x": 10, "y": 26, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_debit_spend_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud Flags (24h)",
+        "gridPos": { "x": 15, "y": 26, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_debit_fraud_flags{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 5 },
+                { "color": "red", "value": 20 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Debit Card Spend Over Time",
+        "gridPos": { "x": 0, "y": 30, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "rate(shadow_debit_spend_total{tenant=\"$tenant\"}[5m])",
+            "legendFormat": "Spend Rate ($/min)"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Debit Card Authorisation Rate",
+        "gridPos": { "x": 10, "y": 30, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "rate(shadow_debit_auth_total{tenant=\"$tenant\",status=\"approved\"}[5m])",
+            "legendFormat": "Approved"
+          },
+          {
+            "expr": "rate(shadow_debit_auth_total{tenant=\"$tenant\",status=\"declined\"}[5m])",
+            "legendFormat": "Declined"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Term Deposit Book ($)",
+        "gridPos": { "x": 0, "y": 36, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_td_total_balance{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "TD Maturities (30d)",
+        "gridPos": { "x": 5, "y": 36, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_td_maturities_30d{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 1000000 },
+                { "color": "red", "value": 5000000 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "TD Breaks Today",
+        "gridPos": { "x": 10, "y": 36, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_td_breaks_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 5 },
+                { "color": "red", "value": 20 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Avg TD Cost of Funds %",
+        "gridPos": { "x": 15, "y": 36, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_td_avg_rate{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "TD Maturity Ladder",
+        "gridPos": { "x": 0, "y": 40, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_td_maturity_0_30d{tenant=\"$tenant\"}",
+            "legendFormat": "0-30 days"
+          },
+          {
+            "expr": "shadow_td_maturity_31_60d{tenant=\"$tenant\"}",
+            "legendFormat": "31-60 days"
+          },
+          {
+            "expr": "shadow_td_maturity_61_90d{tenant=\"$tenant\"}",
+            "legendFormat": "61-90 days"
+          },
+          {
+            "expr": "shadow_td_maturity_91_plus{tenant=\"$tenant\"}",
+            "legendFormat": "91+ days"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "TD Book Growth",
+        "gridPos": { "x": 10, "y": 40, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_td_total_balance{tenant=\"$tenant\"}",
+            "legendFormat": "Total TD Book"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Total CC Outstandings ($)",
+        "gridPos": { "x": 0, "y": 46, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_cc_outstanding{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Instalments Active",
+        "gridPos": { "x": 5, "y": 46, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_cc_instalments_active{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Balance Transfers ($)",
+        "gridPos": { "x": 10, "y": 46, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_cc_balance_transfers{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Credit Cards in Arrears",
+        "gridPos": { "x": 15, "y": 46, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "shadow_cc_arrears_count{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 50 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "CC Outstandings Over Time",
+        "gridPos": { "x": 0, "y": 50, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_cc_outstanding{tenant=\"$tenant\"}",
+            "legendFormat": "Total Outstandings"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "CC Utilisation Rate %",
+        "gridPos": { "x": 10, "y": 50, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "shadow_cc_utilisation_rate{tenant=\"$tenant\"}",
+            "legendFormat": "Utilisation %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "max": 100
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Hardship AI: Cases Pending",
+        "gridPos": { "x": 0, "y": 56, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "hardship_ai_cases_pending{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 50 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Hardship AI: ML Scores Today",
+        "gridPos": { "x": 5, "y": 56, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "hardship_ai_ml_scores_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Hardship AI: Flags Raised",
+        "gridPos": { "x": 10, "y": 56, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "hardship_ai_flags_raised{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 5 },
+                { "color": "red", "value": 20 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Hardship AI: Kill Switch",
+        "gridPos": { "x": 15, "y": 56, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "hardship_ai_kill_switch_active{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "mappings": [
+              { "type": "value", "options": { "0": { "text": "ACTIVE", "color": "green" }, "1": { "text": "DISABLED", "color": "red" } } }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Hardship AI: ML Score Distribution",
+        "gridPos": { "x": 0, "y": 60, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, hardship_ai_ml_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.75, hardship_ai_ml_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p75"
+          },
+          {
+            "expr": "histogram_quantile(0.95, hardship_ai_ml_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p95"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "max": 1.0
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Hardship AI: Human Actions",
+        "gridPos": { "x": 10, "y": 60, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "rate(hardship_ai_human_actions_total{tenant=\"$tenant\",action_type=\"OUTREACH\"}[5m])",
+            "legendFormat": "Outreach"
+          },
+          {
+            "expr": "rate(hardship_ai_human_actions_total{tenant=\"$tenant\",action_type=\"PROPOSE\"}[5m])",
+            "legendFormat": "Propose"
+          },
+          {
+            "expr": "rate(hardship_ai_human_actions_total{tenant=\"$tenant\",action_type=\"APPROVE\"}[5m])",
+            "legendFormat": "Approve"
+          },
+          {
+            "expr": "rate(hardship_ai_human_actions_total{tenant=\"$tenant\",action_type=\"REJECT\"}[5m])",
+            "legendFormat": "Reject"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud AI: Cases Pending",
+        "gridPos": { "x": 0, "y": 66, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "fraud_ai_cases_pending{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 20 },
+                { "color": "red": 100 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud AI: Scores Today",
+        "gridPos": { "x": 5, "y": 66, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "fraud_ai_scores_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud AI: High Risk Flags",
+        "gridPos": { "x": 10, "y": 66, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "fraud_ai_high_risk_flags{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 50 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Fraud AI: Advisory Acceptance %",
+        "gridPos": { "x": 15, "y": 66, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "fraud_ai_advisory_acceptance_rate{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 0.5 },
+                { "color": "green", "value": 0.8 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Fraud AI: Score Distribution",
+        "gridPos": { "x": 0, "y": 70, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, fraud_ai_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.75, fraud_ai_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p75"
+          },
+          {
+            "expr": "histogram_quantile(0.95, fraud_ai_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p95"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "max": 1.0
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Fraud AI: Cluster Detections",
+        "gridPos": { "x": 10, "y": 70, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "fraud_ai_clusters_detected{tenant=\"$tenant\",cluster_type=\"MULE_RING\"}",
+            "legendFormat": "Mule Rings"
+          },
+          {
+            "expr": "fraud_ai_clusters_detected{tenant=\"$tenant\",cluster_type=\"COMPROMISED_TERMINAL\"}",
+            "legendFormat": "Compromised Terminals"
+          },
+          {
+            "expr": "fraud_ai_clusters_detected{tenant=\"$tenant\",cluster_type=\"ACCOUNT_TAKEOVER\"}",
+            "legendFormat": "Account Takeovers"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "AML AI: Investigations Pending",
+        "gridPos": { "x": 0, "y": 76, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "aml_ai_investigations_pending{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 10 },
+                { "color": "red", "value": 50 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "AML AI: Scores Today",
+        "gridPos": { "x": 5, "y": 76, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "aml_ai_scores_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "AML AI: High Risk Flags",
+        "gridPos": { "x": 10, "y": 76, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "aml_ai_high_risk_flags{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "yellow", "value": 5 },
+                { "color": "red", "value": 20 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "AML AI: SMRs Submitted (30d)",
+        "gridPos": { "x": 15, "y": 76, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "aml_ai_smrs_submitted_30d{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "AML AI: Risk Score Distribution",
+        "gridPos": { "x": 0, "y": 80, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.5, aml_ai_risk_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p50"
+          },
+          {
+            "expr": "histogram_quantile(0.75, aml_ai_risk_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p75"
+          },
+          {
+            "expr": "histogram_quantile(0.95, aml_ai_risk_score_distribution{tenant=\"$tenant\"})",
+            "legendFormat": "p95"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "max": 1.0
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "AML AI: Investigation Outcomes",
+        "gridPos": { "x": 10, "y": 80, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "aml_ai_investigations_cleared{tenant=\"$tenant\"}",
+            "legendFormat": "Cleared"
+          },
+          {
+            "expr": "aml_ai_investigations_escalated{tenant=\"$tenant\"}",
+            "legendFormat": "Escalated"
+          },
+          {
+            "expr": "aml_ai_smrs_submitted{tenant=\"$tenant\"}",
+            "legendFormat": "SMRs Submitted"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short"
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Treasury RL: Liquidity Buffer %",
+        "gridPos": { "x": 0, "y": 86, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "treasury_rl_liquidity_buffer_pct{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "thresholds": {
+              "steps": [
+                { "color": "red", "value": 0 },
+                { "color": "yellow", "value": 0.20 },
+                { "color": "green", "value": 0.50 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Treasury RL: Advisories Today",
+        "gridPos": { "x": 5, "y": 86, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "treasury_rl_advisories_today{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Treasury RL: Breaches Avoided (30d)",
+        "gridPos": { "x": 10, "y": 86, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "treasury_rl_breaches_avoided_30d{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "stat",
+        "title": "Treasury RL: Kill Switch Status",
+        "gridPos": { "x": 15, "y": 86, "w": 5, "h": 4 },
+        "targets": [
+          {
+            "expr": "treasury_rl_kill_switch_active{tenant=\"$tenant\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "mappings": [
+              { "type": "value", "value": "0", "text": "OPERATIONAL" },
+              { "type": "value", "value": "1", "text": "DISABLED" }
+            ],
+            "thresholds": {
+              "steps": [
+                { "color": "green", "value": 0 },
+                { "color": "red", "value": 1 }
+              ]
+            }
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Treasury RL: Intraday Liquidity",
+        "gridPos": { "x": 0, "y": 90, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "treasury_rl_available_npp_liquidity{tenant=\"$tenant\"}",
+            "legendFormat": "NPP Liquidity"
+          },
+          {
+            "expr": "treasury_rl_available_becs_liquidity{tenant=\"$tenant\"}",
+            "legendFormat": "BECS Liquidity"
+          },
+          {
+            "expr": "treasury_rl_intraday_min_balance{tenant=\"$tenant\"}",
+            "legendFormat": "Intraday Min"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyAUD"
+          }
+        }
+      },
+      {
+        "type": "timeseries",
+        "title": "Treasury RL: Advisory Acceptance Rate",
+        "gridPos": { "x": 10, "y": 90, "w": 10, "h": 6 },
+        "targets": [
+          {
+            "expr": "rate(treasury_rl_decisions_accepted{tenant=\"$tenant\"}[5m])",
+            "legendFormat": "Accepted"
+          },
+          {
+            "expr": "rate(treasury_rl_decisions_overridden{tenant=\"$tenant\"}[5m])",
+            "legendFormat": "Overridden"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit"
+          }
+        }
+      }
+    ]
+  }
+}

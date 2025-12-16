@@ -1,0 +1,40 @@
+# CU Alpha - Aggressive Retail Growth Strategy
+#
+# Positioning: Cheap overdrafts, higher PL risk appetite, competitive savings
+# Target: Young professionals, digital-first members
+# Risk tolerance: Medium-high
+
+tenant_code: CU_ALPHA
+display_name: CU Alpha Credit Union
+region: AU
+base_currency: AUD
+time_zone: Australia/Sydney
+
+overrides:
+  # Free transaction account to drive acquisition
+  TXN_EVERYDAY:
+    fees:
+      account_keeping_fee: 0.0
+      free_transactions_per_month: 100
+
+  # Aggressive savings rates to compete with neo-banks
+  SAVER_BONUS:
+    interest:
+      base_rate: 0.010
+      bonus_rate: 0.040
+
+  # Higher PL limits, lower credit score threshold
+  PL_36M:
+    interest:
+      base_rate: 0.1399
+    limits:
+      credit_limit_max: 60000.0
+    eligibility:
+      min_credit_score: 620
+
+  # Cheap overdraft to drive usage
+  OD_TXN:
+    interest:
+      base_rate: 0.1599
+    limits:
+      overdraft_limit: 3000.0

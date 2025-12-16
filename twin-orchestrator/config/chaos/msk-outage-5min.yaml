@@ -1,0 +1,32 @@
+# twin-orchestrator/config/chaos/msk-outage-5min.yaml
+#
+# Chaos Plan: MSK 5-Minute Outage
+#
+# Simulates a 5-minute Kafka (MSK) outage to test:
+# - RTO (Recovery Time Objective) compliance
+# - Event continuity during outage window
+# - Graceful degradation of command acceptance
+#
+# This is the baseline CPS 230 resilience test for v0.1.
+
+chaos:
+  name: "MSK_OUTAGE_5MIN"
+  
+  # Total expected runtime for the scenario (20 minutes)
+  maxRuntimeSeconds: 1200
+  
+  # Recovery Time Objective: system must resume successful PostEntry within 60 seconds
+  rtoLimitSeconds: 60
+  
+  events:
+    - name: "MSK_OUTAGE"
+      target: "KAFKA"
+      action: "OUTAGE"
+      
+      # Trigger outage 5 minutes into the run
+      timeOffsetSeconds: 300
+      
+      # Outage lasts 5 minutes
+      durationSeconds: 300
+      
+      params: {}

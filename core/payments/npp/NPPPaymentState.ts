@@ -84,4 +84,5 @@ export enum NPPFailureReason {
   SUBMISSION = "SUBMISSION",   // Failed to submit to rail
   RAIL = "RAIL",              // Rail rejected/timeout
   POST_ACK = "POST_ACK",      // Late failure after ACK
+  CANCELLED = "CANCELLED",     // Operator cancelled before sending
 }
