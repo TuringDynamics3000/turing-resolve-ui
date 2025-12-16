@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { handleFactStream } from "../factStream";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -35,6 +36,17 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+  
+  // SSE endpoint for real-time fact streaming
+  // Streams new fact IDs only - UI must re-query and replay
+  app.get("/api/facts/stream", (req, res) => {
+    const lastEventId = req.headers["last-event-id"] as string | undefined;
+    const cleanup = handleFactStream(res, lastEventId);
+    
+    req.on("close", cleanup);
+    req.on("error", cleanup);
+  });
+  
   // tRPC API
   app.use(
     "/api/trpc",

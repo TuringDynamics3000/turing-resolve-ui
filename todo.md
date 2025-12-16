@@ -1040,3 +1040,30 @@
 
 ### UI Tests - COMPLETED ✓
 - [x] PaymentsCorePage.test.tsx (Overview Tab, UI Principles tests)
+
+## Real-time Updates for Payments Core v1 UI - COMPLETED ✓
+
+### Principle: Stream Facts, Not State - COMPLETED ✓
+- [x] Stream new fact IDs only (not computed state)
+- [x] UI must re-query, replay, re-render on new facts
+- [x] Keep replay sacred - no client-side state computation
+
+### Infrastructure - COMPLETED ✓
+- [x] Add SSE endpoint for fact streaming (/api/facts/stream)
+- [x] Emit { paymentId, newFactId } on fact creation
+- [x] Support sinceFactId for reconnection (getEventsSince)
+
+### tRPC Endpoints - COMPLETED ✓
+- [x] Fact emission integrated into paymentsRouter mutations
+- [x] emitPaymentFact, emitDepositFact, emitSafeguardChange helpers
+
+### UI Updates - COMPLETED ✓
+- [x] Subscribe to fact stream in PaymentsCorePage (useFactStream hook)
+- [x] Auto-refetch payment list on new facts
+- [x] Auto-refetch payment detail on new facts for selected payment
+- [x] Visual indicator for live updates (pulsing green dot + event count)
+- [x] Kill-switch/circuit breaker changes instantly visible
+
+### Testing - COMPLETED ✓
+- [x] factStream.test.ts (9 tests) - emission, event IDs, getEventsSince, principles
+- [x] All 127 tests passing

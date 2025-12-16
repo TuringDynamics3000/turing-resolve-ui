@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
+import { useFactStream, PaymentFactEvent, SafeguardChangeEvent } from "@/hooks/useFactStream";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -371,6 +372,29 @@ export default function PaymentsCorePage() {
   const [selectedPaymentId, setSelectedPaymentId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const { data: payments, isLoading, refetch } = trpc.payments.listCoreV1.useQuery();
+  const utils = trpc.useUtils();
+
+  // Real-time updates: stream fact IDs, re-query to replay
+  const handlePaymentFact = useCallback((event: PaymentFactEvent) => {
+    // Re-fetch payment list to get updated state from server replay
+    refetch();
+    // If viewing this payment's detail, invalidate that query too
+    if (selectedPaymentId === event.paymentId) {
+      utils.payments.rebuildFromFacts.invalidate({ paymentId: event.paymentId });
+      utils.payments.getLinkedDeposits.invalidate({ paymentId: event.paymentId });
+    }
+  }, [refetch, selectedPaymentId, utils]);
+
+  const handleSafeguardChange = useCallback((_event: SafeguardChangeEvent) => {
+    // Re-fetch safeguards to show updated state
+    utils.payments.getSafeguards.invalidate();
+  }, [utils]);
+
+  const { isConnected, eventCount } = useFactStream({
+    onPaymentFact: handlePaymentFact,
+    onSafeguardChange: handleSafeguardChange,
+    enabled: true,
+  });
 
   const handleSelectPayment = (paymentId: string) => {
     setSelectedPaymentId(paymentId);
@@ -396,7 +420,24 @@ export default function PaymentsCorePage() {
             <TabsTrigger value="deposits" disabled={!selectedPaymentId}>Linked Deposits</TabsTrigger>
             <TabsTrigger value="safeguards">Safeguards</TabsTrigger>
           </TabsList>
-          <Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
+          <div className="flex items-center gap-3">
+            {isConnected ? (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span className="text-emerald-600">Live</span>
+                {eventCount > 0 && <Badge variant="secondary" className="text-xs">{eventCount} events</Badge>}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-2 w-2 rounded-full bg-gray-400"></span>
+                <span>Connecting...</span>
+              </div>
+            )}
+            <Button variant="outline" size="sm" onClick={() => refetch()}><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
+          </div>
         </div>
         <TabsContent value="overview" className="mt-4"><OverviewTab payments={payments || []} isLoading={isLoading} onSelectPayment={handleSelectPayment} /></TabsContent>
         <TabsContent value="detail" className="mt-4">{selectedPaymentId && <PaymentDetailTab paymentId={selectedPaymentId} />}</TabsContent>

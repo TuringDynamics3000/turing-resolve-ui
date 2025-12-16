@@ -15,6 +15,7 @@ import { getDb } from "./db";
 import { paymentFacts, payments, depositFacts, depositAccounts, depositHolds } from "../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { emitPaymentFact, emitDepositFact } from "./factStream";
 
 // ============================================
 // HELPER: Rebuild state from facts (same as depositsRouter)
@@ -252,6 +253,9 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
+      // Emit fact event for real-time updates
+      emitPaymentFact(paymentId, `${paymentId}:1`, "PAYMENT_INITIATED", 1);
+
       // Create payment projection
       await db.insert(payments).values({
         paymentId,
@@ -433,6 +437,10 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
+      // Emit fact events for real-time updates
+      emitDepositFact(p.fromAccount, `FACT-${holdId}`, "HOLD_PLACED", depositSeq);
+      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_HOLD_PLACED", paymentSeq);
+
       // Update payment projection
       await db.update(payments)
         .set({
@@ -592,6 +600,9 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
+      // Emit fact event for PAYMENT_SENT
+      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_SENT", paymentSeq);
+
       // If internal transfer, credit destination
       if (p.toAccount) {
         const destAccount = await db.select()
@@ -652,6 +663,9 @@ export const paymentsRouter = router({
         },
         occurredAt: now,
       });
+
+      // Emit fact event for PAYMENT_SETTLED
+      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_SETTLED", paymentSeq);
 
       // Update payment projection
       await db.update(payments)
@@ -781,6 +795,10 @@ export const paymentsRouter = router({
         depositPostingType: "CREDIT",
         occurredAt: now,
       });
+
+      // Emit fact events for real-time updates
+      emitDepositFact(p.fromAccount, `FACT-${insertedRefundFact.id}`, "CREDIT", depositSeq);
+      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_REVERSED", paymentSeq);
 
       // Update payment projection
       await db.update(payments)
