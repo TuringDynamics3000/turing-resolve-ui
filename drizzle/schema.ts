@@ -333,3 +333,55 @@ export const advisoryFacts = mysqlTable("advisory_facts", {
 
 export type AdvisoryFact = typeof advisoryFacts.$inferSelect;
 export type InsertAdvisoryFact = typeof advisoryFacts.$inferInsert;
+
+
+// ============================================
+// AUDIT FACTS (Operator Accountability)
+// ============================================
+
+/**
+ * Audit Facts - Immutable record of every human-initiated action.
+ * 
+ * CRITICAL: Audit facts:
+ * - Are append-only (never updated or deleted)
+ * - Survive replay
+ * - Are exportable for regulator reports
+ * - Cover ALL operator actions (kill-switch, retry, reverse, advisory)
+ */
+export const auditFacts = mysqlTable("audit_facts", {
+  id: int("id").autoincrement().primaryKey(),
+  factId: varchar("factId", { length: 64 }).notNull().unique(),
+  
+  // Actor information
+  actor: varchar("actor", { length: 128 }).notNull(), // Operator ID
+  actorRole: varchar("actorRole", { length: 64 }).notNull(), // Role at time of action
+  
+  // Action details
+  actionType: mysqlEnum("actionType", [
+    "KILL_SWITCH_ENABLE",
+    "KILL_SWITCH_DISABLE",
+    "PAYMENT_RETRY",
+    "PAYMENT_REVERSE",
+    "ADVISORY_NOTE_ADDED",
+    "INCIDENT_ANNOTATION"
+  ]).notNull(),
+  
+  // Target entity
+  targetType: mysqlEnum("targetType", ["PAYMENT", "ACCOUNT", "ADAPTER", "SYSTEM"]).notNull(),
+  targetId: varchar("targetId", { length: 64 }).notNull(),
+  
+  // Action context
+  reason: text("reason"), // Required for some actions
+  metadata: json("metadata"), // Additional context
+  
+  // Result
+  result: mysqlEnum("result", ["ACCEPTED", "REJECTED"]).notNull(),
+  resultReason: text("resultReason"), // Why rejected, if applicable
+  
+  // Audit
+  occurredAt: timestamp("occurredAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditFact = typeof auditFacts.$inferSelect;
+export type InsertAuditFact = typeof auditFacts.$inferInsert;

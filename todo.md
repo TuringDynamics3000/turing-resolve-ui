@@ -1160,3 +1160,37 @@
 ### Tests
 - [x] 133 tests passing (including 6 operator tests)
 - [x] operator.test.ts: Advisory facts, operator principles
+
+
+## Operator Toast Notifications & Audit Log - COMPLETED ✓
+
+### 1. Operator Toast Notifications (Low Risk, High Value) - COMPLETED ✓
+- [x] Toast for Kill-switch enabled
+- [x] Toast for Kill-switch disabled
+- [x] Toast for Circuit breaker OPEN
+- [x] Toast for Circuit breaker HALF_OPEN
+- [x] Toast for Payment FAILED
+- [x] Toast for Payment REVERSED
+- [x] Toasts driven by facts/status endpoints, not optimistic UI
+- [x] Toast fires within seconds of event (via SSE fact stream)
+- [x] Reloading page does not suppress visibility
+- [x] Toasts never imply money moved
+
+### 2. Operator Audit Log (Mandatory for CU Compliance) - COMPLETED ✓
+- [x] Create audit_facts table (append-only)
+- [x] Audit fact fields: actor, actorRole, actionType, targetType, targetId, reason, result, resultReason
+- [x] Emit audit fact on Payment retry (operatorRetry)
+- [x] Emit audit fact on Payment reversal (operatorReverse)
+- [x] Audit facts survive replay (separate from payment/deposit facts)
+- [x] Audit facts exportable (CSV export in UI)
+- [x] Audit facts never editable (append-only by design)
+
+### 3. Audit Log UI - COMPLETED ✓
+- [x] Audit log viewer in Operator Console (/operator/audit)
+- [x] Filter by action type, target type
+- [x] Export functionality for regulator reports (CSV export)
+- [x] Compliance notice banner
+
+### Tests - COMPLETED ✓
+- [x] audit.test.ts (7 tests)
+- [x] All 140 tests passing

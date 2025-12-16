@@ -5,7 +5,8 @@ import {
   AlertTriangle, 
   Shield,
   MessageSquare,
-  Home
+  Home,
+  FileText
 } from "lucide-react";
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
   { href: "/operator/safeguards", label: "Safeguards", icon: Shield },
   { href: "/operator/incidents", label: "Incidents", icon: AlertTriangle },
   { href: "/operator/advisory", label: "Advisory", icon: MessageSquare },
+  { href: "/operator/audit", label: "Audit Log", icon: FileText },
 ];
 
 export function OperatorNav() {

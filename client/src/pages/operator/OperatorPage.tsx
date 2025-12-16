@@ -9,8 +9,10 @@ import {
   CreditCard, 
   Wallet,
   AlertTriangle,
-  Activity
+  Activity,
+  FileText
 } from "lucide-react";
+import { AuditLogPage } from "./audit/AuditLogPage";
 import { Link } from "wouter";
 
 function OperatorOverview() {
@@ -48,6 +50,14 @@ function OperatorOverview() {
             <AlertTriangle className="w-8 h-8 text-red-400 mb-3" />
             <h3 className="text-lg font-semibold text-white mb-1">Incidents</h3>
             <p className="text-sm text-slate-400">View incident timeline</p>
+          </a>
+        </Link>
+        
+        <Link href="/operator/audit">
+          <a className="block p-6 bg-slate-800/30 border border-slate-700 rounded-lg hover:border-cyan-500/50 transition-colors">
+            <FileText className="w-8 h-8 text-cyan-400 mb-3" />
+            <h3 className="text-lg font-semibold text-white mb-1">Audit Log</h3>
+            <p className="text-sm text-slate-400">Immutable record of operator actions</p>
           </a>
         </Link>
       </div>
@@ -131,6 +141,7 @@ export function OperatorPage() {
         <Route path="/operator/deposits" component={DepositsPage} />
         <Route path="/operator/safeguards" component={SafeguardsPage} />
         <Route path="/operator/incidents" component={IncidentsPage} />
+        <Route path="/operator/audit" component={AuditLogPage} />
         <Route path="/operator" component={OperatorOverview} />
         <Route component={OperatorOverview} />
       </Switch>

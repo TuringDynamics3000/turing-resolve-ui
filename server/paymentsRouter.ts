@@ -16,6 +16,7 @@ import { paymentFacts, payments, depositFacts, depositAccounts, depositHolds } f
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { emitPaymentFact, emitDepositFact } from "./factStream";
+import { emitAuditFact } from "./auditRouter";
 
 // ============================================
 // HELPER: Rebuild state from facts (same as depositsRouter)
@@ -1206,6 +1207,17 @@ export const paymentsRouter = router({
 
       emitPaymentFact(input.paymentId, `${input.paymentId}:${seq}`, "PAYMENT_INITIATED", seq);
 
+      // Emit audit fact for operator action
+      await emitAuditFact({
+        actor,
+        actorRole: "OPERATOR",
+        actionType: "PAYMENT_RETRY",
+        targetType: "PAYMENT",
+        targetId: input.paymentId,
+        reason: input.reason,
+        result: "ACCEPTED",
+      });
+
       return {
         success: true,
         error: null,
@@ -1345,6 +1357,22 @@ export const paymentsRouter = router({
           updatedAt: now,
         })
         .where(eq(payments.paymentId, input.paymentId));
+
+      // Emit audit fact for operator action
+      await emitAuditFact({
+        actor,
+        actorRole: "OPERATOR",
+        actionType: "PAYMENT_REVERSE",
+        targetType: "PAYMENT",
+        targetId: input.paymentId,
+        reason: input.reason,
+        metadata: {
+          depositFactId: insertedRefundFact.id,
+          refundAmount: creditAmount,
+          currency: p.currency,
+        },
+        result: "ACCEPTED",
+      });
 
       return {
         success: true,
