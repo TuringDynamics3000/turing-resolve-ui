@@ -40,6 +40,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { StatementPreviewModal, sampleStatementData } from "@/components/StatementPreviewModal";
+import { Eye } from "lucide-react";
 
 // ============================================
 // MOCK DATA - Statements
@@ -299,6 +301,27 @@ function StatementGenerationSection() {
   
   const [selectedCustomer, setSelectedCustomer] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [selectedStatement, setSelectedStatement] = useState<typeof sampleStatementData | null>(null);
+
+  const handlePreview = (statement: Statement) => {
+    // In production, this would fetch the full statement data
+    // For now, we use sample data with the customer name
+    const previewData = {
+      ...sampleStatementData,
+      id: statement.statementId,
+      customerId: statement.customerId,
+      customerName: statement.customerName,
+      accountNumber: statement.accountNumber.replace(/-/g, ""),
+      period: {
+        start: "2024-11-01",
+        end: "2024-11-30",
+      },
+      hash: statement.hash || sampleStatementData.hash,
+    };
+    setSelectedStatement(previewData);
+    setPreviewOpen(true);
+  };
 
   const handleGenerate = () => {
     if (!selectedCustomer) {
@@ -464,12 +487,47 @@ function StatementGenerationSection() {
                   
                   {(statement.status === "generated" || statement.status === "delivered") && (
                     <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" className="h-8 px-2">
-                        <FileBadge className="h-4 w-4 text-red-400" />
-                      </Button>
-                      <Button variant="ghost" size="sm" className="h-8 px-2">
-                        <FileJson className="h-4 w-4 text-blue-400" />
-                      </Button>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-8 px-2 hover:bg-blue-500/20"
+                              onClick={() => handlePreview(statement)}
+                            >
+                              <Eye className="h-4 w-4 text-blue-400" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Preview statement</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 px-2 hover:bg-red-500/20">
+                              <FileBadge className="h-4 w-4 text-red-400" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Download PDF</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-8 px-2 hover:bg-blue-500/20">
+                              <FileJson className="h-4 w-4 text-blue-400" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Download JSON</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                   )}
                 </div>
@@ -478,6 +536,13 @@ function StatementGenerationSection() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Statement Preview Modal */}
+      <StatementPreviewModal
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        statement={selectedStatement}
+      />
     </div>
   );
 }

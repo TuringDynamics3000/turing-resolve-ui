@@ -559,3 +559,14 @@
 - [x] Schedule status (next run, last run, overdue indicator)
 - [x] Run Now buttons
 - [x] Enable/Disable toggles
+
+
+## Statement Preview Modal - COMPLETED ✓
+- [x] Create StatementPreviewModal component
+- [x] Add statement header with customer info and period
+- [x] Add opening/closing balance display
+- [x] Add transaction list with dates, descriptions, amounts
+- [x] Add interest summary section
+- [x] Add prominent hash verification banner
+- [x] Add download PDF/JSON buttons in modal
+- [x] Integrate modal into Reporting Dashboard
