@@ -26,10 +26,12 @@ import {
   reversePosting,
 } from "./db";
 import { depositsRouter } from "./depositsRouter";
+import { paymentsRouter } from "./paymentsRouter";
 
 export const appRouter = router({
   system: systemRouter,
   deposits: depositsRouter,
+  payments: paymentsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

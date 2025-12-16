@@ -190,3 +190,102 @@ export const depositHolds = mysqlTable("deposit_holds", {
 
 export type DepositHold = typeof depositHolds.$inferSelect;
 export type InsertDepositHold = typeof depositHolds.$inferInsert;
+
+
+// ============================================
+// PAYMENTS CORE v1 TABLES (Event Sourcing)
+// ============================================
+
+/**
+ * Payment Facts - Immutable event log for Payments Core v1.
+ * 
+ * CRITICAL: This is append-only. No UPDATE, no DELETE.
+ * Payment state is rebuilt by replaying facts.
+ */
+export const paymentFacts = mysqlTable("payment_facts", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Payment identity
+  paymentId: varchar("paymentId", { length: 64 }).notNull(),
+  sequence: int("sequence").notNull(), // Monotonic within payment
+  
+  // Fact type and data
+  factType: mysqlEnum("factType", [
+    "PAYMENT_INITIATED",
+    "PAYMENT_HOLD_PLACED",
+    "PAYMENT_AUTHORISED",
+    "PAYMENT_SENT",
+    "PAYMENT_SETTLED",
+    "PAYMENT_FAILED",
+    "PAYMENT_REVERSED"
+  ]).notNull(),
+  factData: json("factData").notNull(), // The full fact object
+  
+  // Deposits Core integration - links to deposit facts
+  depositFactId: int("depositFactId"), // FK to deposit_facts when posting applied
+  depositPostingType: varchar("depositPostingType", { length: 32 }), // HOLD_PLACED, DEBIT, CREDIT, etc.
+  
+  // Governance links
+  decisionId: varchar("decisionId", { length: 64 }),
+  
+  // Audit
+  occurredAt: timestamp("occurredAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PaymentFact = typeof paymentFacts.$inferSelect;
+export type InsertPaymentFact = typeof paymentFacts.$inferInsert;
+
+/**
+ * Payments - Derived state for efficient querying.
+ * 
+ * CRITICAL: This is a projection, NOT the source of truth.
+ * Source of truth is payment_facts.
+ */
+export const payments = mysqlTable("payments", {
+  id: int("id").autoincrement().primaryKey(),
+  paymentId: varchar("paymentId", { length: 64 }).notNull().unique(),
+  
+  // Payment details
+  fromAccount: varchar("fromAccount", { length: 64 }).notNull(),
+  toAccount: varchar("toAccount", { length: 64 }),
+  toExternal: json("toExternal"), // External party details
+  
+  // Amount
+  amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("AUD").notNull(),
+  
+  // State (derived from facts)
+  state: mysqlEnum("state", [
+    "INITIATED",
+    "HELD",
+    "AUTHORISED",
+    "SENT",
+    "SETTLED",
+    "FAILED",
+    "REVERSED"
+  ]).default("INITIATED").notNull(),
+  
+  // References
+  reference: varchar("reference", { length: 255 }),
+  description: text("description"),
+  
+  // Hold tracking
+  activeHoldId: varchar("activeHoldId", { length: 64 }),
+  
+  // Failure/reversal info
+  failureReason: text("failureReason"),
+  reversalReason: text("reversalReason"),
+  
+  // Timestamps
+  initiatedAt: timestamp("initiatedAt").notNull(),
+  settledAt: timestamp("settledAt"),
+  failedAt: timestamp("failedAt"),
+  reversedAt: timestamp("reversedAt"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = typeof payments.$inferInsert;

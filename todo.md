@@ -916,3 +916,26 @@
 ### Governance
 - [x] PAYMENTS_CORE_FREEZE.md - Surface freeze declaration
 
+
+
+## Payments tRPC Router - Demonstrability - COMPLETED ✓
+### Endpoints (Non-negotiable)
+- [x] initiatePayment - emits PAYMENT_INITIATED fact, returns payment state
+- [x] placeHold - emits PAYMENT_HOLD_PLACED, invokes Deposits HOLD_PLACED, returns both outcomes
+- [x] settlePayment - emits PAYMENT_SENT + PAYMENT_SETTLED, invokes Deposits DEBIT + CREDIT, returns both outcomes
+- [x] reversePayment - emits PAYMENT_REVERSED, invokes Deposits CREDIT (refund), returns both outcomes
+
+### Each endpoint:
+- [x] Emits payment facts
+- [x] Invokes Deposits Core postings (rebuilds state from facts)
+- [x] Returns payment state + deposit outcome
+- [x] Proves Payments cannot bypass Deposits
+
+### Database
+- [x] Created payment_facts table (payment_id, sequence, fact_type, fact_data, deposit_fact_id, occurred_at)
+- [x] Created payments table (projection for efficient querying)
+
+### Tested Flow
+- [x] INITIATED → HELD → SENT → SETTLED (full lifecycle)
+- [x] Each step links to Deposits Core facts (depositFactId)
+
