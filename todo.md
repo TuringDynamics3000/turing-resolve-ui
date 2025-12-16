@@ -1609,3 +1609,60 @@
 - [ ] Notifications are event-driven
 - [ ] GL export is accrual-based and reconcilable
 - [ ] Evidence packs are auto-generated
+
+
+## Lending Products + UI + CI + Evidence Exports
+
+### Loan Products - COMPLETED ✅
+- [x] Create /shared/lendingProducts.ts with product definitions
+- [x] Add PERSONAL loan product (unsecured, 1-5 years, 8-15% APR)
+- [x] Add HOME loan product (secured, 15-30 years, 3-6% APR)
+- [x] Add AUTO loan product (secured, 3-7 years, 5-10% APR)
+- [x] Add BUSINESS loan product (secured/unsecured, 1-10 years, 6-12% APR)
+- [x] Integrate products with CreditPolicy (product-specific risk scoring)
+- [x] Integrate products with Resolve (product-specific approval workflows)
+
+### Lending UI Integration - COMPLETED ✅
+- [x] Add Lending link to operator dashboard navigation menu
+- [x] Wire LendingOverview to operator dashboard
+- [x] Wire LoanDetail to operator dashboard
+- [x] Test navigation flow (operator dashboard → lending → loan detail)
+
+### Amortization Schedule Calculator - COMPLETED ✅
+- [x] Implement calculateAmortizationSchedule() function
+- [x] Calculate monthly payment (principal + interest breakdown)
+- [x] Calculate total interest over loan term
+- [x] Handle hardship periods (payment pause, reduced payments, interest-only)
+- [x] Complete DerivedSchedulePanel with actual schedule display
+- [x] Label schedule as "Derived. Not authoritative."
+
+### Composite CI Workflow
+- [ ] Create .github/workflows/lending-composite.yml
+- [ ] Add architectural forbiddance checks (no DB, no schedules, no balances, no cron)
+- [ ] Add core boundaries enforcement (no cross-core imports)
+- [ ] Add ADR requirement for Lending Core changes
+- [ ] Add replay determinism tests
+- [ ] Add property tests
+- [ ] Add cash movement safety checks
+- [ ] Add AI execution guard
+- [ ] Verify required tests exist
+
+### Chaos Tests
+- [ ] Create tests/lending/chaos.spec.ts
+- [ ] Test: Reject duplicate repayments safely
+- [ ] Test: Survive missed payments without mutation
+- [ ] Test: Handle repayment during hardship correctly
+- [ ] Test: Prevent restructuring from altering past obligations
+- [ ] Test: Replay correctness under disorder
+
+### Regulator Evidence Exports
+- [ ] Create /exports/lendingEvidenceExporter.ts
+- [ ] Implement exportLendingEvidence() function
+- [ ] Include loan lifecycle fact timeline
+- [ ] Include hardship/restructure facts
+- [ ] Include derived schedule (labelled "derived")
+- [ ] Include core commit hashes
+- [ ] Include parity snapshot
+- [ ] Include explicit guarantees
+- [ ] Create lendingEvidenceRouter.ts with exportLoan endpoint
+- [ ] Support JSON and PDF export formats

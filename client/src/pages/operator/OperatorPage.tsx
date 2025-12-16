@@ -10,10 +10,13 @@ import {
   Wallet,
   AlertTriangle,
   Activity,
-  FileText
+  FileText,
+  Landmark
 } from "lucide-react";
 import { AuditLogPage } from "./audit/AuditLogPage";
 import FactReplayPage from "./fact-replay/FactReplayPage";
+import { LendingOverview } from "./lending/LendingOverview";
+import { LoanDetail } from "./lending/LoanDetail";
 import { Link } from "wouter";
 
 function OperatorOverview() {
@@ -35,6 +38,14 @@ function OperatorOverview() {
             <Wallet className="w-8 h-8 text-green-400 mb-3" />
             <h3 className="text-lg font-semibold text-white mb-1">Deposits</h3>
             <p className="text-sm text-slate-400">View deposit accounts and facts</p>
+          </a>
+        </Link>
+        
+        <Link href="/operator/lending">
+          <a className="block p-6 bg-slate-800/30 border border-slate-700 rounded-lg hover:border-purple-500/50 transition-colors">
+            <Landmark className="w-8 h-8 text-purple-400 mb-3" />
+            <h3 className="text-lg font-semibold text-white mb-1">Lending</h3>
+            <p className="text-sm text-slate-400">View loans and manage hardship</p>
           </a>
         </Link>
         
@@ -140,6 +151,8 @@ export function OperatorPage() {
         <Route path="/operator/payments/:paymentId" component={PaymentDetail} />
         <Route path="/operator/payments" component={PaymentsOverview} />
         <Route path="/operator/deposits" component={DepositsPage} />
+        <Route path="/operator/lending/:loanId" component={LoanDetail} />
+        <Route path="/operator/lending" component={LendingOverview} />
         <Route path="/operator/safeguards" component={SafeguardsPage} />
         <Route path="/operator/incidents" component={IncidentsPage} />
         <Route path="/operator/audit" component={AuditLogPage} />
