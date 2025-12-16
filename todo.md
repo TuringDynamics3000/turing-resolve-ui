@@ -1289,3 +1289,21 @@
 - [x] Generate compliance reports automatically (audit_facts)
 - [x] Store drill results in audit_facts (DR_DRILL_COMPLETED/DR_DRILL_FAILED)
 - [x] All 152 tests passing
+
+
+## Evidence Pack Download & Shadow AI Confidence Alerts - COMPLETED ✓
+
+### Evidence Pack Download Button - COMPLETED ✓
+- [x] Add "Export Evidence Pack" button to PaymentDetail page
+- [x] Call evidencePack.exportPDF tRPC endpoint (useMutation)
+- [x] Convert base64 PDF to blob and trigger browser download
+- [x] Show loading state during PDF generation (toast.info)
+- [x] Show success/error toast after download
+
+### Shadow AI Confidence Threshold Alerts - COMPLETED ✓
+- [x] Monitor Shadow AI advisories in ShadowAIAdvisoryCard (useEffect)
+- [x] Show toast notification when confidence < 70%
+- [x] Include domain, recommendation, and confidence in alert
+- [x] Flag low-confidence recommendations for manual review (10s toast duration)
+- [x] Add visual indicator (warning icon + amber badge) for low confidence
+- [x] All 152 tests passing

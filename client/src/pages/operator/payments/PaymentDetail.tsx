@@ -11,8 +11,11 @@ import {
   XCircle,
   RefreshCw,
   Hash,
-  FileText
+  FileText,
+  Download
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Link } from "wouter";
 
 const stateColors: Record<string, { bg: string; text: string }> = {
@@ -36,6 +39,7 @@ export function PaymentDetail() {
     { paymentId },
     { enabled: !!paymentId }
   );
+  const exportPDF = trpc.evidencePack.exportPDF.useMutation();
 
   if (paymentLoading || factsLoading) {
     return (
@@ -80,9 +84,49 @@ export function PaymentDetail() {
             <p className="text-sm text-slate-400">Operator Control View</p>
           </div>
         </div>
-        <span className={`px-4 py-2 rounded-lg text-lg font-semibold ${stateStyle.bg} ${stateStyle.text}`}>
-          {payment.currentState}
-        </span>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                toast.info("Generating evidence pack...");
+                const result = await exportPDF.mutateAsync({ paymentId });
+                
+                // Convert base64 to blob
+                const byteCharacters = atob(result.pdf);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: "application/pdf" });
+                
+                // Trigger download
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = result.filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                toast.success("Evidence pack downloaded");
+              } catch (error) {
+                toast.error("Failed to generate evidence pack");
+                console.error(error);
+              }
+            }}
+            className="bg-transparent"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Export Evidence Pack
+          </Button>
+          <span className={`px-4 py-2 rounded-lg text-lg font-semibold ${stateStyle.bg} ${stateStyle.text}`}>
+            {payment.currentState}
+          </span>
+        </div>
       </div>
 
       <AdvisoryBanner />

@@ -1,6 +1,8 @@
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Brain, TrendingUp, Shield, DollarSign, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import { useEffect } from "react";
 
 const domainIcons: Record<string, any> = {
   PAYMENTS_RL: TrendingUp,
@@ -32,6 +34,23 @@ export function ShadowAIAdvisoryCard({ paymentId }: ShadowAIAdvisoryCardProps) {
     entityType: "PAYMENT",
     entityId: paymentId,
   });
+
+  // Monitor confidence threshold and show alerts
+  useEffect(() => {
+    if (advisories && advisories.length > 0) {
+      advisories.forEach((advisory) => {
+        if (advisory.confidence < 0.7) {
+          toast.warning(
+            `Low Confidence Alert: ${advisory.domain} recommendation has ${(advisory.confidence * 100).toFixed(0)}% confidence`,
+            {
+              description: `${advisory.recommendation} - Manual review recommended`,
+              duration: 10000,
+            }
+          );
+        }
+      });
+    }
+  }, [advisories]);
 
   if (isLoading) {
     return (
@@ -114,13 +133,23 @@ export function ShadowAIAdvisoryCard({ paymentId }: ShadowAIAdvisoryCardProps) {
                 <span className="text-xs text-slate-400">Confidence:</span>
                 <div className="flex-1 bg-slate-700 rounded-full h-2">
                   <div
-                    className="bg-purple-500 h-2 rounded-full"
+                    className={`h-2 rounded-full ${
+                      advisory.confidence < 0.7 ? "bg-amber-500" : "bg-purple-500"
+                    }`}
                     style={{ width: `${(advisory.confidence || 0) * 100}%` }}
                   />
                 </div>
-                <span className="text-xs text-slate-300 font-mono">
+                <span className={`text-xs font-mono ${
+                  advisory.confidence < 0.7 ? "text-amber-400" : "text-slate-300"
+                }`}>
                   {((advisory.confidence || 0) * 100).toFixed(1)}%
                 </span>
+                {advisory.confidence < 0.7 && (
+                  <div className="flex items-center gap-1 px-2 py-1 bg-amber-500/20 border border-amber-500/30 rounded">
+                    <AlertTriangle className="h-3 w-3 text-amber-400" />
+                    <span className="text-xs text-amber-400 font-semibold">Low Confidence</span>
+                  </div>
+                )}
               </div>
 
               {/* Reasoning */}
