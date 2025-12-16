@@ -19,11 +19,15 @@ import { RefreshCw, Download, Shield, User, Clock, FileText, AlertTriangle, Chec
 export function AuditLogPage() {
   const [actionTypeFilter, setActionTypeFilter] = useState<string>("all");
   const [targetTypeFilter, setTargetTypeFilter] = useState<string>("all");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
   const [limit, setLimit] = useState(100);
 
   const { data: auditFacts, isLoading, refetch } = trpc.audit.list.useQuery({
     actionType: actionTypeFilter !== "all" ? actionTypeFilter as any : undefined,
     targetType: targetTypeFilter !== "all" ? targetTypeFilter as any : undefined,
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
     limit,
   });
 
@@ -137,9 +141,46 @@ export function AuditLogPage() {
           <CardTitle className="text-sm font-medium text-slate-300">Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="text-xs text-slate-400 mb-1 block">Action Type</label>
+          <div className="space-y-4">
+            {/* Date Range */}
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="text-xs text-slate-400 mb-1 block">From Date</label>
+                <Input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  className="bg-slate-800 border-slate-700"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-xs text-slate-400 mb-1 block">To Date</label>
+                <Input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  className="bg-slate-800 border-slate-700"
+                />
+              </div>
+              <div className="flex items-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setFromDate("");
+                    setToDate("");
+                  }}
+                  className="border-slate-700 hover:bg-slate-800"
+                >
+                  Clear Dates
+                </Button>
+              </div>
+            </div>
+            
+            {/* Action and Target Type */}
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="text-xs text-slate-400 mb-1 block">Action Type</label>
               <Select value={actionTypeFilter} onValueChange={setActionTypeFilter}>
                 <SelectTrigger className="bg-slate-800 border-slate-700">
                   <SelectValue />
@@ -170,16 +211,17 @@ export function AuditLogPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-32">
-              <label className="text-xs text-slate-400 mb-1 block">Limit</label>
-              <Input
-                type="number"
-                value={limit}
-                onChange={(e) => setLimit(parseInt(e.target.value) || 100)}
-                min={1}
-                max={1000}
-                className="bg-slate-800 border-slate-700"
-              />
+              <div className="w-32">
+                <label className="text-xs text-slate-400 mb-1 block">Limit</label>
+                <Input
+                  type="number"
+                  value={limit}
+                  onChange={(e) => setLimit(parseInt(e.target.value) || 100)}
+                  min={1}
+                  max={1000}
+                  className="bg-slate-800 border-slate-700"
+                />
+              </div>
             </div>
           </div>
         </CardContent>
