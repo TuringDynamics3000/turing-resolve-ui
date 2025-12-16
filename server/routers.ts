@@ -13,6 +13,7 @@ import {
   GOVERNANCE_BOUNDARIES,
   INTERNAL_DECLARATIONS,
   RELEASE_INFO,
+  type EvidencePack,
 } from "./governance";
 import {
   createLedgerAccount,
