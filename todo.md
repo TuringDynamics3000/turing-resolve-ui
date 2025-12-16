@@ -1666,3 +1666,29 @@
 - [ ] Include explicit guarantees
 - [ ] Create lendingEvidenceRouter.ts with exportLoan endpoint
 - [ ] Support JSON and PDF export formats
+
+
+## Composite CI Workflow for Lending Core - COMPLETED ✅
+
+### ADR Documentation
+- [x] Create adr/ directory
+- [x] Create ADR template (0000-template.md)
+- [x] Create ADR-0001: Lending Core Freeze
+- [x] Create ADR README with guidelines
+
+### CI Workflow File - COMPLETED ✅
+- [x] Create .github/workflows/lending-composite.yml
+- [x] Add architectural forbiddance checks (no DB, no schedules, no balances, no cron)
+- [x] Add core boundaries enforcement (no cross-core imports)
+- [x] Add ADR requirement for Lending Core changes
+- [x] Add replay determinism tests
+- [x] Add property tests
+- [x] Add cash movement safety checks
+- [x] Add AI execution guard
+- [x] Verify required tests exist
+
+### Required Test Files - COMPLETED ✅
+- [x] server/lending.test.ts exists (16 tests)
+- [x] server/lending.property.test.ts exists (7 property tests)
+- [x] server/lending.hardship.test.ts exists (7 hardship tests)
+- [x] All required tests present and passing

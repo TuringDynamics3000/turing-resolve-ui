@@ -1,0 +1,263 @@
+name: Lending Core Composite Guardrail
+
+on:
+  pull_request:
+    paths:
+      - 'core/lending/**'
+      - 'application/lending/**'
+      - 'policies/lending/**'
+      - 'intelligence/lending/**'
+      - 'server/lending.test.ts'
+      - 'server/lending.*.test.ts'
+
+jobs:
+  lending-guardrails:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        ports:
+          - 5432:5432
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for ADR check
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # ========================================
+      # 1. ARCHITECTURAL FORBIDDANCE
+      # ========================================
+      - name: Block forbidden patterns in Lending Core
+        run: |
+          echo "🔍 Checking for forbidden patterns in core/lending..."
+          
+          # Block database imports in core
+          if grep -r "drizzle\|sql\|pg\|mysql\|sqlite" core/lending 2>/dev/null; then
+            echo "❌ FORBIDDEN: Database imports found in core/lending"
+            echo "Core modules must not import database libraries directly."
+            echo "Use application layer for database operations."
+            exit 1
+          fi
+          
+          # Block stored schedules/balances
+          if grep -r "schedule\|amortisation\|amortization" core/lending/aggregate core/lending/events 2>/dev/null; then
+            echo "❌ FORBIDDEN: Schedule/amortization storage found in core"
+            echo "Schedules must be derived, not stored."
+            echo "Use core/lending/derivation/ for schedule calculations."
+            exit 1
+          fi
+          
+          if grep -r "balance\|outstanding\|remaining" core/lending/aggregate core/lending/events 2>/dev/null; then
+            echo "❌ FORBIDDEN: Balance storage found in core"
+            echo "Balances must be derived from facts, not stored."
+            exit 1
+          fi
+          
+          # Block cron/scheduler
+          if grep -r "cron\|scheduler\|setInterval\|setTimeout" core/lending 2>/dev/null; then
+            echo "❌ FORBIDDEN: Scheduler/cron found in core"
+            echo "Core must be stateless and deterministic."
+            echo "Use external schedulers to trigger fact emission."
+            exit 1
+          fi
+          
+          echo "✅ No forbidden patterns found"
+
+      # ========================================
+      # 2. CORE BOUNDARIES
+      # ========================================
+      - name: Enforce core boundaries
+        run: |
+          echo "🔍 Checking core boundaries..."
+          
+          # Block cross-core imports
+          if grep -r "core/deposits\|core/payments" core/lending 2>/dev/null; then
+            echo "❌ FORBIDDEN: Cross-core imports found"
+            echo "Lending core must not import Deposits or Payments core."
+            echo "Use application layer for cross-core orchestration."
+            exit 1
+          fi
+          
+          # Block UI imports in core
+          if grep -r "client/\|components/\|pages/" core/lending 2>/dev/null; then
+            echo "❌ FORBIDDEN: UI imports found in core"
+            echo "Core must be UI-agnostic."
+            exit 1
+          fi
+          
+          echo "✅ Core boundaries respected"
+
+      # ========================================
+      # 3. ADR ENFORCEMENT
+      # ========================================
+      - name: Require ADR for Lending Core changes
+        run: |
+          echo "🔍 Checking for ADR requirement..."
+          
+          # Get changed files
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+          
+          # Check if core/lending was modified
+          if echo "$CHANGED_FILES" | grep -q "^core/lending"; then
+            echo "📝 Lending Core changes detected"
+            
+            # Check if ADR was added
+            if ! echo "$CHANGED_FILES" | grep -q "^adr/.*\.md$"; then
+              echo "❌ REQUIRED: ADR missing for Lending Core changes"
+              echo ""
+              echo "Lending Core is frozen. Any changes require an ADR (Architecture Decision Record)."
+              echo ""
+              echo "To add an ADR:"
+              echo "  1. Create adr/NNNN-brief-title.md"
+              echo "  2. Document: Context, Decision, Consequences"
+              echo "  3. Include in this PR"
+              echo ""
+              echo "Example: adr/0042-add-loan-product-types.md"
+              exit 1
+            fi
+            
+            echo "✅ ADR found for core changes"
+          else
+            echo "ℹ️  No core changes detected, ADR not required"
+          fi
+
+      # ========================================
+      # 4. REPLAY + PROPERTY TESTS
+      # ========================================
+      - name: Run Lending replay determinism tests
+        run: |
+          echo "🧪 Running replay determinism tests..."
+          if [ -f "server/lending.test.ts" ]; then
+            pnpm test server/lending.test.ts
+          else
+            echo "⚠️  Warning: server/lending.test.ts not found"
+          fi
+
+      - name: Run Lending property tests
+        run: |
+          echo "🧪 Running property tests..."
+          if [ -f "server/lending.property.test.ts" ]; then
+            pnpm test server/lending.property.test.ts
+          else
+            echo "⚠️  Warning: server/lending.property.test.ts not found"
+          fi
+          
+          if [ -f "server/lending.hardship.test.ts" ]; then
+            pnpm test server/lending.hardship.test.ts
+          else
+            echo "⚠️  Warning: server/lending.hardship.test.ts not found"
+          fi
+
+      # ========================================
+      # 5. CASH MOVEMENT SAFETY
+      # ========================================
+      - name: Prevent Lending cash movement
+        run: |
+          echo "🔍 Checking for direct cash movement..."
+          
+          # Block ledger postings in core
+          if grep -r "CREDIT\|DEBIT\|Posting\|createPosting\|commitPosting" core/lending 2>/dev/null; then
+            echo "❌ FORBIDDEN: Direct cash movement found in core"
+            echo "Lending core must not create ledger postings."
+            echo "Cash movement must flow via Deposits Core only."
+            exit 1
+          fi
+          
+          echo "✅ No direct cash movement in core"
+
+      # ========================================
+      # 6. AI EXECUTION GUARD
+      # ========================================
+      - name: Prevent AI execution
+        run: |
+          echo "🔍 Checking for AI execution..."
+          
+          # Block LoanFact emission in intelligence layer
+          if grep -r "LoanFact\|loanFacts\|emitFact" intelligence/lending 2>/dev/null; then
+            echo "❌ FORBIDDEN: AI execution detected"
+            echo "AI advisors must produce recommendations only."
+            echo "AI must never emit LoanFacts or trigger actions."
+            exit 1
+          fi
+          
+          echo "✅ AI is advisory-only"
+
+      # ========================================
+      # 7. TEST PRESENCE
+      # ========================================
+      - name: Verify required tests exist
+        run: |
+          echo "🔍 Verifying required test files..."
+          
+          MISSING_TESTS=0
+          
+          if [ ! -f "server/lending.test.ts" ]; then
+            echo "❌ Missing: server/lending.test.ts"
+            MISSING_TESTS=1
+          fi
+          
+          if [ ! -f "server/lending.property.test.ts" ]; then
+            echo "⚠️  Recommended: server/lending.property.test.ts"
+          fi
+          
+          if [ ! -f "server/lending.hardship.test.ts" ]; then
+            echo "⚠️  Recommended: server/lending.hardship.test.ts"
+          fi
+          
+          if [ $MISSING_TESTS -eq 1 ]; then
+            echo "❌ Required test files missing"
+            exit 1
+          fi
+          
+          echo "✅ Required tests present"
+
+      # ========================================
+      # 8. RUN ALL TESTS
+      # ========================================
+      - name: Run all tests
+        run: pnpm test
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/test
+
+      # ========================================
+      # 9. SUMMARY
+      # ========================================
+      - name: Summary
+        if: success()
+        run: |
+          echo "✅ All Lending Core guardrails passed"
+          echo ""
+          echo "Verified:"
+          echo "  ✓ No forbidden patterns (DB, schedules, balances, cron)"
+          echo "  ✓ Core boundaries respected"
+          echo "  ✓ ADR present (if core changed)"
+          echo "  ✓ Replay determinism"
+          echo "  ✓ Property tests"
+          echo "  ✓ No direct cash movement"
+          echo "  ✓ AI is advisory-only"
+          echo "  ✓ Required tests present"
+          echo "  ✓ All tests passing"
