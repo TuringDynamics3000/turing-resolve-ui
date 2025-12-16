@@ -1793,13 +1793,20 @@
 - [ ] Implement OpsOverrideHandler.ts (policy-gated, emits OpsOverrideApplied) - DEFERRED to Phase 4
 - [ ] All ops actions appear in evidence pack - DEFERRED to Phase 4
 
-### Phase 4: Evidence Pack Schema
-- [ ] Create exports/nppEvidencePack.ts
-- [ ] Implement evidence pack schema (payment_intent, rail, route_decision, attempts, lifecycle_events, ops_actions, final_state)
-- [ ] Evidence must be deterministic
-- [ ] Evidence must be replayable
-- [ ] Evidence must be regulator-ready
-- [ ] Add tRPC endpoint: exports.nppEvidencePack
+### Phase 4: Evidence Pack Schema - COMPLETED ✅
+- [x] Create exports/nppEvidencePack.ts
+- [x] Implement evidence pack schema (payment_intent, rail, route_decision, attempts, lifecycle_events, ops_actions, final_state)
+- [x] Evidence is deterministic (same events → same pack)
+- [x] Evidence is replayable (rebuild state from pack)
+- [x] Evidence is regulator-ready (human + machine readable)
+- [x] Implement buildNPPEvidencePack() function
+- [x] Implement verifyNPPEvidencePack() function
+- [x] Implement exportNPPEvidencePackJSON() function
+- [x] Add cryptographic hashes (events_hash, state_hash) with SHA-256
+- [x] Add replay proof (event_count, events_hash, state_hash)
+- [x] Write CI tests for evidence packs (7 tests passing)
+- [x] All 220 tests passing (213 existing + 7 new evidence tests)
+- [ ] Add tRPC endpoint: exports.nppEvidencePack - DEFERRED to Phase 6
 
 ### Phase 5: Replay Guarantee
 - [ ] Create server/npp.replay.test.ts
