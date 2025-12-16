@@ -1498,3 +1498,114 @@
 - **Operator UI:** LendingOverview, LoanDetail, LoanActions, DerivedSchedulePanel
 - **GL Export:** Read-only, rebuildable from facts, reconcilable
 - **Status:** Lending Core v1 is now a first-class citizen alongside Deposits and Payments
+
+
+## Lending Uplift - State-of-the-Art Build Specification
+
+### 0. HARD RULES (Enforced in CI) - COMPLETED ✅
+- [x] Copy hard rules to Lending README
+- [x] Loans never store balances
+- [x] Loans never store schedules
+- [x] All loan state comes from LoanFact replay
+- [x] All cash movement flows via Deposits Core
+- [x] AI never emits executable facts
+- [x] Human actions emit facts, not mutations
+- [x] Derived outputs are disposable
+- [x] Failure must be visible and explainable
+- [x] Replay must reconstruct everything
+- [x] If it can't be replayed, it doesn't exist
+
+### 1. Lending Policy Layer (CRITICAL) - COMPLETED ✅
+- [x] Create /policies/lending/ directory
+- [x] Implement CreditPolicy.v1.ts (consume facts, produce recommendations)
+- [ ] Implement PricingPolicy.v1.ts (interest rate, fee recommendations) - TODO
+- [ ] Implement RepaymentPolicy.v1.ts (payment schedule recommendations) - TODO
+- [x] Implement ArrearsPolicy.v1.ts (arrears entry recommendations)
+- [x] Implement HardshipPolicy.v1.ts (hardship eligibility recommendations)
+- [x] Add policies README.md (pure functions, never apply facts)
+
+### 2. AI as Advisor, Not Executor - COMPLETED ✅
+- [x] Create /intelligence/lending/ directory
+- [x] Implement CreditRiskAdvisor.ts (score default risk)
+- [x] Implement DelinquencyAdvisor.ts (predict arrears probability)
+- [ ] Implement RestructureAdvisor.ts (suggest restructure terms) - TODO
+- [x] Define LendingAdvisoryOutput type (recommendation, confidence, rationale)
+- [x] Store as AdvisoryFact only (no execution)
+- [x] Add intelligence README.md (AI cannot emit LoanFacts)
+
+### 3. Loan Origination as Facts - COMPLETED ✅
+- [x] Create /application/lending/origination/ directory
+- [x] Extend LoanFact with APPLICATION_STARTED
+- [x] Extend LoanFact with APPLICATION_SUBMITTED
+- [x] Extend LoanFact with CREDIT_DECISION_RECORDED
+- [x] Extend LoanFact with LOAN_OFFER_ISSUED
+- [x] Extend LoanFact with LOAN_OFFER_ACCEPTED
+- [x] Implement StartApplicationHandler.ts
+- [x] Implement SubmitApplicationHandler.ts
+- [x] Implement DecisionRecordedHandler.ts
+- [x] Implement OfferIssuedHandler.ts
+- [x] Implement OfferAcceptedHandler.ts
+- [ ] Add origination README.md (full audit trail) - TODO
+
+### 4. Derived Arrears Engine
+- [ ] Create /core/lending/derivation/ directory (if not exists)
+- [ ] Implement deriveArrearsStatus.ts (derived, not stored)
+- [ ] Implement deriveDaysPastDue.ts (calculated from due dates + payment facts)
+- [ ] Implement deriveNextObligation.ts (next payment due)
+- [ ] LOAN_IN_ARREARS fact emitted only when policy + human approve
+
+### 5. Extend Lending Operator UI
+- [ ] Add loan state machine visualization
+- [ ] Add loan fact timeline (already done, verify)
+- [ ] Add derived schedule panel (already done, verify)
+- [ ] Add arrears/hardship/default status indicators
+- [ ] Add advisory panel (AI + human recommendations)
+- [ ] Add operator actions: enter hardship (done), exit hardship (done)
+- [ ] Add operator actions: approve restructure, close loan, write-off (RBAC-gated)
+
+### 6. Lending Notifications (Event-Driven)
+- [ ] Create /notifications/lending/ directory
+- [ ] Implement MissedPaymentNotice.ts (triggered by LoanFacts only)
+- [ ] Implement ArrearsWarning.ts
+- [ ] Implement HardshipAcknowledgement.ts
+- [ ] Implement RestructureConfirmation.ts
+- [ ] Never trigger by schedules or timers
+
+### 7. Lending Chaos & Property Tests
+- [ ] Add chaos test: duplicate repayments
+- [ ] Add chaos test: missed payments
+- [ ] Add chaos test: repayment after hardship
+- [ ] Add chaos test: restructure mid-arrears
+- [ ] Add chaos test: replay after crash
+- [ ] Add chaos test: AI advisory divergence
+- [ ] Add property test: principal never negative (done, verify)
+- [ ] Add property test: loan never skips states
+- [ ] Add property test: no cash movement without deposit fact
+- [ ] Add property test: replay reconstructs identical state (done, verify)
+
+### 8. Extend GL Export
+- [ ] Add accrual-based interest recognition
+- [ ] Add fee income separation
+- [ ] Add write-off expense mapping
+- [ ] Add reconciliation metadata
+- [ ] Verify GL export is read-only and derived (done)
+
+### 9. Lending Evidence Packs
+- [ ] Create /evidence/lending/ directory
+- [ ] Auto-generate Loan lifecycle PDF (facts + replay)
+- [ ] Auto-generate Hardship case walkthrough
+- [ ] Auto-generate Restructure before/after comparison
+- [ ] Auto-generate Write-off justification pack
+
+### Exit Criteria
+- [ ] All 9 areas implemented
+- [ ] All chaos tests passing
+- [ ] All property tests passing
+- [ ] Policy layer produces recommendations only
+- [ ] AI advisors never emit executable facts
+- [ ] Origination workflow has full audit trail
+- [ ] Arrears is derived, not stored
+- [ ] Operator UI provides full trust surface
+- [ ] Notifications are event-driven
+- [ ] GL export is accrual-based and reconcilable
+- [ ] Evidence packs are auto-generated

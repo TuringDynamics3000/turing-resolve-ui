@@ -30,8 +30,14 @@ import {
 export function applyLoanFact(loan: Loan, fact: LoanFact): Loan {
   // Route to specific handlers based on fact type
   switch (fact.type) {
-    case "LOAN_OFFERED":
-      throw new Error("Cannot apply LOAN_OFFERED to existing loan");
+    // Origination facts (pass-through, no state change)
+    case "APPLICATION_STARTED":
+    case "APPLICATION_SUBMITTED":
+    case "CREDIT_DECISION_RECORDED":
+    case "LOAN_OFFER_ISSUED":
+    case "LOAN_OFFER_ACCEPTED":
+    case "LOAN_OFFERED": // Legacy fact, replaced by LOAN_OFFER_ISSUED
+      return loan; // Origination facts don't change loan state
 
     case "LOAN_ACCEPTED":
       return applyLoanAccepted(loan, fact);

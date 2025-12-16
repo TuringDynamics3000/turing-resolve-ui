@@ -7,6 +7,11 @@
  */
 
 export type LoanFact =
+  | ApplicationStartedFact
+  | ApplicationSubmittedFact
+  | CreditDecisionRecordedFact
+  | LoanOfferIssuedFact
+  | LoanOfferAcceptedFact
   | LoanOfferedFact
   | LoanAcceptedFact
   | LoanActivatedFact
@@ -20,6 +25,58 @@ export type LoanFact =
   | LoanDefaultedFact
   | LoanClosedFact
   | LoanWrittenOffFact;
+
+// ============================================
+// ORIGINATION FACTS (New)
+// ============================================
+
+export interface ApplicationStartedFact {
+  type: "APPLICATION_STARTED";
+  loanId: string;
+  applicantAccountId: string;
+  occurredAt: number;
+}
+
+export interface ApplicationSubmittedFact {
+  type: "APPLICATION_SUBMITTED";
+  loanId: string;
+  requestedPrincipal: bigint;
+  requestedTermMonths: number;
+  purpose: string;
+  occurredAt: number;
+}
+
+export interface CreditDecisionRecordedFact {
+  type: "CREDIT_DECISION_RECORDED";
+  loanId: string;
+  decision: "APPROVED" | "DECLINED" | "REVIEW";
+  riskScore: number;
+  rationale: string;
+  decidedBy: string; // Operator ID or "POLICY_ENGINE"
+  occurredAt: number;
+}
+
+export interface LoanOfferIssuedFact {
+  type: "LOAN_OFFER_ISSUED";
+  loanId: string;
+  offeredPrincipal: bigint;
+  offeredInterestRate: number;
+  offeredTermMonths: number;
+  conditions: string[];
+  expiresAt: number; // Unix timestamp
+  occurredAt: number;
+}
+
+export interface LoanOfferAcceptedFact {
+  type: "LOAN_OFFER_ACCEPTED";
+  loanId: string;
+  acceptedAt: number;
+  occurredAt: number;
+}
+
+// ============================================
+// EXISTING FACTS
+// ============================================
 
 export interface LoanOfferedFact {
   type: "LOAN_OFFERED";
