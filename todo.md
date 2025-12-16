@@ -694,3 +694,72 @@
 - [ ] Adversarial tests
 - [ ] Application tests (ordering, idempotency, failure modes)
 - [ ] No test mocks core behaviour
+
+
+## Deposits Policy Layer (Step 1) - COMPLETED ✓
+### Critical Rule: Policies recommend postings, NEVER apply them
+- [x] Create DepositPolicy interface (evaluate(facts, context) => Posting[])
+- [x] Policies: consume facts, emit postings, are pure
+- [x] No DB, no clocks (pass time explicitly), no side effects
+- [x] Versioning: one version = one file, no edits after release
+
+### FeePolicy.v1.ts - FROZEN
+- [x] Monthly maintenance fee evaluation
+- [x] Low balance fee evaluation
+- [x] Transaction fee evaluation (excessive withdrawals)
+- [x] Fee waiver conditions (premium segment, high balance)
+
+### InterestPolicy.v1.ts - FROZEN
+- [x] Daily accrual calculation
+- [x] Rate determination by product/tier
+- [x] Customer segment bonus rates
+- [x] Interest posting recommendation
+
+### HoldPolicy.v1.ts - FROZEN
+- [x] Hold placement rules (payment, deposit, regulatory, legal)
+- [x] Hold expiration rules (auto-release by type)
+- [x] Hold release conditions
+- [x] Regulatory hold handling (CTR threshold)
+
+
+## Deposits Application Handlers (Step 2) - COMPLETED ✓
+### Critical Rule: Handlers orchestrate, NEVER decide
+| Allowed | Not Allowed |
+|---------|-------------|
+| Load facts | Decide business rules |
+| Validate command shape | Mutate balances |
+| Call policies | Encode product logic |
+| Emit facts | |
+| Apply postings via core | |
+
+### OpenAccountHandler.ts - IMPLEMENTED
+- [x] Validate command shape
+- [x] Emit ACCOUNT_OPENED fact
+- [x] Create initial DepositAccount state
+- [x] No balance mutation, no policy application
+
+### ApplyPostingHandler.ts - IMPLEMENTED
+- [x] Load facts for account
+- [x] Evaluate policies
+- [x] Apply postings via core
+- [x] Emit POSTING_APPLIED facts
+- [x] Cannot break invariants
+
+### CloseAccountHandler.ts - IMPLEMENTED
+- [x] Validate closure conditions
+- [x] Emit ACCOUNT_CLOSED fact
+- [x] No balance mutation
+
+### Governance Files - CREATED
+- [x] CODEOWNERS - review gate for core changes
+- [x] BREAKING_CHANGES.md - checklist for modifications
+- [x] SURFACE_FREEZE.md - governance declaration
+
+
+## Shadow Mode Harness (Step 3)
+- [ ] Read-only comparison
+- [ ] Non-blocking execution
+- [ ] Continuous comparison logging
+- [ ] Compare: ledger balance, available balance, holds
+- [ ] Log deltas (don't throw)
+- [ ] Track: systematic differences, rounding mismatches, policy drift
