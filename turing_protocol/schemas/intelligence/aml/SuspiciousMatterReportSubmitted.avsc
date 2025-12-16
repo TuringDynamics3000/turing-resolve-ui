@@ -1,0 +1,33 @@
+{
+  "type": "record",
+  "name": "SuspiciousMatterReportSubmitted",
+  "namespace": "turing.protocol.intelligence.aml",
+  "doc": "Suspicious Matter Report submitted to AUSTRAC. Only humans can submit SMRs.",
+  "fields": [
+    {
+      "name": "base",
+      "type": "turing.protocol.intelligence.IntelligenceEventBase",
+      "doc": "Base intelligence event fields"
+    },
+    {
+      "name": "customer_id",
+      "type": "string",
+      "doc": "Customer identifier"
+    },
+    {
+      "name": "account_id",
+      "type": "string",
+      "doc": "Account identifier"
+    },
+    {
+      "name": "smr_reference",
+      "type": "string",
+      "doc": "AUSTRAC SMR reference number"
+    },
+    {
+      "name": "submitted_by",
+      "type": "string",
+      "doc": "Officer ID who submitted the SMR"
+    }
+  ]
+}

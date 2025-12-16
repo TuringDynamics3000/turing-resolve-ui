@@ -105,3 +105,20 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Deterministic testing infrastructure
+twin-orchestrator/src/replays/
+twin-orchestrator/src/golden/*.json
+!twin-orchestrator/src/golden/.gitkeep

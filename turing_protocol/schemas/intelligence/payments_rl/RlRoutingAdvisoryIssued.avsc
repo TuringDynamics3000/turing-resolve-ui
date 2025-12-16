@@ -1,0 +1,38 @@
+{
+  "type": "record",
+  "name": "RlRoutingAdvisoryIssued",
+  "namespace": "turing.protocol.intelligence.payments",
+  "doc": "Payments RL routing advisory issued after statistical proof. Human chooses to accept or override.",
+  "fields": [
+    {
+      "name": "base",
+      "type": "turing.protocol.intelligence.IntelligenceEventBase",
+      "doc": "Base intelligence event fields"
+    },
+    {
+      "name": "payment_id",
+      "type": "string",
+      "doc": "Payment identifier"
+    },
+    {
+      "name": "recommended_action",
+      "type": "string",
+      "doc": "Recommended routing action"
+    },
+    {
+      "name": "expected_cost_saving",
+      "type": "double",
+      "doc": "Expected cost saving in AUD"
+    },
+    {
+      "name": "expected_latency_delta_ms",
+      "type": "double",
+      "doc": "Expected latency delta in milliseconds (negative = faster)"
+    },
+    {
+      "name": "confidence_level",
+      "type": "double",
+      "doc": "Confidence level (0.0 to 1.0)"
+    }
+  ]
+}

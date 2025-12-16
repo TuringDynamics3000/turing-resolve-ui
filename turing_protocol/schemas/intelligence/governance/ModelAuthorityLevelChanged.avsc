@@ -1,0 +1,38 @@
+{
+  "type": "record",
+  "name": "ModelAuthorityLevelChanged",
+  "namespace": "turing.protocol.intelligence.governance",
+  "doc": "Model authority level changed. Requires board/regulator approval for ADVISORY → ENFORCEMENT.",
+  "fields": [
+    {
+      "name": "base",
+      "type": "turing.protocol.intelligence.IntelligenceEventBase",
+      "doc": "Base intelligence event fields"
+    },
+    {
+      "name": "model_id",
+      "type": "string",
+      "doc": "Model identifier"
+    },
+    {
+      "name": "old_authority",
+      "type": "string",
+      "doc": "Old authority level (SHADOW, ADVISORY, ENFORCEMENT)"
+    },
+    {
+      "name": "new_authority",
+      "type": "string",
+      "doc": "New authority level (SHADOW, ADVISORY, ENFORCEMENT)"
+    },
+    {
+      "name": "approving_body",
+      "type": "string",
+      "doc": "Approving body (e.g., 'BOARD', 'APRA', 'CRO')"
+    },
+    {
+      "name": "policy_id",
+      "type": "string",
+      "doc": "Policy ID that governs this authority change"
+    }
+  ]
+}

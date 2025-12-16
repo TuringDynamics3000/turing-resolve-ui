@@ -1,0 +1,30 @@
+﻿name: Digital Twin Boundaries
+
+on: [pull_request]
+
+jobs:
+  boundaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Block write endpoints
+        run: |
+          if grep -R "POST\|PUT\|PATCH\|DELETE" trpc api ui; then
+            echo "Write-capable endpoints detected in Digital Twin"
+            exit 1
+          fi
+
+      - name: Block core mutation imports
+        run: |
+          if grep -R "core/deposits\|core/payments" .; then
+            echo "Core mutation logic imported into Digital Twin"
+            exit 1
+          fi
+
+      - name: Block balance calculations
+        run: |
+          if grep -R "balance\.\|computeBalance\|recalculate" .; then
+            echo "Balance computation detected in Digital Twin"
+            exit 1
+          fi
