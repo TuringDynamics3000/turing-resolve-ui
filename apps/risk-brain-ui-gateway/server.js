@@ -20,6 +20,16 @@ app.get("/api/v1/ui/twin/scenarios", (_, res) => res.json(load("twin-scenarios.j
 app.get("/api/v1/ui/documents/board-packs", (_, res) => res.json(load("board-packs.json")))
 app.get("/api/v1/ui/documents/regulator-annexes", (_, res) => res.json(load("regulator-annexes.json")))
 
+// Core Status endpoint for Digital Twin boundary verification
+app.get("/api/v1/ui/system/core-status", (_, res) => {
+  res.json({
+    turingCoreCommit: process.env.TURINGCORE_COMMIT || "unknown",
+    depositsCoreHash: process.env.DEPOSITS_CORE_HASH || "unknown",
+    paymentsCoreHash: process.env.PAYMENTS_CORE_HASH || "unknown",
+    shadowParity: process.env.SHADOW_PARITY || "UNKNOWN"
+  })
+})
+
 app.use("/documents", express.static(path.join(__dirname, "demo-pdfs")))
 
 app.listen(8080, () => console.log("✅ UI Gateway running on http://localhost:8080"))
