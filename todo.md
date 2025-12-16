@@ -1758,3 +1758,61 @@
 ### CI Guards for Notifications
 - [ ] Block fact emission (append, emit, LoanFact, PaymentFact)
 - [ ] Block core imports (core/deposits, core/payments, core/lending)
+
+
+## NPP Payments Orchestration - Stage 1 Single-Rail
+
+### Phase 1: NPP Lifecycle State Machine - COMPLETED ✅
+- [x] Create core/payments/npp/ directory
+- [x] Implement NPPPaymentState.ts (7 states: CREATED, AUTHORISED, SENT, ACKNOWLEDGED, SETTLED, FAILED, EXPIRED)
+- [x] Implement NPPPaymentEvent.ts (9 event types)
+- [x] Implement NPPPayment.ts aggregate with apply(event) method
+- [x] Implement NPPPaymentErrors.ts
+- [x] All 182 tests still passing
+
+### Phase 2: Invariant Enforcement
+- [ ] Implement NPPInvariants.ts (state transitions, economic rules, idempotency)
+- [ ] Add state transition table enforcement
+- [ ] Add economic invariants (no negative amounts, single settlement, funds consistency)
+- [ ] Add idempotency checks (duplicate intent, duplicate callback, out-of-order)
+- [ ] Add NPP-specific invariants (ACK ≠ settlement, late failure allowed)
+- [ ] Write CI tests for all invariants (target: 20+ tests)
+
+### Phase 3: Ops Actions
+- [ ] Create application/payments/npp/ops/ directory
+- [ ] Implement RetryPaymentHandler.ts (FAILED/EXPIRED → new attempt)
+- [ ] Implement CancelPaymentHandler.ts (AUTHORISED only)
+- [ ] Implement MarkFailedHandler.ts (SENT/ACKNOWLEDGED with reason)
+- [ ] Implement OpsOverrideHandler.ts (policy-gated, emits OpsOverrideApplied)
+- [ ] All ops actions emit immutable events
+- [ ] All ops actions appear in evidence pack
+
+### Phase 4: Evidence Pack Schema
+- [ ] Create exports/nppEvidencePack.ts
+- [ ] Implement evidence pack schema (payment_intent, rail, route_decision, attempts, lifecycle_events, ops_actions, final_state)
+- [ ] Evidence must be deterministic
+- [ ] Evidence must be replayable
+- [ ] Evidence must be regulator-ready
+- [ ] Add tRPC endpoint: exports.nppEvidencePack
+
+### Phase 5: Replay Guarantee
+- [ ] Create server/npp.replay.test.ts
+- [ ] Execute NPP payment
+- [ ] Persist events
+- [ ] Delete read models
+- [ ] Rebuild from events
+- [ ] Compare final state hash
+- [ ] Mismatch = FAIL
+
+### Phase 6: Documentation
+- [ ] Create docs/payments/npp-lifecycle.md (diagram + states)
+- [ ] Create docs/payments/npp-invariants.md (invariant tables)
+- [ ] Create docs/payments/npp-ops-rules.md
+- [ ] Create docs/payments/npp-evidence-schema.md
+
+### Stage 1 Acceptance Gate
+- [ ] All invariants enforced in CI
+- [ ] One NPP failure path demonstrated
+- [ ] Ops override logged and replayed
+- [ ] Evidence pack export verified
+- [ ] Replay test deterministic
