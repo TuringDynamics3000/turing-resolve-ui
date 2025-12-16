@@ -1067,3 +1067,47 @@
 ### Testing - COMPLETED ✓
 - [x] factStream.test.ts (9 tests) - emission, event IDs, getEventsSince, principles
 - [x] All 127 tests passing
+
+
+## Full Restore + Replay Drill - COMPLETED ✓
+
+### Purpose - VERIFIED ✓
+- [x] Prove DR is not "on paper"
+- [x] Prove replay is not "best effort"
+- [x] Prove ops does not need heroics
+
+### Phase 1: Take Backup - COMPLETED ✓
+- [x] Export all facts tables (payment_facts: 6, deposit_facts: 5)
+- [x] Export projection tables for comparison (payments: 2, deposit_accounts: 1)
+- [x] Record row counts before drill
+
+### Phase 2: Drop Database - COMPLETED ✓
+- [x] Drop all projection tables (payments, deposit_accounts, deposit_holds)
+- [x] Verify projections are empty (0 rows)
+- [x] Facts tables remain intact (append-only source of truth)
+
+### Phase 3: Restore - COMPLETED ✓
+- [x] Recreate projection table schemas
+- [x] Verify empty projections ready for replay
+
+### Phase 4: Replay All Facts - COMPLETED ✓
+- [x] Replay 5 deposit facts → rebuilt 1 account with correct balances
+- [x] Replay 6 payment facts → rebuilt 2 payments with correct states
+- [x] Verify row counts match pre-drill: ALL VERIFICATIONS PASSED
+
+### Phase 5: Re-load UI - COMPLETED ✓
+- [x] Navigate to Payments Core v1, verify states (2 payments: SETTLED, FAILED)
+- [x] Verify live indicator still works (green pulsing dot)
+- [x] Summary cards show correct counts (2 Total, 1 Settled, 0 In Progress, 1 Failed/Reversed)
+
+### Phase 6: Re-run Tests - COMPLETED ✓
+- [x] Run full test suite: 127 tests PASSED
+- [x] Run shadow harness tests: 13 tests PASSED
+- [x] All 8 test files passed
+
+### Phase 7: Document Results - COMPLETED ✓
+- [x] Drill duration: 6.17 seconds
+- [x] Facts replayed: 11 total (5 deposit + 6 payment)
+- [x] Accounts rebuilt: 1
+- [x] Payments rebuilt: 2
+- [x] DR READINESS CONFIRMED

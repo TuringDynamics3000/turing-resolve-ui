@@ -1,0 +1,40 @@
+{
+  "query": "SELECT factId, accountId, factType, factData FROM deposit_facts ORDER BY accountId, sequence LIMIT 10",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zFXp9RNvPn4ZSGY.19b6520577aa --database jah2eqXz63rtWYSbgQszMm --execute SELECT factId, accountId, factType, factData FROM deposit_facts ORDER BY accountId, sequence LIMIT 10",
+  "rows": [
+    {
+      "factId": "FACT-t0BHP3YQNKND",
+      "accountId": "DEP-oCOcDF0XNtr_",
+      "factType": "ACCOUNT_OPENED",
+      "factData": "{\"accountId\": \"DEP-oCOcDF0XNtr_\", \"currency\": \"AUD\", \"occurredAt\": \"2025-12-16T02:31:36.744Z\", \"type\": \"ACCOUNT_OPENED\"}"
+    },
+    {
+      "factId": "FACT-ztbYCVg8Mglz",
+      "accountId": "DEP-oCOcDF0XNtr_",
+      "factType": "POSTING_APPLIED",
+      "factData": "{\"accountId\": \"DEP-oCOcDF0XNtr_\", \"occurredAt\": \"2025-12-16T02:33:09.876Z\", \"posting\": {\"amount\": {\"amount\": \"100000\", \"currency\": \"AUD\"}, \"occurredAt\": \"2025-12-16T02:33:09.876Z\", \"type\": \"CREDIT\"}, \"sequence\": 2, \"type\": \"POSTING_APPLIED\"}"
+    },
+    {
+      "factId": "FACT-yakbYF4VvO1W",
+      "accountId": "DEP-oCOcDF0XNtr_",
+      "factType": "POSTING_APPLIED",
+      "factData": "{\"accountId\": \"DEP-oCOcDF0XNtr_\", \"occurredAt\": \"2025-12-16T03:56:33.955Z\", \"posting\": {\"amount\": {\"amount\": \"50000\", \"currency\": \"AUD\"}, \"occurredAt\": \"2025-12-16T03:56:33.955Z\", \"type\": \"CREDIT\"}, \"sequence\": 3, \"type\": \"POSTING_APPLIED\"}"
+    },
+    {
+      "factId": "FACT-qwArgJf-_2xl",
+      "accountId": "DEP-oCOcDF0XNtr_",
+      "factType": "POSTING_APPLIED",
+      "factData": "{\"amount\": {\"amount\": \"10000\", \"currency\": \"AUD\"}, \"holdId\": \"HOLD-Jo3AoSET6qtw\", \"reason\": \"Payment PAY-28l6VP8BOwyC\", \"type\": \"HOLD_PLACED\"}"
+    },
+    {
+      "factId": "FACT-q4W_z4QGmEWV",
+      "accountId": "DEP-oCOcDF0XNtr_",
+      "factType": "POSTING_APPLIED",
+      "factData": "{\"amount\": {\"amount\": \"10000\", \"currency\": \"AUD\"}, \"releasedHoldId\": \"HOLD-Jo3AoSET6qtw\", \"type\": \"DEBIT\"}"
+    }
+  ],
+  "messages": [],
+  "stdout": "factId\taccountId\tfactType\tfactData\nFACT-t0BHP3YQNKND\tDEP-oCOcDF0XNtr_\tACCOUNT_OPENED\t{\"accountId\": \"DEP-oCOcDF0XNtr_\", \"currency\": \"AUD\", \"occurredAt\": \"2025-12-16T02:31:36.744Z\", \"type\": \"ACCOUNT_OPENED\"}\nFACT-ztbYCVg8Mglz\tDEP-oCOcDF0XNtr_\tPOSTING_APPLIED\t{\"accountId\": \"DEP-oCOcDF0XNtr_\", \"occurredAt\": \"2025-12-16T02:33:09.876Z\", \"posting\": {\"amount\": {\"amount\": \"100000\", \"currency\": \"AUD\"}, \"occurredAt\": \"2025-12-16T02:33:09.876Z\", \"type\": \"CREDIT\"}, \"sequence\": 2, \"type\": \"POSTING_APPLIED\"}\nFACT-yakbYF4VvO1W\tDEP-oCOcDF0XNtr_\tPOSTING_APPLIED\t{\"accountId\": \"DEP-oCOcDF0XNtr_\", \"occurredAt\": \"2025-12-16T03:56:33.955Z\", \"posting\": {\"amount\": {\"amount\": \"50000\", \"currency\": \"AUD\"}, \"occurredAt\": \"2025-12-16T03:56:33.955Z\", \"type\": \"CREDIT\"}, \"sequence\": 3, \"type\": \"POSTING_APPLIED\"}\nFACT-qwArgJf-_2xl\tDEP-oCOcDF0XNtr_\tPOSTING_APPLIED\t{\"amount\": {\"amount\": \"10000\", \"currency\": \"AUD\"}, \"holdId\": \"HOLD-Jo3AoSET6qtw\", \"reason\": \"Payment PAY-28l6VP8BOwyC\", \"type\": \"HOLD_PLACED\"}\nFACT-q4W_z4QGmEWV\tDEP-oCOcDF0XNtr_\tPOSTING_APPLIED\t{\"amount\": {\"amount\": \"10000\", \"currency\": \"AUD\"}, \"releasedHoldId\": \"HOLD-Jo3AoSET6qtw\", \"type\": \"DEBIT\"}\n",
+  "stderr": "",
+  "execution_time_ms": 1581
+}
