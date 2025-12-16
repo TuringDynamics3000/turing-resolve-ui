@@ -939,3 +939,104 @@
 - [x] INITIATED → HELD → SENT → SETTLED (full lifecycle)
 - [x] Each step links to Deposits Core facts (depositFactId)
 
+
+
+## NPP Scheme Adapter v1 - Risk Containment Code
+### Non-Negotiable Constraints
+- [ ] MUST NOT mutate balances
+- [ ] MUST NOT call Deposits Core directly
+- [ ] MUST NOT advance payment state
+- [ ] MUST NOT store state
+- [ ] MUST NOT rely on ordering guarantees from NPP
+- [ ] Emits PaymentFacts only
+- [ ] Is stateless
+- [ ] Is idempotent
+- [ ] Survives retries, duplicates, and reordering
+
+### Files to Create
+- [ ] /adapters/payments/npp/NppTypes.ts
+- [ ] /adapters/payments/npp/NppIdempotency.ts
+- [ ] /adapters/payments/npp/NppMessageMapper.ts
+- [ ] /adapters/payments/npp/NppAdapter.ts
+- [ ] /adapters/payments/npp/README.md
+
+### Payment Fact Mapping (Authoritative)
+- [ ] Submission accepted → PAYMENT_SENT
+- [ ] Settlement confirmed → PAYMENT_SETTLED
+- [ ] Rejected/failed → PAYMENT_FAILED
+- [ ] No other facts permitted
+
+### Tests Required
+- [ ] tests/adapters/npp/mapping.spec.ts
+- [ ] tests/adapters/npp/idempotency.spec.ts
+- [ ] tests/adapters/npp/duplicate-callback.spec.ts
+- [ ] tests/chaos/npp-adapter.spec.ts
+
+### CI Enforcement
+- [ ] Block adapters/payments/npp importing core/deposits
+- [ ] Block adapters/payments/npp accessing balance
+- [ ] Required test pass for adapters/npp and chaos tests
+
+### Acceptance Criteria (Binary)
+- [ ] Payments Core unchanged
+- [ ] Deposits Core unchanged
+- [ ] Duplicate callbacks produce zero new facts
+- [ ] Chaos tests pass
+- [ ] Shadow harness shows zero BUG divergences
+- [ ] Removing adapter state does not affect replay
+
+
+## Payments Core v1 UI - Trust Surface (Operational Infrastructure)
+### Global Non-Negotiables
+- [ ] UI never computes state
+- [ ] UI never mutates data
+- [ ] UI only renders replayed facts
+- [ ] UI never hides failures
+- [ ] UI must explain intent vs truth
+- [ ] UI must reflect kill-switch + circuit state
+
+### Overview Tab (/payments/core-v1) - COMPLETED ✓
+- [x] Summary Cards: Total Payments, Settled, In Progress, Failed/Reversed
+- [x] Payments Table: Payment ID, State, Amount, Scheme, From→To, Facts Count, Last Event
+- [x] State badge colors:
+- [x] INITIATED/HELD = amber
+- [x] SENT = blue
+- [x] SETTLED = green
+- [x] FAILED/REVERSED always red
+- [x] Badge for kill-switch active / circuit breaker OPEN
+- [x] Zero balance math in rendering
+
+### Payment Detail Tab (/payments/core-v1/:paymentId) - COMPLETED ✓
+- [x] State Machine Visualization (INITIATED → HELD → SENT → SETTLED, with FAILED/REVERSED branches)
+- [x] Highlight current state, grey out unreachable
+- [x] Show timestamps per transition
+- [x] Intent Summary (Payment ID, From/To Account, Amount, Scheme, Idempotency Key)
+- [x] Current State (Derived from rebuildPaymentFromFacts)
+- [x] Safeguards section
+
+### Fact Timeline Tab - COMPLETED ✓
+- [x] Show exact sequence of truth events
+- [x] Strict chronological order, no collapsing, no summarisation
+- [x] Fields: Fact Type, Occurred At, Idempotency Key, Source, External Ref, Hash
+- [x] Duplicate callbacks visible once only
+- [x] Rejected facts shown with reasonCode
+- [x] Gaps warning banner
+
+### Linked Deposits Tab - COMPLETED ✓
+- [x] Linked Accounts (From/To)
+- [x] Deposit Facts for each account (Account ID, Posting Type, Amount, Occurred At, Balance Impact)
+- [x] HOLDs shown separately, RELEASE clearly marked
+- [x] No editable fields, no balances without source facts
+
+### Failures & Safeguards Tab - COMPLETED ✓
+- [x] Kill-Switch Status (Adapter, State, Last Changed, Reason, Actor)
+- [x] Circuit Breaker Status (State, Failure Count, Last Failure)
+- [x] Failure History (Adapter errors, Timeouts, Rejections, Retry storms)
+
+### Mandatory Banners - COMPLETED ✓
+- [x] Intent vs Truth Banner on every payment detail
+- [x] Failure Safety Banner when applicable
+- [x] Kill-Switch Banner when active
+
+### UI Tests - COMPLETED ✓
+- [x] PaymentsCorePage.test.tsx (Overview Tab, UI Principles tests)

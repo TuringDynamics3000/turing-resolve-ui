@@ -27,7 +27,9 @@ import {
   Lock,
   Zap,
   Hash,
+  Database,
 } from "lucide-react";
+import PaymentsCorePage from "./PaymentsCorePage";
 
 // Payment states
 type PaymentState = "CREATED" | "AUTHORISED" | "SUBMITTED" | "COMPLETED" | "FAILED" | "REVERSED";
@@ -525,6 +527,10 @@ export default function PaymentsDashboard() {
         <TabsList className="glass-panel p-1">
           <TabsTrigger value="payments">Payments</TabsTrigger>
           <TabsTrigger value="events">Event Chain</TabsTrigger>
+          <TabsTrigger value="corev1" className="gap-1">
+            <Database className="h-3 w-3" />
+            Core v1
+          </TabsTrigger>
           <TabsTrigger value="governance">Governance</TabsTrigger>
         </TabsList>
 
@@ -534,6 +540,10 @@ export default function PaymentsDashboard() {
 
         <TabsContent value="events">
           <EventChainTable />
+        </TabsContent>
+
+        <TabsContent value="corev1">
+          <PaymentsCorePage />
         </TabsContent>
 
         <TabsContent value="governance">

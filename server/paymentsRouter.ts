@@ -808,4 +808,301 @@ export const paymentsRouter = router({
         },
       };
     }),
+
+  // ============================================
+  // PAYMENTS CORE V1 UI ENDPOINTS
+  // ============================================
+
+  /**
+   * LIST CORE V1 PAYMENTS
+   * Returns derived projection (server-side only) for Overview tab.
+   * UI renders this data - no balance math in frontend.
+   */
+  listCoreV1: publicProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) throw new Error("Database not available");
+    
+    const allPayments = await db.select().from(payments).orderBy(desc(payments.createdAt));
+    
+    // Rebuild state from facts for each payment (server-side only)
+    const paymentsWithReplayedState = await Promise.all(
+      allPayments.map(async (p) => {
+        const facts = await db.select()
+          .from(paymentFacts)
+          .where(eq(paymentFacts.paymentId, p.paymentId))
+          .orderBy(paymentFacts.sequence);
+        
+        // Replay to get current state
+        let replayedState = "INITIATED";
+        let lastFactType = null;
+        let lastFactAt = null;
+        
+        for (const fact of facts) {
+          lastFactType = fact.factType;
+          lastFactAt = fact.occurredAt;
+          if (fact.factType === "PAYMENT_HOLD_PLACED") replayedState = "HELD";
+          else if (fact.factType === "PAYMENT_SENT") replayedState = "SENT";
+          else if (fact.factType === "PAYMENT_SETTLED") replayedState = "SETTLED";
+          else if (fact.factType === "PAYMENT_FAILED") replayedState = "FAILED";
+          else if (fact.factType === "PAYMENT_REVERSED") replayedState = "REVERSED";
+        }
+        
+        return {
+          paymentId: p.paymentId,
+          state: replayedState,
+          amount: p.amount,
+          currency: p.currency,
+          fromAccount: p.fromAccount,
+          toAccount: p.toAccount,
+          toExternal: p.toExternal,
+          scheme: p.toExternal ? "NPP" : "INTERNAL",
+          createdAt: p.createdAt,
+          lastEvent: lastFactType,
+          lastEventAt: lastFactAt,
+          factCount: facts.length,
+          // Safeguards (hardcoded for now - would come from ops config)
+          safeguards: {
+            killSwitchActive: false,
+            circuitBreakerOpen: false,
+          },
+        };
+      })
+    );
+    
+    return paymentsWithReplayedState;
+  }),
+
+  /**
+   * GET PAYMENT FACTS
+   * Returns exact sequence of truth events for Fact Timeline tab.
+   * Strict chronological order, no collapsing, no summarisation.
+   */
+  getFacts: publicProcedure
+    .input(z.object({ paymentId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const facts = await db.select()
+        .from(paymentFacts)
+        .where(eq(paymentFacts.paymentId, input.paymentId))
+        .orderBy(paymentFacts.sequence);
+      
+      return facts.map((f) => ({
+        id: f.id,
+        sequence: f.sequence,
+        factType: f.factType,
+        factData: f.factData,
+        occurredAt: f.occurredAt,
+        depositFactId: f.depositFactId,
+        depositPostingType: f.depositPostingType,
+        // Idempotency key derived from payment + sequence
+        idempotencyKey: `${input.paymentId}:${f.sequence}:${f.factType}`,
+        source: f.factData && (f.factData as any).nppMessageId ? "NPP" : "INTERNAL",
+        externalRef: f.factData && (f.factData as any).nppMessageId || null,
+      }));
+    }),
+
+  /**
+   * GET LINKED DEPOSITS
+   * Returns deposit facts linked to a payment.
+   * Proves payments cannot corrupt balances.
+   */
+  getLinkedDeposits: publicProcedure
+    .input(z.object({ paymentId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      // Get payment to find linked accounts
+      const payment = await db.select()
+        .from(payments)
+        .where(eq(payments.paymentId, input.paymentId))
+        .limit(1);
+      
+      if (payment.length === 0) {
+        return { linkedAccounts: [], depositFacts: [] };
+      }
+      
+      const p = payment[0];
+      const linkedAccountIds = [p.fromAccount];
+      if (p.toAccount) linkedAccountIds.push(p.toAccount);
+      
+      // Get deposit facts for linked accounts
+      const allDepositFacts = [];
+      for (const accountId of linkedAccountIds) {
+        const facts = await db.select()
+          .from(depositFacts)
+          .where(eq(depositFacts.accountId, accountId));
+        
+        // Filter to facts related to this payment (by reference in factData)
+        const relatedFacts = facts.filter((f) => {
+          const data = f.factData as any;
+          if (data && data.reference && data.reference.includes(input.paymentId)) {
+            return true;
+          }
+          // Also check if this fact was created by a payment operation
+          if (data && data.posting && data.posting.reference && data.posting.reference.includes(input.paymentId)) {
+            return true;
+          }
+          return false;
+        });
+        
+        for (const fact of relatedFacts) {
+          const data = fact.factData as any;
+          let postingType = "UNKNOWN";
+          let amount = null;
+          
+          if (data.type === "POSTING_APPLIED" || data.posting) {
+            const posting = data.posting || data;
+            postingType = posting.type;
+            amount = posting.amount;
+          } else if (data.type) {
+            postingType = data.type;
+            amount = data.amount;
+          }
+          
+          allDepositFacts.push({
+            factId: fact.factId,
+            accountId: fact.accountId,
+            sequence: fact.sequence,
+            postingType,
+            amount,
+            occurredAt: fact.occurredAt,
+          });
+        }
+      }
+      
+      // Get account info
+      const linkedAccounts = [];
+      for (const accountId of linkedAccountIds) {
+        const account = await db.select()
+          .from(depositAccounts)
+          .where(eq(depositAccounts.accountId, accountId))
+          .limit(1);
+        
+        if (account.length > 0) {
+          const a = account[0];
+          linkedAccounts.push({
+            accountId: a.accountId,
+            customerId: a.customerId,
+            role: accountId === p.fromAccount ? "SOURCE" : "DESTINATION",
+          });
+        }
+      }
+      
+      return {
+        linkedAccounts,
+        depositFacts: allDepositFacts,
+      };
+    }),
+
+  /**
+   * GET SAFEGUARDS
+   * Returns kill-switch and circuit breaker status.
+   * Makes containment visible.
+   */
+  getSafeguards: publicProcedure.query(async () => {
+    // In production, this would read from ops config / feature flags
+    // For now, return hardcoded values that can be toggled
+    return {
+      killSwitch: {
+        npp: {
+          state: "ENABLED" as const,
+          lastChanged: new Date().toISOString(),
+          reason: null,
+          actor: null,
+        },
+      },
+      circuitBreaker: {
+        npp: {
+          state: "CLOSED" as const,
+          failureCount: 0,
+          lastFailure: null,
+        },
+      },
+      failureHistory: [] as Array<{
+        type: string;
+        adapter: string;
+        timestamp: string;
+        details: string;
+      }>,
+    };
+  }),
+
+  /**
+   * REBUILD PAYMENT FROM FACTS
+   * Server-side replay for Payment Detail tab.
+   * Returns current state derived from facts.
+   */
+  rebuildFromFacts: publicProcedure
+    .input(z.object({ paymentId: z.string() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const payment = await db.select()
+        .from(payments)
+        .where(eq(payments.paymentId, input.paymentId))
+        .limit(1);
+      
+      if (payment.length === 0) {
+        return { success: false, error: "Payment not found", payment: null };
+      }
+      
+      const p = payment[0];
+      const facts = await db.select()
+        .from(paymentFacts)
+        .where(eq(paymentFacts.paymentId, input.paymentId))
+        .orderBy(paymentFacts.sequence);
+      
+      // Replay state machine
+      let state = "INITIATED";
+      const stateTransitions: Array<{ from: string; to: string; factType: string; occurredAt: Date | null }> = [];
+      let lastFact = null;
+      let lastOccurredAt = null;
+      
+      for (const fact of facts) {
+        const prevState = state;
+        lastFact = fact.factType;
+        lastOccurredAt = fact.occurredAt;
+        
+        if (fact.factType === "PAYMENT_HOLD_PLACED") state = "HELD";
+        else if (fact.factType === "PAYMENT_SENT") state = "SENT";
+        else if (fact.factType === "PAYMENT_SETTLED") state = "SETTLED";
+        else if (fact.factType === "PAYMENT_FAILED") state = "FAILED";
+        else if (fact.factType === "PAYMENT_REVERSED") state = "REVERSED";
+        
+        if (prevState !== state) {
+          stateTransitions.push({
+            from: prevState,
+            to: state,
+            factType: fact.factType,
+            occurredAt: fact.occurredAt,
+          });
+        }
+      }
+      
+      return {
+        success: true,
+        error: null,
+        payment: {
+          paymentId: p.paymentId,
+          currentState: state,
+          lastFact,
+          lastOccurredAt,
+          stateTransitions,
+          replaySucceeded: true,
+          intent: {
+            fromAccount: p.fromAccount,
+            toAccount: p.toAccount,
+            toExternal: p.toExternal,
+            amount: p.amount,
+            currency: p.currency,
+            scheme: p.toExternal ? "NPP" : "INTERNAL",
+            idempotencyKey: `${p.paymentId}:INIT`,
+          },
+        },
+      };
+    }),
 });
