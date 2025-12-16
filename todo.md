@@ -1819,11 +1819,27 @@
 - [ ] Replay test deterministic
 
 
-## NPP Load Testing & CI/CD Integration
+## NPP Load Testing & CI/CD Integration - COMPLETED ✓
 - [x] Create NPP load testing script (npp-load-test.mjs)
 - [x] Simulate 134 TPS peak for 20 CUs
 - [x] Run load tests and capture metrics
 - [x] Analyze bottlenecks and performance
 - [x] Extend composite workflow with NPP guardrails
 - [x] Add CI checks: no stored state, no cross-core imports, replay tests mandatory
+- [x] Save checkpoint and push to GitHub
+- [x] Create NPP_POWERSCRIPT.md for manual push
+
+
+## BECS Payment Rail Implementation (Batch + Delayed Truth)
+- [ ] Create BECS state machine (BATCHED, SUBMITTED, CLEARED, RETURNED)
+- [ ] Create BECS state transitions matrix
+- [ ] Create BECS invariants (batch totals, late returns, file-level failures)
+- [ ] Create BECS events (PaymentBatched, BatchSubmitted, PaymentCleared, PaymentReturned)
+- [ ] Create BECS evidence pack with batch metadata
+- [ ] Write BECS diff documentation (vs NPP)
+- [ ] Write BECS tests (batch reconciliation, late returns, replay)
 - [ ] Save checkpoint and push to GitHub
+
+## Future Rails (RTGS & Cards) - Deferred
+- [ ] RTGS: Governance-first, approval-heavy rail
+- [ ] Cards: Auth/clearing/chargeback rail
