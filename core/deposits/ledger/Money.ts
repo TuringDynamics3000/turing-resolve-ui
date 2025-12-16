@@ -17,7 +17,7 @@ export class Money {
   readonly currency: string;
 
   constructor(amount: bigint, currency: string) {
-    if (amount < 0n) {
+    if (amount < BigInt(0)) {
       throw new Error("NEGATIVE_MONEY");
     }
     if (!currency || currency.length !== 3) {
@@ -69,14 +69,14 @@ export class Money {
    * Check if this money equals zero.
    */
   isZero(): boolean {
-    return this.amount === 0n;
+    return this.amount === BigInt(0);
   }
 
   /**
    * Create zero money in the same currency.
    */
   zero(): Money {
-    return new Money(0n, this.currency);
+    return new Money(BigInt(0), this.currency);
   }
 
   /**
@@ -120,7 +120,7 @@ export class Money {
    * Create zero Money in specified currency.
    */
   static zero(currency: string): Money {
-    return new Money(0n, currency);
+    return new Money(BigInt(0), currency);
   }
 
   /**

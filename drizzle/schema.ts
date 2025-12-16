@@ -103,3 +103,90 @@ export const ledgerPostings = mysqlTable("ledger_postings", {
 
 export type LedgerPosting = typeof ledgerPostings.$inferSelect;
 export type InsertLedgerPosting = typeof ledgerPostings.$inferInsert;
+
+// ============================================
+// DEPOSITS CORE v1 TABLES (Event Sourcing)
+// ============================================
+
+/**
+ * Deposit Accounts - Metadata for deposit accounts.
+ * State is derived from facts, this is for indexing/querying.
+ */
+export const depositAccounts = mysqlTable("deposit_accounts", {
+  id: int("id").autoincrement().primaryKey(),
+  accountId: varchar("accountId", { length: 64 }).notNull().unique(),
+  customerId: varchar("customerId", { length: 64 }).notNull(),
+  productType: varchar("productType", { length: 32 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("AUD").notNull(),
+  status: mysqlEnum("status", ["OPEN", "CLOSED"]).default("OPEN").notNull(),
+  customerSegment: varchar("customerSegment", { length: 32 }),
+  
+  // Cached balances (derived from facts, updated on each posting)
+  ledgerBalance: decimal("ledgerBalance", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  availableBalance: decimal("availableBalance", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  holdCount: int("holdCount").default(0).notNull(),
+  
+  // Audit
+  openedAt: timestamp("openedAt").defaultNow().notNull(),
+  closedAt: timestamp("closedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DepositAccount = typeof depositAccounts.$inferSelect;
+export type InsertDepositAccount = typeof depositAccounts.$inferInsert;
+
+/**
+ * Deposit Facts - Event sourcing facts for deposit accounts.
+ * This is the source of truth. All state is derived from facts.
+ * 
+ * IMMUTABLE: Facts are never updated or deleted.
+ */
+export const depositFacts = mysqlTable("deposit_facts", {
+  id: int("id").autoincrement().primaryKey(),
+  factId: varchar("factId", { length: 64 }).notNull().unique(),
+  accountId: varchar("accountId", { length: 64 }).notNull(),
+  sequence: int("sequence").notNull(),
+  
+  // Fact type and data
+  factType: mysqlEnum("factType", ["ACCOUNT_OPENED", "POSTING_APPLIED", "ACCOUNT_CLOSED"]).notNull(),
+  factData: json("factData").notNull(), // The full fact object (Posting, etc.)
+  
+  // Governance links
+  decisionId: varchar("decisionId", { length: 64 }),
+  commandId: varchar("commandId", { length: 64 }),
+  
+  // Audit
+  occurredAt: timestamp("occurredAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DepositFact = typeof depositFacts.$inferSelect;
+export type InsertDepositFact = typeof depositFacts.$inferInsert;
+
+/**
+ * Deposit Holds - Active holds on deposit accounts.
+ * Derived from facts, but stored for efficient querying.
+ */
+export const depositHolds = mysqlTable("deposit_holds", {
+  id: int("id").autoincrement().primaryKey(),
+  holdId: varchar("holdId", { length: 64 }).notNull().unique(),
+  accountId: varchar("accountId", { length: 64 }).notNull(),
+  amount: decimal("amount", { precision: 18, scale: 2 }).notNull(),
+  currency: varchar("currency", { length: 3 }).default("AUD").notNull(),
+  holdType: varchar("holdType", { length: 32 }).notNull(),
+  reason: text("reason"),
+  
+  // Status
+  status: mysqlEnum("status", ["ACTIVE", "RELEASED", "EXPIRED"]).default("ACTIVE").notNull(),
+  
+  // Audit
+  placedAt: timestamp("placedAt").notNull(),
+  releasedAt: timestamp("releasedAt"),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DepositHold = typeof depositHolds.$inferSelect;
+export type InsertDepositHold = typeof depositHolds.$inferInsert;

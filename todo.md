@@ -763,3 +763,21 @@
 - [ ] Compare: ledger balance, available balance, holds
 - [ ] Log deltas (don't throw)
 - [ ] Track: systematic differences, rounding mismatches, policy drift
+
+
+## FactStore Database Integration - COMPLETED ✓
+- [x] Create deposits_facts table schema (account_id, sequence, fact_type, fact_data, occurred_at)
+- [x] Create deposits_accounts table for account metadata
+- [x] Implement DrizzleFactStore adapter (inline in depositsRouter.ts)
+- [x] loadFacts() - query by account_id ordered by sequence
+- [x] appendFact() - insert with transaction
+- [x] getNextSequence() - atomic increment
+- [x] Integration tested via UI
+
+## Deposits UI Integration - COMPLETED ✓
+- [x] Create /deposits route and page (Core v1 tab)
+- [x] Account list with balances rebuilt from facts
+- [x] Account detail view with facts timeline
+- [x] Governance flow visualization (Immutable Audit Trail banner)
+- [x] Credit/Debit/Hold operations via UI
+- [x] Real-time balance display (ledger vs available)

@@ -112,7 +112,7 @@ export class OpenAccountHandler implements DepositHandler<OpenAccountCommand, Op
     // 1. Validate command shape
     const validationErrors = this.validate(command);
     if (validationErrors.length > 0) {
-      return failureResult(
+      return failureResult<OpenAccountResult>(
         command.commandId,
         validationErrors.join("; "),
         "VALIDATION_ERROR"
@@ -122,7 +122,7 @@ export class OpenAccountHandler implements DepositHandler<OpenAccountCommand, Op
     // 2. Check if account already exists
     const existingFacts = await context.factStore.loadFacts(command.accountId);
     if (existingFacts.length > 0) {
-      return failureResult(
+      return failureResult<OpenAccountResult>(
         command.commandId,
         `Account ${command.accountId} already exists`,
         "ACCOUNT_EXISTS"
@@ -139,7 +139,7 @@ export class OpenAccountHandler implements DepositHandler<OpenAccountCommand, Op
     // 4. Persist fact
     const persisted = await context.factStore.appendFacts([fact]);
     if (!persisted) {
-      return failureResult(
+      return failureResult<OpenAccountResult>(
         command.commandId,
         "Failed to persist account opened fact",
         "PERSISTENCE_ERROR"

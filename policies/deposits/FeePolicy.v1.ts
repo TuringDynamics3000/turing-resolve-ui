@@ -122,9 +122,8 @@ export class FeePolicyV1 implements DepositPolicy {
    * Check if customer is in a premium segment (fees waived).
    */
   private isPremiumCustomer(context: PolicyContext): boolean {
-    return FEE_CONFIG_V1.waivers.premiumSegments.includes(
-      context.customerSegment ?? ""
-    );
+    const segment = context.customerSegment ?? "";
+    return (FEE_CONFIG_V1.waivers.premiumSegments as readonly string[]).includes(segment);
   }
   
   /**

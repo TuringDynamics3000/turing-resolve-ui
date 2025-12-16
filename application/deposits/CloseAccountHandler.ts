@@ -92,7 +92,7 @@ export class CloseAccountHandler implements DepositHandler<CloseAccountCommand, 
     // 1. Validate command shape
     const validationErrors = this.validate(command);
     if (validationErrors.length > 0) {
-      return failureResult(
+      return failureResult<CloseAccountResult>(
         command.commandId,
         validationErrors.join("; "),
         "VALIDATION_ERROR"
@@ -102,7 +102,7 @@ export class CloseAccountHandler implements DepositHandler<CloseAccountCommand, 
     // 2. Load facts for account
     const facts = await context.factStore.loadFacts(command.accountId);
     if (facts.length === 0) {
-      return failureResult(
+      return failureResult<CloseAccountResult>(
         command.commandId,
         `Account ${command.accountId} not found`,
         "ACCOUNT_NOT_FOUND"
@@ -112,7 +112,7 @@ export class CloseAccountHandler implements DepositHandler<CloseAccountCommand, 
     // 3. Rebuild account state from facts
     const account = rebuildFromFacts(facts);
     if (!account) {
-      return failureResult(
+      return failureResult<CloseAccountResult>(
         command.commandId,
         `Failed to rebuild account ${command.accountId}`,
         "REBUILD_ERROR"
@@ -121,7 +121,7 @@ export class CloseAccountHandler implements DepositHandler<CloseAccountCommand, 
     
     // 4. Check if already closed
     if (account.isClosed()) {
-      return failureResult(
+      return failureResult<CloseAccountResult>(
         command.commandId,
         `Account ${command.accountId} is already closed`,
         "ALREADY_CLOSED"
@@ -134,7 +134,7 @@ export class CloseAccountHandler implements DepositHandler<CloseAccountCommand, 
       closedAccount = account.close();
     } catch (error) {
       // Core will throw if balance > 0 or holds exist
-      return failureResult(
+      return failureResult<CloseAccountResult>(
         command.commandId,
         error instanceof Error ? error.message : "Unknown error",
         "CLOSURE_REJECTED"
@@ -150,7 +150,7 @@ export class CloseAccountHandler implements DepositHandler<CloseAccountCommand, 
     // 7. Persist fact
     const persisted = await context.factStore.appendFacts([fact]);
     if (!persisted) {
-      return failureResult(
+      return failureResult<CloseAccountResult>(
         command.commandId,
         "Failed to persist account closed fact",
         "PERSISTENCE_ERROR"

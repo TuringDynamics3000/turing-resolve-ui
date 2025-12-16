@@ -18,7 +18,7 @@ export {
   successResult,
   failureResult,
   InMemoryFactStore,
-} from "./HandlerInterface";
+} from "./HandlerInterface.ts";
 
 // Open Account Handler
 export {
@@ -26,7 +26,7 @@ export {
   OpenAccountResult,
   OpenAccountHandler,
   openAccountHandler,
-} from "./OpenAccountHandler";
+} from "./OpenAccountHandler.ts";
 
 // Apply Posting Handler
 export {
@@ -34,7 +34,7 @@ export {
   ApplyPostingResult,
   ApplyPostingHandler,
   applyPostingHandler,
-} from "./ApplyPostingHandler";
+} from "./ApplyPostingHandler.ts";
 
 // Close Account Handler
 export {
@@ -42,4 +42,4 @@ export {
   CloseAccountResult,
   CloseAccountHandler,
   closeAccountHandler,
-} from "./CloseAccountHandler";
+} from "./CloseAccountHandler.ts";

@@ -25,9 +25,11 @@ import {
   listPostings,
   reversePosting,
 } from "./db";
+import { depositsRouter } from "./depositsRouter";
 
 export const appRouter = router({
   system: systemRouter,
+  deposits: depositsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

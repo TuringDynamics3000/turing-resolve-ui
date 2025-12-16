@@ -129,7 +129,7 @@ export class ApplyPostingHandler implements DepositHandler<ApplyPostingCommand, 
     // 1. Validate command shape
     const validationErrors = this.validate(command);
     if (validationErrors.length > 0) {
-      return failureResult(
+      return failureResult<ApplyPostingResult>(
         command.commandId,
         validationErrors.join("; "),
         "VALIDATION_ERROR"
@@ -139,7 +139,7 @@ export class ApplyPostingHandler implements DepositHandler<ApplyPostingCommand, 
     // 2. Load facts for account
     const facts = await context.factStore.loadFacts(command.accountId);
     if (facts.length === 0) {
-      return failureResult(
+      return failureResult<ApplyPostingResult>(
         command.commandId,
         `Account ${command.accountId} not found`,
         "ACCOUNT_NOT_FOUND"
@@ -149,7 +149,7 @@ export class ApplyPostingHandler implements DepositHandler<ApplyPostingCommand, 
     // 3. Rebuild account state from facts
     const account = rebuildFromFacts(facts);
     if (!account) {
-      return failureResult(
+      return failureResult<ApplyPostingResult>(
         command.commandId,
         `Failed to rebuild account ${command.accountId}`,
         "REBUILD_ERROR"
@@ -158,7 +158,7 @@ export class ApplyPostingHandler implements DepositHandler<ApplyPostingCommand, 
     
     // 4. Check if posting can be applied
     if (!canApplyPosting(account, command.posting)) {
-      return failureResult(
+      return failureResult<ApplyPostingResult>(
         command.commandId,
         `Posting cannot be applied to account ${command.accountId}`,
         "POSTING_REJECTED"
@@ -170,7 +170,7 @@ export class ApplyPostingHandler implements DepositHandler<ApplyPostingCommand, 
     try {
       updatedAccount = account.apply(command.posting);
     } catch (error) {
-      return failureResult(
+      return failureResult<ApplyPostingResult>(
         command.commandId,
         error instanceof Error ? error.message : "Unknown error",
         "APPLY_ERROR"
@@ -236,7 +236,7 @@ export class ApplyPostingHandler implements DepositHandler<ApplyPostingCommand, 
     // 9. Persist facts
     const persisted = await context.factStore.appendFacts(newFacts);
     if (!persisted) {
-      return failureResult(
+      return failureResult<ApplyPostingResult>(
         command.commandId,
         "Failed to persist facts",
         "PERSISTENCE_ERROR"

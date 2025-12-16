@@ -30,7 +30,9 @@ import {
   Calendar,
   FileText,
   RefreshCw,
+  Database,
 } from "lucide-react";
+import { DepositsCorePage } from "@/components/deposits/DepositsCorePage";
 
 // Account states
 type AccountState = "CREATED" | "ACTIVE" | "FROZEN" | "LEGAL_HOLD" | "DORMANT" | "CLOSED";
@@ -594,6 +596,10 @@ export default function DepositsDashboard() {
           <TabsTrigger value="holds">Holds</TabsTrigger>
           <TabsTrigger value="interest">Interest</TabsTrigger>
           <TabsTrigger value="governance">Governance</TabsTrigger>
+          <TabsTrigger value="core-v1" className="gap-1">
+            <Database className="h-3 w-3" />
+            Core v1
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="accounts">
@@ -610,6 +616,10 @@ export default function DepositsDashboard() {
 
         <TabsContent value="governance">
           <GovernanceInfo />
+        </TabsContent>
+
+        <TabsContent value="core-v1">
+          <DepositsCorePage />
         </TabsContent>
       </Tabs>
     </div>

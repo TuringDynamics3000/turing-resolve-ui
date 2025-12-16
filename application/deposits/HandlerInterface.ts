@@ -160,11 +160,11 @@ export function successResult<T>(
 /**
  * Create a failed handler result.
  */
-export function failureResult(
+export function failureResult<T = unknown>(
   commandId: string,
   error: string,
   errorCode: string
-): HandlerResult {
+): HandlerResult<T> {
   return {
     success: false,
     commandId,
