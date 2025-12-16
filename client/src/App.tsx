@@ -19,6 +19,7 @@ import LendingDashboard from "@/pages/LendingDashboard";
 import PaymentsDashboard from "@/pages/PaymentsDashboard";
 import DepositsDashboard from "@/pages/DepositsDashboard";
 import GovernanceControls from "@/pages/GovernanceControls";
+import ReportingDashboard from "@/pages/ReportingDashboard";
 import NotFound from "@/pages/NotFound";
 
 function Router() {
@@ -50,6 +51,9 @@ function Router() {
         {/* Evidence Vault */}
         <Route path="/evidence" component={EvidenceVaultSystem} />
         <Route path="/evidence/:id" component={EvidenceDetail} />
+        
+        {/* Reporting Module */}
+        <Route path="/reporting" component={ReportingDashboard} />
         
         {/* Governance */}
         <Route path="/governance" component={GovernanceControls} />

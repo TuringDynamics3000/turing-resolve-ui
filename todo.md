@@ -506,3 +506,56 @@
 - [ ] GL journals reconcile
 - [ ] Ops reports validated
 - [ ] Regulatory extracts validated
+
+
+## Reporting Dashboard UI
+### Page Structure
+- [ ] Create ReportingDashboard.tsx page
+- [ ] Add Reporting tab to GlobalNav
+- [ ] Add route in App.tsx
+
+### Statement Generation Section
+- [ ] Statement queue/history table
+- [ ] Generate statement button with customer selector
+- [ ] Statement status (pending, generated, delivered)
+- [ ] Download PDF/JSON buttons
+- [ ] Hash verification display
+
+### Trial Balance Status Section
+- [ ] Current trial balance summary
+- [ ] Balance by account type
+- [ ] Debits = Credits verification
+- [ ] Last reconciliation timestamp
+- [ ] Variance alerts
+
+### Regulatory Report Schedules Section
+- [ ] AML transaction report schedule
+- [ ] APRA capital report schedule
+- [ ] ASIC credit report schedule
+- [ ] Next run countdown
+- [ ] Last run status and hash
+
+
+## Reporting Dashboard UI - COMPLETED ✓
+### Statement Generation
+- [x] Customer statement generator with dropdown
+- [x] Statement history list (5 statements)
+- [x] Status badges (Delivered, Generated, Pending, Failed)
+- [x] Hash verification display with copy button
+- [x] Download PDF/JSON buttons
+
+### Trial Balance
+- [x] Balance status card (BALANCED indicator)
+- [x] Total debits/credits display ($19,565,000)
+- [x] Last reconciliation timestamp
+- [x] Trial balance hash with "Why it matters" tooltip
+- [x] Balance by account type breakdown (Assets, Liabilities, Equity, Revenue, Expenses)
+- [x] GL Journal entries table
+
+### Regulatory Reports
+- [x] AML reports section (Daily/Weekly) - 2 scheduled
+- [x] APRA reports section (Monthly) - 2 scheduled
+- [x] ASIC reports section (Quarterly) - 2 scheduled
+- [x] Schedule status (next run, last run, overdue indicator)
+- [x] Run Now buttons
+- [x] Enable/Disable toggles

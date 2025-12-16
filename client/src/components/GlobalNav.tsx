@@ -38,6 +38,7 @@ export function GlobalNav() {
     { href: "/payments", label: "Payments", icon: Wallet, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/deposits", label: "Deposits", icon: Building2, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/exposure", label: "Exposure", icon: TrendingUp, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'BOARD_VIEWER'] },
+    { href: "/reporting", label: "Reporting", icon: FileText, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'BOARD_VIEWER'] },
     { href: "/evidence", label: "Evidence", icon: FileCheck, roles: ['COMPLIANCE_VIEWER', 'OPS_SUPERVISOR', 'BOARD_VIEWER'] },
     { href: "/governance", label: "Governance", icon: Lock, roles: ['COMPLIANCE_VIEWER', 'BOARD_VIEWER', 'SYSTEM_ADMIN'] },
   ];
