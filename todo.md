@@ -781,3 +781,71 @@
 - [x] Governance flow visualization (Immutable Audit Trail banner)
 - [x] Credit/Debit/Hold operations via UI
 - [x] Real-time balance display (ledger vs available)
+
+
+## Hard Guards - Deposits Core v1
+### 1. Derived State Explicit
+- [ ] Rename balance fields to derivedLedgerBalance, derivedAvailableBalance
+- [ ] Add DERIVED_STATE.md explaining projections are disposable/rebuildable
+- [ ] Add "Derived" label in UI for all computed balances
+- [ ] Never call projections "balances" without qualification
+
+### 2. FactStore Database Invariants
+- [ ] Create append-only trigger (prevent UPDATE/DELETE on deposit_facts)
+- [ ] Add monotonic sequence constraint
+- [ ] Add idempotency key column with unique constraint
+- [ ] Revoke UPDATE/DELETE privileges on deposit_facts table
+
+### 3. Freeze Core v1 + FactStore Contract
+- [ ] Create FACTSTORE_CONTRACT_FREEZE.md
+- [ ] Define stable interface (appendFact, loadFacts, getNextSequence)
+- [ ] Any change requires: migration plan, replay validation, version bump
+- [ ] Add version field to facts table
+- [ ] Update CODEOWNERS for factstore files
+
+
+
+## Shadow Mode Harness - Critical Confidence Builder - COMPLETED ✓
+### Architecture
+- [x] Design shadow mode flow (legacy Python || TS Core v1 in parallel)
+- [x] Read-only, non-blocking execution
+- [x] No production impact - shadow runs don't affect state
+- [x] Created /shadow directory with types, adapters, comparison, logging
+
+### Python Shadow Adapter
+- [x] Create shadow_adapter.py in TuringCore-v3
+- [x] Wrap existing deposits logic (LegacyPythonShadowAdapter class)
+- [x] Return standardized comparison output (ledger, available, holds)
+- [x] FastAPI endpoint for shadow comparison (/shadow/execute, /shadow/account)
+
+### TS Core v1 Shadow Adapter
+- [x] Create CoreV1Adapter.ts in shadow/adapters
+- [x] Wrap Core v1 logic with fact-based state rebuild
+- [x] Return standardized comparison output
+
+### Comparison Engine
+- [x] Create ShadowComparator.ts
+- [x] Compare: ledger balance, available balance, holds array
+- [x] Detect: amount differences, hold count differences, state differences
+- [x] Tolerance-based rounding detection (0.01%)
+
+### Divergence Logging & Classification
+- [x] Create DivergenceLogger.ts
+- [x] Log all divergences with full context (console + in-memory)
+- [x] Classify divergences:
+  - [x] BUG: Core v1 is wrong
+  - [x] POLICY_DIFFERENCE: Intentional behavior change
+  - [x] ROUNDING_ARTEFACT: Floating point vs bigint
+  - [x] TIMING: Race condition or sequence difference
+  - [x] MISSING_FEATURE: Core v1 doesn't support yet
+- [x] Track divergence trends over time (getTrends method)
+- [x] Generate markdown reports (generateReport method)
+- [x] Export divergences as JSON (export method)
+
+### Shadow Mode Tests (13 tests passing)
+- [x] Test with known good scenarios (expect match)
+- [x] Test with known edge cases (success/failure divergence)
+- [x] Test balance divergence detection
+- [x] Test divergence classification and filtering
+- [x] Test report generation
+
