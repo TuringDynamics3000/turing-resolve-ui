@@ -849,3 +849,70 @@
 - [x] Test divergence classification and filtering
 - [x] Test report generation
 
+
+
+## Payments Core v1 - Subordinate to Deposits Core - COMPLETED ✓
+### Executive Intent
+- [x] Payments Core owns intent, routing, lifecycle - NOT balances
+- [x] Deposits Core owns money - Payments emits postings, never mutates
+- [x] One-way dependency: core/payments → core/deposits (never reverse)
+
+### Non-Negotiable Rules (Structurally Enforced)
+- [x] Payments Core cannot import DB, Kafka, HTTP
+- [x] Payments Core cannot touch Money, Balance, or Hold internals
+- [x] Payments Core cannot change balances
+- [x] All money movement via Deposits Core postings
+- [x] Payment state ≠ account state
+
+### PC-1: Folder Structure - IMPLEMENTED
+- [x] Create /core/payments/aggregate/ (Payment.ts, PaymentState.ts)
+- [x] Create /core/payments/events/ (PaymentFact.ts)
+- [x] Create /core/payments/commands/ (PaymentCommand.ts)
+- [x] Create /core/payments/errors/ (PaymentErrors.ts)
+- [x] Create /core/payments/index.ts (public surface)
+
+### PC-2: Payment Aggregate - IMPLEMENTED
+- [x] Payment class with id, fromAccount, toAccount, amount, state, holds
+- [x] References Money (value object only) - does not hold balances
+- [x] References accounts by ID only
+- [x] apply(event: PaymentFact) => Payment (immutable)
+
+### PC-3: Payment State Machine (Deterministic) - IMPLEMENTED
+- [x] States: INITIATED, HELD, AUTHORISED, SENT, SETTLED, FAILED, REVERSED
+- [x] Forward-only progression unless explicitly reversed
+- [x] No implicit transitions, no magic retries
+- [x] State transition validation
+
+### PC-4: Payment Facts (Event Sourcing) - IMPLEMENTED
+- [x] PaymentInitiated, PaymentHoldPlaced, PaymentAuthorised
+- [x] PaymentSent, PaymentSettled, PaymentFailed, PaymentReversed
+- [x] Append-only, replayable, explainable
+- [x] No side effects
+
+### PC-5: Deposits Core Integration (Critical) - IMPLEMENTED
+- [x] Payments emits intent, Deposits emits truth
+- [x] Payment Intent → Deposit Posting mapping:
+  - Reserve funds → HOLD_PLACED
+  - Release funds → HOLD_RELEASED
+  - Execute debit → DEBIT
+  - Execute credit → CREDIT
+  - Refund → CREDIT
+  - Cancel → HOLD_RELEASED
+
+### PC-6: Application Layer Handlers - IMPLEMENTED
+- [x] InitiatePaymentHandler.ts
+- [x] PlaceHoldHandler.ts
+- [x] SettlePaymentHandler.ts
+- [x] ReversePaymentHandler.ts
+- [x] Failure semantics: Deposits failure → payment stays in current state
+
+### PC-7: Tests (29 tests passing)
+- [x] State machine legality tests
+- [x] Replay determinism tests
+- [x] Invalid transition tests
+- [x] Full payment lifecycle tests
+- [x] Payment error tests
+
+### Governance
+- [x] PAYMENTS_CORE_FREEZE.md - Surface freeze declaration
+
