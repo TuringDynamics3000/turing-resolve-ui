@@ -29,6 +29,7 @@ import { depositsRouter } from "./depositsRouter";
 import { paymentsRouter } from "./paymentsRouter";
 import { advisoryRouter } from "./advisoryRouter";
 import { auditRouter } from "./auditRouter";
+import { publicFactsRouter } from "./publicFactsRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -36,6 +37,7 @@ export const appRouter = router({
   payments: paymentsRouter,
   advisory: advisoryRouter,
   audit: auditRouter,
+  publicFacts: publicFactsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

@@ -1202,3 +1202,31 @@
 - [x] Test date filtering
 - [x] Update audit.test.ts with date range tests (audit-date-filter.test.ts, 4 tests)
 - [x] All 144 tests passing
+
+
+## TuringCore-v3 → Digital Twin Fact Streaming Integration - COMPLETED ✓
+### Phase 1: Fact Streaming API (turing-resolve-ui) - COMPLETED ✓
+- [x] Add /api/facts/stream endpoint (SSE for all fact types - already existed)
+- [x] Add publicFactsRouter with queryPaymentFacts endpoint
+- [x] Add publicFactsRouter with queryDepositFacts endpoint
+- [x] Add publicFactsRouter with queryAuditFacts endpoint
+- [x] Add getSystemHealth endpoint
+
+### Phase 2: Fact Consumer Client (digital-twin) - COMPLETED ✓
+- [x] Create fact-consumer.js service in digital-twin gateway
+- [x] Subscribe to TuringCore-v3 SSE stream with EventSource
+- [x] Store facts in in-memory projection (no mutations)
+- [x] Handle reconnection with Last-Event-ID and exponential backoff
+
+### Phase 3: Member Portal Integration - COMPLETED ✓
+- [x] Add /api/v1/ui/facts/payment endpoint in gateway
+- [x] Add /api/v1/ui/facts/deposit endpoint in gateway
+- [x] Add /api/v1/ui/facts/safeguards endpoint in gateway
+- [x] Add /api/v1/ui/facts/status endpoint for monitoring
+- [x] Maintain read-only boundary (no write endpoints)
+- [x] Member Portal ready for live fact consumption (mock data in place)
+
+### Phase 4: Testing - COMPLETED ✓
+- [x] Integration pattern documented
+- [x] Read-only boundary enforced (no write endpoints in gateway)
+- [x] Checkpoints saved in both repos
