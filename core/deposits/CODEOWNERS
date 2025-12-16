@@ -1,0 +1,18 @@
+# Deposits Core v1 - CODEOWNERS
+# 
+# GOVERNANCE FREEZE: This directory is FROZEN.
+# All changes require explicit approval from core maintainers.
+#
+# Rule: If it changes balances and doesn't go through Deposits Core v1, it's a bug.
+
+# Core deposits module - requires senior review
+/core/deposits/ @deposits-core-maintainers @platform-leads
+
+# Invariants are especially sensitive - breaking changes require formal review
+/core/deposits/invariants/ @deposits-core-maintainers @platform-leads @compliance
+
+# Ledger primitives - money handling must be bulletproof
+/core/deposits/ledger/ @deposits-core-maintainers @platform-leads
+
+# Public surface - API changes affect all consumers
+/core/deposits/index.ts @deposits-core-maintainers @platform-leads @api-stewards
