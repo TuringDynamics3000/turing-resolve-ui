@@ -6,13 +6,13 @@ import { z } from "zod";
 import {
   getDecisions,
   getDecision,
-  getEvidencePack,
   getEvidencePacks,
-  getModuleStatus,
-  getModuleStatusById,
-  getGovernanceBoundaries,
+  getModules,
   getReplayProofs,
   getSystemSummary,
+  GOVERNANCE_BOUNDARIES,
+  INTERNAL_DECLARATIONS,
+  RELEASE_INFO,
 } from "./governance";
 import {
   createLedgerAccount,
@@ -43,8 +43,8 @@ export const appRouter = router({
   // ============================================
   governance: router({
     // System Summary
-    getSystemSummary: publicProcedure.query(() => {
-      return getSystemSummary();
+    getSystemSummary: publicProcedure.query(async () => {
+      return await getSystemSummary();
     }),
 
     // Decisions
@@ -54,14 +54,27 @@ export const appRouter = router({
         outcome: z.enum(["ALLOW", "REVIEW", "DECLINE"]).optional(),
         limit: z.number().optional(),
       }).optional())
-      .query(({ input }) => {
-        return getDecisions(input || {});
+      .query(async ({ input }) => {
+        const decisions = await getDecisions();
+        let filtered = decisions;
+        
+        if (input?.entityType) {
+          filtered = filtered.filter(d => d.entityType === input.entityType);
+        }
+        if (input?.outcome) {
+          filtered = filtered.filter(d => d.outcome === input.outcome);
+        }
+        if (input?.limit) {
+          filtered = filtered.slice(0, input.limit);
+        }
+        
+        return filtered;
       }),
 
     getDecision: publicProcedure
       .input(z.object({ decisionId: z.string() }))
-      .query(({ input }) => {
-        return getDecision(input.decisionId);
+      .query(async ({ input }) => {
+        return await getDecision(input.decisionId);
       }),
 
     // Evidence Packs
@@ -70,37 +83,65 @@ export const appRouter = router({
         entityType: z.string().optional(),
         limit: z.number().optional(),
       }).optional())
-      .query(({ input }) => {
-        return getEvidencePacks(input || {});
+      .query(async ({ input }) => {
+        const packs = await getEvidencePacks();
+        let filtered = packs;
+        
+        if (input?.entityType) {
+          filtered = filtered.filter(e => e.entityType === input.entityType);
+        }
+        if (input?.limit) {
+          filtered = filtered.slice(0, input.limit);
+        }
+        
+        return filtered;
       }),
 
     getEvidencePack: publicProcedure
       .input(z.object({ decisionId: z.string() }))
-      .query(({ input }) => {
-        return getEvidencePack(input.decisionId);
+      .query(async ({ input }) => {
+        const packs = await getEvidencePacks();
+        return packs.find(p => p.decisionId === input.decisionId) || null;
       }),
 
     // Module Status
-    listModules: publicProcedure.query(() => {
-      return getModuleStatus();
+    listModules: publicProcedure.query(async () => {
+      return await getModules();
     }),
 
     getModule: publicProcedure
       .input(z.object({ moduleId: z.string() }))
-      .query(({ input }) => {
-        return getModuleStatusById(input.moduleId);
+      .query(async ({ input }) => {
+        const modules = await getModules();
+        return modules.find(m => m.moduleId === input.moduleId) || null;
       }),
 
-    // Governance
+    // Governance Boundaries (static data)
     listBoundaries: publicProcedure.query(() => {
-      return getGovernanceBoundaries();
+      return GOVERNANCE_BOUNDARIES;
+    }),
+
+    // Internal Declarations (static data)
+    listDeclarations: publicProcedure.query(() => {
+      return INTERNAL_DECLARATIONS;
+    }),
+
+    // Release Info (static data)
+    getReleaseInfo: publicProcedure.query(() => {
+      return RELEASE_INFO;
     }),
 
     // Replay Proofs
     listReplayProofs: publicProcedure
       .input(z.object({ moduleName: z.string().optional() }).optional())
-      .query(({ input }) => {
-        return getReplayProofs(input?.moduleName);
+      .query(async ({ input }) => {
+        const proofs = await getReplayProofs();
+        
+        if (input?.moduleName) {
+          return proofs.filter(p => p.moduleName.toLowerCase() === input.moduleName!.toLowerCase());
+        }
+        
+        return proofs;
       }),
   }),
 

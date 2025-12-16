@@ -346,3 +346,30 @@
 - 12/12 replay proofs passing
 - v1.0-replacement-ready release tag
 
+
+
+## Live TuringCore-v3 API Integration - COMPLETED ✓
+### Phase 1: Python API Service
+- [x] Analyze TuringCore-v3 module structure for API endpoints
+- [x] Create FastAPI service in TuringCore-v3 (src/governance_api/main.py)
+- [x] Expose decisions, evidence, and module status endpoints
+
+### Phase 2: API Endpoints (Running on port 8001)
+- [x] GET /api/decisions - List all decisions (7 decisions)
+- [x] GET /api/decisions/{id} - Get decision by ID
+- [x] GET /api/evidence - List evidence packs (3 packs)
+- [x] GET /api/evidence/{id} - Get evidence pack by ID
+- [x] GET /api/modules - List module status (6 modules)
+- [x] GET /api/replay-proofs - List replay proof results (12 proofs)
+- [x] GET /api/summary - System summary
+
+### Phase 3: tRPC Integration
+- [x] Update governance.ts to call Python API (async fetch)
+- [x] Handle API errors and fallbacks
+- [x] Transform snake_case to camelCase
+
+### Phase 4: Testing
+- [x] Test end-to-end data flow
+- [x] Verify live data displays correctly in Evidence Vault
+
+**Dashboard now fetches LIVE data from TuringCore-v3 Governance API**
