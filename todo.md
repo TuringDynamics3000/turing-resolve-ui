@@ -570,3 +570,127 @@
 - [x] Add prominent hash verification banner
 - [x] Add download PDF/JSON buttons in modal
 - [x] Integrate modal into Reporting Dashboard
+
+
+## Deposits Core v1 - Skeleton Repository (TypeScript) - COMPLETED ✓
+### Executive Intent
+- [x] Immutable banking primitive
+- [x] Ledger-driven, policy-agnostic, side-effect free
+- [x] Frozen by default - once exists, everything else orbits it
+
+### DC-1: Folder Structure (Hard Boundary)
+- [x] Create /core/deposits/aggregate/ (DepositAccount.ts, Balance.ts, Hold.ts)
+- [x] Create /core/deposits/ledger/ (Money.ts, Posting.ts)
+- [x] Create /core/deposits/events/ (DepositFact.ts)
+- [x] Create /core/deposits/invariants/ (DepositInvariants.ts)
+- [x] Create /core/deposits/errors/ (DepositErrors.ts)
+- [x] Create /core/deposits/index.ts (public surface)
+- [x] HARD RULE: Nothing imports anything outside /core/deposits
+
+### DC-2: Ledger Primitives
+- [x] Money.ts - bigint amount, currency string, no floats, no silent rounding
+- [x] Money.add() and Money.subtract() with currency discipline
+- [x] Posting.ts - discriminated union (Credit, Debit, HoldPlaced, HoldReleased, InterestAccrued)
+- [x] No deposit(), withdraw() methods - only facts
+
+### DC-3: Aggregate Layer (Immutable)
+- [x] Balance.ts - readonly ledger Money, readonly available Money
+- [x] Hold.ts - readonly id, readonly amount Money
+- [x] DepositAccount.ts - readonly id, balance, holds[], status
+- [x] DepositAccount.apply(posting) - returns new DepositAccount
+- [x] Aggregate does not decide - only applies postings
+
+### DC-4: Frozen Invariants
+- [x] applyPosting(account, posting) - all invariants in one place
+- [x] CREDIT: add to ledger and available
+- [x] DEBIT: subtract from ledger and available (throws INSUFFICIENT_FUNDS)
+- [x] HOLD_PLACED: subtract from available, add to holds (throws HOLD_ALREADY_EXISTS)
+- [x] HOLD_RELEASED: add to available, remove from holds (throws HOLD_NOT_FOUND)
+- [x] INTEREST_ACCRUED: add to ledger and available
+- [x] ACCOUNT_CLOSED check on all operations
+
+### DC-5: Deposit Facts (Event Sourcing)
+- [x] DepositFact type (AccountOpened, PostingApplied, AccountClosed)
+- [x] No commands, no intentions - only facts
+- [x] Append-only, immutable, auditable, replayable
+
+### DC-6: Public Surface
+- [x] index.ts exports only: DepositAccount, Posting, Money, DepositFact
+- [x] This is the ONLY supported API
+
+### DC-7: Tests (44 tests passing)
+- [x] Money arithmetic tests (add, subtract, currency mismatch)
+- [x] Posting application tests (all 5 types)
+- [x] Invariant violation tests (insufficient funds, hold not found, etc.)
+- [x] Replay determinism tests
+- [x] Event sourcing tests (rebuildFromFacts, validateFactSequence)
+
+
+## Deposits Core v1 - Target Architecture Refactor
+### Design Principles (Non-Negotiable)
+- [ ] Small surface area, immutable logic, no orchestration
+- [ ] No IO, no policies in core
+- [ ] Facts before decisions
+- [ ] Ledger postings are the only state change
+- [ ] Zero framework leakage (no DB, Kafka, HTTP in core)
+- [ ] Policies are external, versioned, explainable
+- [ ] Replayability guaranteed by construction
+
+### Phase DC-1: Physical Layout (Hard Boundaries)
+- [ ] Create /core/deposits/aggregate/ (DepositAccount, Balance, Hold, InterestAccrual)
+- [ ] Create /core/deposits/ledger/ (LedgerEntry, Posting, Money)
+- [ ] Create /core/deposits/events/ (DepositFact)
+- [ ] Create /core/deposits/invariants/ (DepositInvariants)
+- [ ] Create /core/deposits/errors/ (DepositErrors)
+- [ ] Enforce lint rules: no imports from infra, db, api, kafka
+- [ ] Enforce: no side effects, no clocks, no UUIDs, no env vars
+- [ ] Enforce: pure functions only
+
+### Phase DC-2: Core Aggregate (Immutable)
+- [ ] DepositAccount class (readonly id, status, balance, holds)
+- [ ] Only apply(posting) method - no setters, no mutation
+- [ ] Balance value object (immutable)
+- [ ] Hold value object (immutable)
+- [ ] InterestAccrual value object (immutable)
+
+### Phase DC-3: Ledger as Only State Transition
+- [ ] Posting type (Credit, Debit, HoldPlaced, HoldReleased, InterestAccrued)
+- [ ] No deposit(), withdraw() methods
+- [ ] Only facts recorded in ledger
+
+### Phase DC-4: Frozen Invariants
+- [ ] assertInvariant for NEGATIVE_AVAILABLE_BALANCE
+- [ ] Stateless, declarative, centralised invariants
+- [ ] No conditionals based on product type or policy
+- [ ] Breaking changes require formal review
+
+### Phase DC-5: Deposit Facts (Event Sourcing)
+- [ ] DepositFact type (AccountOpened, PostingApplied, AccountClosed)
+- [ ] Append-only, immutable, auditable, replayable
+- [ ] No command events, no intent events
+
+### Phase DC-6: Policy Layer (Outside Core)
+- [ ] Create /policies/deposits/ directory
+- [ ] FeePolicy.v1.ts (versioned, explainable)
+- [ ] InterestPolicy.v1.ts (versioned, explainable)
+- [ ] HoldPolicy.v1.ts (versioned, explainable)
+- [ ] Policies consume facts, emit recommended postings
+
+### Phase DC-7: Application Layer (Orchestration)
+- [ ] Create /application/deposits/ directory
+- [ ] OpenAccountHandler.ts
+- [ ] ApplyPostingHandler.ts
+- [ ] CloseAccountHandler.ts
+- [ ] Handlers cannot break invariants
+
+### Phase DC-8: Infrastructure Adapters
+- [ ] Create /adapters/db/ for storage translation
+- [ ] Create /adapters/api/ for command translation
+- [ ] Adapters never contain logic
+
+### Phase DC-9: Testing Model
+- [ ] Pure invariant tests
+- [ ] Property-based tests (forAll postings, state => invariants hold)
+- [ ] Adversarial tests
+- [ ] Application tests (ordering, idempotency, failure modes)
+- [ ] No test mocks core behaviour
