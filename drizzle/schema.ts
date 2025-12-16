@@ -289,3 +289,47 @@ export const payments = mysqlTable("payments", {
 
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = typeof payments.$inferInsert;
+
+
+// ============================================
+// ADVISORY FACTS (Human Advisory Override - Non-Executing)
+// ============================================
+
+/**
+ * Advisory Facts - Human advisory notes that do NOT execute or override system decisions.
+ * 
+ * CRITICAL: Advisory facts:
+ * - Do NOT affect replay
+ * - Do NOT change state
+ * - Do NOT emit postings
+ * - Are visible, auditable, and permanent
+ */
+export const advisoryFacts = mysqlTable("advisory_facts", {
+  id: int("id").autoincrement().primaryKey(),
+  factId: varchar("factId", { length: 64 }).notNull().unique(),
+  
+  // Entity reference
+  entityType: mysqlEnum("entityType", ["PAYMENT", "ACCOUNT"]).notNull(),
+  entityId: varchar("entityId", { length: 64 }).notNull(),
+  
+  // Advisory type
+  advisoryType: mysqlEnum("advisoryType", [
+    "RECOMMEND_RETRY",
+    "RECOMMEND_REVERSAL",
+    "HOLD_FOR_REVIEW",
+    "NO_ACTION"
+  ]).notNull(),
+  
+  // Content
+  note: text("note").notNull(),
+  
+  // Actor (who added this advisory)
+  actor: varchar("actor", { length: 128 }).notNull(),
+  
+  // Audit
+  occurredAt: timestamp("occurredAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AdvisoryFact = typeof advisoryFacts.$inferSelect;
+export type InsertAdvisoryFact = typeof advisoryFacts.$inferInsert;

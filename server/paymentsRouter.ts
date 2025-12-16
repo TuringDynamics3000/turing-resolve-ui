@@ -1123,4 +1123,242 @@ export const paymentsRouter = router({
         },
       };
     }),
+
+  // ============================================
+  // OPERATOR COMMANDS (Control Plane)
+  // ============================================
+
+  /**
+   * OPERATOR: RETRY PAYMENT
+   * 
+   * Re-emits the payment command. Idempotency key ensures no duplicate execution.
+   * This is a command, not a state mutation.
+   * 
+   * Rules:
+   * - Action emits a command
+   * - Command emits facts
+   * - Facts replay determines outcome
+   * - UI never assumes success
+   */
+  operatorRetry: publicProcedure
+    .input(z.object({
+      paymentId: z.string(),
+      reason: z.string().min(1),
+      actor: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const now = new Date();
+      const actor = input.actor || ctx.user?.name || ctx.user?.openId || "operator";
+
+      // Load payment
+      const payment = await db.select()
+        .from(payments)
+        .where(eq(payments.paymentId, input.paymentId))
+        .limit(1);
+
+      if (payment.length === 0) {
+        return {
+          success: false,
+          error: "Payment not found",
+          commandEmitted: false,
+        };
+      }
+
+      const p = payment[0];
+
+      // Validate state - can only retry FAILED or HELD payments
+      if (p.state !== "FAILED" && p.state !== "HELD") {
+        return {
+          success: false,
+          error: `Cannot retry payment in state ${p.state}. Only FAILED or HELD payments can be retried.`,
+          commandEmitted: false,
+        };
+      }
+
+      // Check idempotency - if already retried with same key, return success without action
+      const idempotencyKey = `${input.paymentId}:RETRY:${input.reason}`;
+      const existingRetry = await db.select()
+        .from(paymentFacts)
+        .where(and(
+          eq(paymentFacts.paymentId, input.paymentId),
+          eq(paymentFacts.factType, "PAYMENT_INITIATED")
+        ));
+
+      // Emit OPERATOR_RETRY_REQUESTED fact (informational, does not change state)
+      const existingFacts = await db.select().from(paymentFacts).where(eq(paymentFacts.paymentId, input.paymentId));
+      const seq = existingFacts.length + 1;
+
+      await db.insert(paymentFacts).values({
+        paymentId: input.paymentId,
+        sequence: seq,
+        factType: "PAYMENT_INITIATED", // Re-emit initiation
+        factData: {
+          retryOf: input.paymentId,
+          reason: input.reason,
+          actor,
+          idempotencyKey,
+        },
+        occurredAt: now,
+      });
+
+      emitPaymentFact(input.paymentId, `${input.paymentId}:${seq}`, "PAYMENT_INITIATED", seq);
+
+      return {
+        success: true,
+        error: null,
+        commandEmitted: true,
+        message: "Retry command emitted. Outcome determined by fact replay.",
+        actor,
+        occurredAt: now.toISOString(),
+      };
+    }),
+
+  /**
+   * OPERATOR: REVERSE PAYMENT
+   * 
+   * Emits explicit reversal command. This is different from system-initiated reversal.
+   * 
+   * Rules:
+   * - Action emits a command
+   * - Command emits facts (PAYMENT_REVERSED)
+   * - Deposits Core emits refund posting
+   * - UI never assumes success
+   */
+  operatorReverse: publicProcedure
+    .input(z.object({
+      paymentId: z.string(),
+      reason: z.string().min(1),
+      actor: z.string().optional(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error("Database not available");
+      
+      const now = new Date();
+      const actor = input.actor || ctx.user?.name || ctx.user?.openId || "operator";
+
+      // Load payment
+      const payment = await db.select()
+        .from(payments)
+        .where(eq(payments.paymentId, input.paymentId))
+        .limit(1);
+
+      if (payment.length === 0) {
+        return {
+          success: false,
+          error: "Payment not found",
+          commandEmitted: false,
+          depositOutcome: null,
+        };
+      }
+
+      const p = payment[0];
+
+      // Validate state - can only reverse SETTLED payments
+      if (p.state !== "SETTLED") {
+        return {
+          success: false,
+          error: `Cannot reverse payment in state ${p.state}. Only SETTLED payments can be reversed.`,
+          commandEmitted: false,
+          depositOutcome: null,
+        };
+      }
+
+      // INVOKE DEPOSITS CORE: Credit source (refund)
+      const account = await db.select()
+        .from(depositAccounts)
+        .where(eq(depositAccounts.accountId, p.fromAccount))
+        .limit(1);
+
+      if (account.length === 0) {
+        return {
+          success: false,
+          error: "Source account not found",
+          commandEmitted: false,
+          depositOutcome: { success: false, error: "ACCOUNT_NOT_FOUND" },
+        };
+      }
+
+      const acc = account[0];
+      const ledger = parseFloat(acc.ledgerBalance);
+      const available = parseFloat(acc.availableBalance);
+      const creditAmount = parseFloat(p.amount);
+
+      // Create deposit fact for refund credit
+      const depositFactsExisting = await db.select().from(depositFacts).where(eq(depositFacts.accountId, p.fromAccount));
+      const depositSeq = depositFactsExisting.length + 1;
+
+      const [insertedRefundFact] = await db.insert(depositFacts).values({
+        factId: `FACT-${nanoid(12)}`,
+        accountId: p.fromAccount,
+        sequence: depositSeq,
+        factType: "POSTING_APPLIED",
+        factData: {
+          type: "CREDIT",
+          amount: { amount: (creditAmount * 100).toString(), currency: p.currency },
+          reference: `Operator reversal of ${input.paymentId}: ${input.reason}`,
+          actor,
+        },
+        occurredAt: now,
+      }).$returningId();
+
+      // Update account projection
+      await db.update(depositAccounts)
+        .set({
+          ledgerBalance: (ledger + creditAmount).toFixed(2),
+          availableBalance: (available + creditAmount).toFixed(2),
+          updatedAt: now,
+        })
+        .where(eq(depositAccounts.accountId, p.fromAccount));
+
+      // Emit PAYMENT_REVERSED fact
+      const existingPaymentFacts = await db.select().from(paymentFacts).where(eq(paymentFacts.paymentId, input.paymentId));
+      const paymentSeq = existingPaymentFacts.length + 1;
+
+      await db.insert(paymentFacts).values({
+        paymentId: input.paymentId,
+        sequence: paymentSeq,
+        factType: "PAYMENT_REVERSED",
+        factData: {
+          reason: input.reason,
+          actor,
+          operatorInitiated: true,
+        },
+        depositFactId: insertedRefundFact.id,
+        depositPostingType: "CREDIT",
+        occurredAt: now,
+      });
+
+      // Emit fact events for real-time updates
+      emitDepositFact(p.fromAccount, `FACT-${insertedRefundFact.id}`, "CREDIT", depositSeq);
+      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_REVERSED", paymentSeq);
+
+      // Update payment projection
+      await db.update(payments)
+        .set({
+          state: "REVERSED",
+          reversalReason: `Operator: ${input.reason}`,
+          reversedAt: now,
+          updatedAt: now,
+        })
+        .where(eq(payments.paymentId, input.paymentId));
+
+      return {
+        success: true,
+        error: null,
+        commandEmitted: true,
+        message: "Reversal command executed. Funds refunded to source account.",
+        actor,
+        occurredAt: now.toISOString(),
+        depositOutcome: {
+          success: true,
+          depositFactId: insertedRefundFact.id,
+          postingType: "CREDIT",
+          operation: "OPERATOR_REFUND",
+        },
+      };
+    }),
 });

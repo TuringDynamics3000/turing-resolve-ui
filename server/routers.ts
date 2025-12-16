@@ -27,11 +27,13 @@ import {
 } from "./db";
 import { depositsRouter } from "./depositsRouter";
 import { paymentsRouter } from "./paymentsRouter";
+import { advisoryRouter } from "./advisoryRouter";
 
 export const appRouter = router({
   system: systemRouter,
   deposits: depositsRouter,
   payments: paymentsRouter,
+  advisory: advisoryRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

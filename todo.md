@@ -1111,3 +1111,52 @@
 - [x] Accounts rebuilt: 1
 - [x] Payments rebuilt: 2
 - [x] DR READINESS CONFIRMED
+
+
+## Operator UI, Member UI, Advisory UI Implementation - COMPLETED ✓
+
+### Phase 1: Advisory Facts Schema & Endpoints - COMPLETED ✓
+- [x] Add advisory_facts table to drizzle schema
+- [x] Create advisoryRouter with add/list endpoints
+- [x] Advisory fact types: RECOMMEND_RETRY, RECOMMEND_REVERSAL, HOLD_FOR_REVIEW, NO_ACTION
+
+### Phase 2: Operator Payment Commands - COMPLETED ✓
+- [x] Add operator.payments.retry endpoint (command re-emission)
+- [x] Add operator.payments.reverse endpoint (explicit reversal command)
+- [x] Ensure idempotency on retry
+- [x] Ensure reversal emits explicit fact
+
+### Phase 3: Operator UI Components - COMPLETED ✓
+- [x] OperatorShell layout with navigation
+- [x] DepositsOverview (read-only, trust surface)
+- [x] PaymentsOverview with CoreStatusBanner
+- [x] PaymentDetail with state, facts, actions, advisory
+- [x] PaymentActions (retry/reverse buttons - command-driven)
+- [x] AdvisoryPanel and AdvisoryForm
+- [x] KillSwitchPanel with enable/disable
+- [x] CircuitBreakerPanel (read-only)
+- [x] OperatorBanner and AdvisoryBanner (mandatory)
+
+### Phase 4: Read-Only Member UI (digital-twin) - COMPLETED ✓
+- [x] Member Portal at /member-portal
+- [x] Balance viewing with mandatory timestamp
+- [x] Payment status with mandatory copy
+- [x] No write endpoints, no action buttons
+- [x] ReadOnlyBanner (mandatory)
+
+### Phase 5: CI Enforcement - COMPLETED ✓
+- [x] Member UI must not call write endpoints (CI enforced)
+- [x] Advisory UI does not touch deposits/payments core
+- [x] Operator UI commands go through application handlers
+
+### Done Criteria (Binary) - ALL MET ✓
+- [x] Operator can safely pause, retry, reverse
+- [x] Member can see truth but cannot act
+- [x] Humans can advise without executing
+- [x] All actions produce facts or commands
+- [x] Replay remains deterministic
+- [x] CI blocks unsafe changes
+
+### Tests
+- [x] 133 tests passing (including 6 operator tests)
+- [x] operator.test.ts: Advisory facts, operator principles

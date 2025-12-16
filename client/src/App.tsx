@@ -1,6 +1,6 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useRoute } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 
@@ -21,8 +21,9 @@ import DepositsDashboard from "@/pages/DepositsDashboard";
 import GovernanceControls from "@/pages/GovernanceControls";
 import ReportingDashboard from "@/pages/ReportingDashboard";
 import NotFound from "@/pages/NotFound";
+import { OperatorPage } from "@/pages/operator/OperatorPage";
 
-function Router() {
+function MainDashboard() {
   return (
     <DashboardLayout>
       <Switch>
@@ -64,6 +65,17 @@ function Router() {
       </Switch>
     </DashboardLayout>
   );
+}
+
+function Router() {
+  // Check if we're on an operator route
+  const [isOperator] = useRoute("/operator/*?");
+  
+  if (isOperator) {
+    return <OperatorPage />;
+  }
+  
+  return <MainDashboard />;
 }
 
 function App() {

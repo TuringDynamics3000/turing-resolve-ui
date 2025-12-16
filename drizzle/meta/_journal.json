@@ -36,6 +36,13 @@
       "when": 1765857094753,
       "tag": "0004_motionless_living_tribunal",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1765863063744,
+      "tag": "0005_left_namor",
+      "breakpoints": true
     }
   ]
 }
