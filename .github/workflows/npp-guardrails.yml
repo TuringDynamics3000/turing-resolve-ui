@@ -1,0 +1,358 @@
+name: NPP Orchestration Guardrails
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - develop
+    paths:
+      - 'core/payments/npp/**'
+      - 'application/payments/npp/**'
+      - 'server/npp*.test.ts'
+      - '.github/workflows/npp-guardrails.yml'
+  pull_request:
+    branches:
+      - master
+      - main
+      - develop
+    paths:
+      - 'core/payments/npp/**'
+      - 'application/payments/npp/**'
+      - 'server/npp*.test.ts'
+      - '.github/workflows/npp-guardrails.yml'
+
+jobs:
+  npp-invariant-tests:
+    name: NPP Invariant Tests (CI-Blocking)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run NPP Invariant Tests
+        run: pnpm test npp.invariants
+        timeout-minutes: 5
+      
+      - name: Verify test count
+        run: |
+          TEST_COUNT=$(pnpm test npp.invariants 2>&1 | grep -oP '\d+(?= passed)' | head -1)
+          if [ "$TEST_COUNT" -lt 20 ]; then
+            echo "Expected at least 20 invariant tests, found $TEST_COUNT"
+            exit 1
+          fi
+          echo "✓ All 20+ invariant tests passing"
+
+  npp-ops-tests:
+    name: NPP Ops Action Tests (CI-Blocking)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run NPP Ops Action Tests
+        run: pnpm test npp.ops
+        timeout-minutes: 5
+      
+      - name: Verify test count
+        run: |
+          TEST_COUNT=$(pnpm test npp.ops 2>&1 | grep -oP '\d+(?= passed)' | head -1)
+          if [ "$TEST_COUNT" -lt 11 ]; then
+            echo "Expected at least 11 ops action tests, found $TEST_COUNT"
+            exit 1
+          fi
+          echo "✓ All 11+ ops action tests passing"
+
+  npp-evidence-tests:
+    name: NPP Evidence Pack Tests (CI-Blocking)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run NPP Evidence Pack Tests
+        run: pnpm test npp.evidence
+        timeout-minutes: 5
+      
+      - name: Verify test count
+        run: |
+          TEST_COUNT=$(pnpm test npp.evidence 2>&1 | grep -oP '\d+(?= passed)' | head -1)
+          if [ "$TEST_COUNT" -lt 7 ]; then
+            echo "Expected at least 7 evidence pack tests, found $TEST_COUNT"
+            exit 1
+          fi
+          echo "✓ All 7+ evidence pack tests passing"
+
+  npp-replay-tests:
+    name: NPP Replay Guarantee Tests (CI-Blocking)
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      
+      - name: Run NPP Replay Tests
+        run: pnpm test npp.replay
+        timeout-minutes: 5
+      
+      - name: Verify test count
+        run: |
+          TEST_COUNT=$(pnpm test npp.replay 2>&1 | grep -oP '\d+(?= passed)' | head -1)
+          if [ "$TEST_COUNT" -lt 7 ]; then
+            echo "Expected at least 7 replay tests, found $TEST_COUNT"
+            exit 1
+          fi
+          echo "✓ All 7+ replay tests passing"
+
+  npp-no-stored-state:
+    name: NPP Guardrail - No Stored State
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Block stored state patterns
+        run: |
+          echo "Checking for stored state violations in NPP code..."
+          
+          # Block database writes in core/payments/npp
+          if grep -r "db\\.insert\|db\\.update\|db\\.delete" core/payments/npp/; then
+            echo "❌ VIOLATION: Database writes detected in core/payments/npp"
+            echo "NPP state must be derived from events, not stored"
+            exit 1
+          fi
+          
+          # Block balance storage
+          if grep -r "storedBalance\|cachedBalance\|balanceSnapshot" core/payments/npp/; then
+            echo "❌ VIOLATION: Stored balance detected in NPP code"
+            echo "Balances must be derived from events"
+            exit 1
+          fi
+          
+          # Block mutable state
+          if grep -r "let.*state\|state\s*=\|setState" core/payments/npp/*.ts; then
+            echo "❌ VIOLATION: Mutable state detected in NPP code"
+            echo "All state must be immutable"
+            exit 1
+          fi
+          
+          echo "✓ No stored state violations detected"
+
+  npp-no-cross-core-imports:
+    name: NPP Guardrail - No Cross-Core Imports
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Block cross-core imports
+        run: |
+          echo "Checking for cross-core import violations..."
+          
+          # Block imports from other core modules
+          if grep -r "from.*core/lending\|from.*core/deposits\|from.*core/exposure" core/payments/npp/; then
+            echo "❌ VIOLATION: Cross-core imports detected in NPP code"
+            echo "NPP must not depend on other core modules"
+            exit 1
+          fi
+          
+          # Block imports from application layer
+          if grep -r "from.*application/lending\|from.*application/deposits" core/payments/npp/; then
+            echo "❌ VIOLATION: Application layer imports detected in NPP core"
+            echo "Core must not depend on application layer"
+            exit 1
+          fi
+          
+          # Block imports from server layer
+          if grep -r "from.*server/\|from.*trpc/" core/payments/npp/; then
+            echo "❌ VIOLATION: Server layer imports detected in NPP core"
+            echo "Core must not depend on server layer"
+            exit 1
+          fi
+          
+          echo "✓ No cross-core import violations detected"
+
+  npp-replay-mandatory:
+    name: NPP Guardrail - Replay Tests Mandatory
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Verify replay tests exist
+        run: |
+          echo "Verifying replay tests are present..."
+          
+          if [ ! -f "server/npp.replay.test.ts" ]; then
+            echo "❌ VIOLATION: server/npp.replay.test.ts not found"
+            echo "Replay tests are mandatory for NPP"
+            exit 1
+          fi
+          
+          # Check for rebuildFromEvents usage
+          if ! grep -q "rebuildFromEvents" server/npp.replay.test.ts; then
+            echo "❌ VIOLATION: rebuildFromEvents not used in replay tests"
+            echo "Replay tests must use rebuildFromEvents()"
+            exit 1
+          fi
+          
+          # Check for hash verification
+          if ! grep -q "computeStateHash\|sha256\|hash" server/npp.replay.test.ts; then
+            echo "❌ VIOLATION: No hash verification in replay tests"
+            echo "Replay tests must verify state hashes"
+            exit 1
+          fi
+          
+          echo "✓ Replay tests are present and valid"
+
+  npp-event-immutability:
+    name: NPP Guardrail - Event Immutability
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Block event mutation patterns
+        run: |
+          echo "Checking for event mutation violations..."
+          
+          # Block event updates
+          if grep -r "updateEvent\|modifyEvent\|editEvent" core/payments/npp/; then
+            echo "❌ VIOLATION: Event mutation detected"
+            echo "Events must be immutable (append-only)"
+            exit 1
+          fi
+          
+          # Block event deletion
+          if grep -r "deleteEvent\|removeEvent\|dropEvent" core/payments/npp/; then
+            echo "❌ VIOLATION: Event deletion detected"
+            echo "Events must never be deleted"
+            exit 1
+          fi
+          
+          # Verify readonly types
+          if ! grep -q "readonly" core/payments/npp/NPPPaymentEvent.ts; then
+            echo "⚠️  WARNING: No readonly modifiers found in NPPPaymentEvent.ts"
+            echo "Consider adding readonly to enforce immutability"
+          fi
+          
+          echo "✓ No event mutation violations detected"
+
+  npp-terminal-state-enforcement:
+    name: NPP Guardrail - Terminal State Enforcement
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Verify terminal state guards
+        run: |
+          echo "Checking for terminal state enforcement..."
+          
+          # Check for terminal state guards in NPPInvariants.ts
+          if ! grep -q "assertNotTerminal\|isTerminal" core/payments/npp/NPPInvariants.ts; then
+            echo "❌ VIOLATION: No terminal state guards found"
+            echo "NPPInvariants.ts must enforce terminal state immutability"
+            exit 1
+          fi
+          
+          # Verify terminal states are defined
+          if ! grep -q "SETTLED\|FAILED\|EXPIRED" core/payments/npp/NPPPaymentState.ts; then
+            echo "❌ VIOLATION: Terminal states not properly defined"
+            exit 1
+          fi
+          
+          echo "✓ Terminal state enforcement verified"
+
+  npp-composite-status:
+    name: NPP Composite Status
+    runs-on: ubuntu-latest
+    needs:
+      - npp-invariant-tests
+      - npp-ops-tests
+      - npp-evidence-tests
+      - npp-replay-tests
+      - npp-no-stored-state
+      - npp-no-cross-core-imports
+      - npp-replay-mandatory
+      - npp-event-immutability
+      - npp-terminal-state-enforcement
+    
+    steps:
+      - name: All NPP Guardrails Passed
+        run: |
+          echo "=================================="
+          echo "NPP ORCHESTRATION: ALL CHECKS PASSED"
+          echo "=================================="
+          echo ""
+          echo "✓ Invariant Tests (20+)"
+          echo "✓ Ops Action Tests (11+)"
+          echo "✓ Evidence Pack Tests (7+)"
+          echo "✓ Replay Tests (7+)"
+          echo "✓ No Stored State"
+          echo "✓ No Cross-Core Imports"
+          echo "✓ Replay Tests Mandatory"
+          echo "✓ Event Immutability"
+          echo "✓ Terminal State Enforcement"
+          echo ""
+          echo "NPP is production-ready 🚀"

@@ -1817,3 +1817,13 @@
 - [ ] Ops override logged and replayed
 - [ ] Evidence pack export verified
 - [ ] Replay test deterministic
+
+
+## NPP Load Testing & CI/CD Integration
+- [x] Create NPP load testing script (npp-load-test.mjs)
+- [x] Simulate 134 TPS peak for 20 CUs
+- [x] Run load tests and capture metrics
+- [x] Analyze bottlenecks and performance
+- [x] Extend composite workflow with NPP guardrails
+- [x] Add CI checks: no stored state, no cross-core imports, replay tests mandatory
+- [ ] Save checkpoint and push to GitHub
