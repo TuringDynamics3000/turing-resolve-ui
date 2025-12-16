@@ -256,7 +256,7 @@ export const lendingRouter = router({
     }),
 
   /**
-   * Enter hardship arrangement
+   * Enter hardship
    */
   enterHardship: publicProcedure
     .input(
@@ -272,6 +272,65 @@ export const lendingRouter = router({
       const fact: LoanFact = {
         type: "HARDSHIP_ENTERED",
         loanId: input.loanId,
+        hardshipType: "PAYMENT_PAUSE", // Default to payment pause
+        reason: input.reason,
+        approvedBy: input.approvedBy,
+        occurredAt: Date.now(),
+      };
+
+      await appendFact(db, fact);
+      await updateLoanProjection(db, input.loanId);
+
+      return { loanId: input.loanId, fact };
+    }),
+
+  /**
+   * Exit hardship
+   */
+  exitHardship: publicProcedure
+    .input(
+      z.object({
+        loanId: z.string(),
+        reason: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = getDb();
+
+      const fact: LoanFact = {
+        type: "HARDSHIP_EXITED",
+        loanId: input.loanId,
+        reason: input.reason,
+        occurredAt: Date.now(),
+      };
+
+      await appendFact(db, fact);
+      await updateLoanProjection(db, input.loanId);
+
+      return { loanId: input.loanId, fact };
+    }),
+
+  /**
+   * Restructure loan
+   */
+  restructureLoan: publicProcedure
+    .input(
+      z.object({
+        loanId: z.string(),
+        newInterestRate: z.number().optional(),
+        newTermMonths: z.number().optional(),
+        reason: z.string(),
+        approvedBy: z.string(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const db = getDb();
+
+      const fact: LoanFact = {
+        type: "LOAN_RESTRUCTURED",
+        loanId: input.loanId,
+        newInterestRate: input.newInterestRate,
+        newTermMonths: input.newTermMonths,
         reason: input.reason,
         approvedBy: input.approvedBy,
         occurredAt: Date.now(),
@@ -340,6 +399,17 @@ export const lendingRouter = router({
    * Get loan facts (for timeline/audit)
    */
   getLoanFacts: publicProcedure
+    .input(z.object({ loanId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const db = getDb();
+      const facts = await loadFacts(db, input.loanId);
+      return facts;
+    }),
+
+  /**
+   * Get facts (alias for getLoanFacts)
+   */
+  getFacts: publicProcedure
     .input(z.object({ loanId: z.string() }))
     .query(async ({ input, ctx }) => {
       const db = getDb();

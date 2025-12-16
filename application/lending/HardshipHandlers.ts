@@ -44,6 +44,7 @@ export async function enterHardship(
   const fact: HardshipEnteredFact = {
     type: "HARDSHIP_ENTERED",
     loanId: command.loanId,
+    hardshipType: "PAYMENT_PAUSE", // Default to payment pause
     reason: command.reason,
     approvedBy: command.approvedBy,
     occurredAt: Date.now(),

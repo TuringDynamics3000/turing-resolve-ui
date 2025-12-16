@@ -1454,3 +1454,47 @@
 ### Cleanup - COMPLETED ✅
 - [x] Core is pure domain logic (no UI dependencies)
 - [x] Loan aggregate is immutable (no setters, only apply(fact))
+
+
+## Lending Core v1 - Completion (Hardship, UI, GL Export) - COMPLETED ✅
+
+### A. Hardship + Restructure Derivation Rules - COMPLETED ✅
+- [x] Extend LoanFact.ts with HARDSHIP_ENTERED, HARDSHIP_EXITED, LOAN_RESTRUCTURED
+- [x] Add hardship types (PAYMENT_PAUSE, REDUCED_PAYMENTS, INTEREST_ONLY)
+- [x] Implement hardship invariants in LoanInvariants.ts
+- [x] Implement restructure invariants (non-destructive, future-only)
+- [x] Create deriveSchedule() function (derived, not stored)
+- [x] Property tests: hardship never reduces principal, deterministic replay (7 tests)
+
+### B. Lending Operator UI - COMPLETED ✅
+- [x] Create /client/src/pages/operator/lending/ directory
+- [x] Implement LendingOverview.tsx (loan list, state, principal)
+- [x] Implement LoanDetail.tsx (fact timeline, derived schedule, advisory)
+- [x] Implement LoanActions.tsx (enter/exit hardship, restructure - command-driven)
+- [x] Implement DerivedSchedulePanel.tsx (labeled "Derived. Not authoritative.")
+- [x] Wire routes to operator dashboard (tRPC endpoints added)
+
+### C. Lending → GL Export Mapping - COMPLETED ✅
+- [x] Create /exports/lendingGlExport.ts
+- [x] Map LOAN_ACTIVATED → Dr Loans Receivable / Cr Cash
+- [x] Map LOAN_PAYMENT_APPLIED → Dr Cash / Cr Loans Receivable
+- [x] Map INTEREST_ACCRUED → Dr Loans Receivable / Cr Interest Income
+- [x] Map FEE_APPLIED → Dr Loans Receivable / Cr Fee Income
+- [x] Map LOAN_WRITTEN_OFF → Dr Bad Debt Expense / Cr Loans Receivable
+- [x] Add tRPC endpoint: exports.lendingGL (CSV + JSON)
+- [x] Verify GL export rebuildable from facts (no core mutation)
+- [x] Add reconcileGlWithLoans() function for balance verification
+
+### Exit Criteria - ALL MET ✅
+- [x] Hardship/restructure property tests passing (7 tests, 100 runs each)
+- [x] Operator UI functional (read-only + command-driven)
+- [x] GL export reconciles with derived loan state
+- [x] Replay deterministic across all loan states
+- [x] Lending is first-class citizen (not risk center)
+
+### Final State
+- **Total Tests:** 182 passing (16 lending invariant + 7 hardship property)
+- **Hardship/Restructure:** Derivation rules implemented, non-destructive
+- **Operator UI:** LendingOverview, LoanDetail, LoanActions, DerivedSchedulePanel
+- **GL Export:** Read-only, rebuildable from facts, reconcilable
+- **Status:** Lending Core v1 is now a first-class citizen alongside Deposits and Payments

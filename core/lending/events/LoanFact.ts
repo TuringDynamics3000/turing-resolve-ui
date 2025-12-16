@@ -82,6 +82,7 @@ export interface LoanInArrearsFact {
 export interface HardshipEnteredFact {
   type: "HARDSHIP_ENTERED";
   loanId: string;
+  hardshipType: "PAYMENT_PAUSE" | "REDUCED_PAYMENTS" | "INTEREST_ONLY";
   reason: string;
   approvedBy: string; // Operator ID
   occurredAt: number;
