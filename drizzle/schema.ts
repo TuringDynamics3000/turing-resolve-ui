@@ -385,3 +385,53 @@ export const auditFacts = mysqlTable("audit_facts", {
 
 export type AuditFact = typeof auditFacts.$inferSelect;
 export type InsertAuditFact = typeof auditFacts.$inferInsert;
+
+
+// ============================================
+// SHADOW AI ADVISORY FACTS (AI Recommendations - Non-Executing)
+// ============================================
+
+/**
+ * Shadow AI Advisory Facts - AI domain recommendations that do NOT execute.
+ * 
+ * CRITICAL BOUNDARIES:
+ * - Shadow mode only (no execution)
+ * - Advisory facts are logged for audit
+ * - Resolve can see them but does NOT act on them
+ * - Used for board packs and regulator reports
+ */
+export const shadowAIAdvisoryFacts = mysqlTable("shadow_ai_advisory_facts", {
+  id: int("id").autoincrement().primaryKey(),
+  advisoryId: varchar("advisoryId", { length: 64 }).notNull().unique(),
+  
+  // Shadow AI domain
+  domain: mysqlEnum("domain", ["PAYMENTS_RL", "FRAUD", "AML", "TREASURY"]).notNull(),
+  
+  // Entity being advised on
+  entityType: mysqlEnum("entityType", ["PAYMENT", "DEPOSIT", "LOAN", "EXPOSURE"]).notNull(),
+  entityId: varchar("entityId", { length: 64 }).notNull(),
+  
+  // Recommendation
+  recommendation: mysqlEnum("recommendation", [
+    "APPROVE",
+    "REVIEW",
+    "DECLINE",
+    "HOLD",
+    "ESCALATE",
+    "NO_ACTION"
+  ]).notNull(),
+  confidence: decimal("confidence", { precision: 5, scale: 4 }).notNull(), // 0.0000 to 1.0000
+  reasoning: text("reasoning").notNull(), // Explainable AI output
+  
+  // Model metadata
+  modelVersion: varchar("modelVersion", { length: 64 }).notNull(),
+  modelType: varchar("modelType", { length: 64 }), // "RL", "RULE_BASED", "ENSEMBLE"
+  metadata: json("metadata"), // Additional model outputs
+  
+  // Audit
+  occurredAt: timestamp("occurredAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ShadowAIAdvisoryFact = typeof shadowAIAdvisoryFacts.$inferSelect;
+export type InsertShadowAIAdvisoryFact = typeof shadowAIAdvisoryFacts.$inferInsert;

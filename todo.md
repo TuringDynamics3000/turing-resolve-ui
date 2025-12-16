@@ -1230,3 +1230,38 @@
 - [x] Integration pattern documented
 - [x] Read-only boundary enforced (no write endpoints in gateway)
 - [x] Checkpoints saved in both repos
+
+
+## Shadow AI → Resolve Advisory Flow - COMPLETED ✓
+### Phase 1: Shadow AI Advisory Fact Schema - COMPLETED ✓
+- [x] Add shadow_ai_advisory_facts table to schema
+- [x] Fields: advisoryId, domain (PAYMENTS_RL, FRAUD, AML, TREASURY), entityType, entityId, recommendation, confidence, reasoning, modelVersion, occurredAt
+- [x] Create shadowAIRouter with add/list/getForEntity/getDomainSummary endpoints
+
+### Phase 2: Shadow AI Domain Integration - COMPLETED ✓
+- [x] Mock Shadow AI domain outputs (Payments RL, Fraud, AML, Treasury)
+- [x] Emit advisory facts to TuringCore-v3 from digital-twin (shadow-ai-emitter.js)
+- [x] Advisory facts are logged but NOT executed (shadow mode principle enforced)
+- [x] 8 Shadow AI tests passing
+
+## Unified Evidence Pack Viewer - COMPLETED ✓
+### Risk Brain Reporter Integration - COMPLETED ✓
+- [x] Create Evidence Pack Viewer page in digital-twin (/evidence-packs)
+- [x] Display decision evidence with full audit trail
+- [x] Link to payment/deposit facts
+- [x] Export evidence pack to PDF for board packs (demo)
+- [x] Read-only boundary enforced
+
+## Fact Replay UI - COMPLETED ✓
+### Operator Tool for DR Verification - COMPLETED ✓
+- [x] Create Fact Replay page in Operator Console (/operator/fact-replay)
+- [x] Select point-in-time for replay (timestamp or factId)
+- [x] Show before/after state comparison
+- [x] Replay payment facts → rebuild payment state
+- [x] Replay deposit facts → rebuild account balances
+- [x] Export replay report for compliance (JSON export)
+- [x] DR drill history display
+
+### Testing - COMPLETED ✓
+- [x] shadowAI.test.ts (8 tests) - advisory emission, filtering, domain summary, shadow mode principles
+- [x] All 152 tests passing

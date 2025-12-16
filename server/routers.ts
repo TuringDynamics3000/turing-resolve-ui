@@ -30,6 +30,7 @@ import { paymentsRouter } from "./paymentsRouter";
 import { advisoryRouter } from "./advisoryRouter";
 import { auditRouter } from "./auditRouter";
 import { publicFactsRouter } from "./publicFactsRouter";
+import { shadowAIRouter } from "./shadowAIRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -38,6 +39,7 @@ export const appRouter = router({
   advisory: advisoryRouter,
   audit: auditRouter,
   publicFacts: publicFactsRouter,
+  shadowAI: shadowAIRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

@@ -13,6 +13,7 @@ import {
   FileText
 } from "lucide-react";
 import { AuditLogPage } from "./audit/AuditLogPage";
+import FactReplayPage from "./fact-replay/FactReplayPage";
 import { Link } from "wouter";
 
 function OperatorOverview() {
@@ -142,6 +143,7 @@ export function OperatorPage() {
         <Route path="/operator/safeguards" component={SafeguardsPage} />
         <Route path="/operator/incidents" component={IncidentsPage} />
         <Route path="/operator/audit" component={AuditLogPage} />
+        <Route path="/operator/fact-replay" component={FactReplayPage} />
         <Route path="/operator" component={OperatorOverview} />
         <Route component={OperatorOverview} />
       </Switch>
