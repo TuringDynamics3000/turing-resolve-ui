@@ -3,6 +3,7 @@ import { useParams } from "wouter";
 import { PaymentActions } from "./PaymentActions";
 import { AdvisoryPanel } from "../advisory/AdvisoryPanel";
 import { AdvisoryBanner } from "../banners/AdvisoryBanner";
+import { ShadowAIAdvisoryCard } from "./ShadowAIAdvisoryCard";
 import { 
   ArrowLeft,
   Clock,
@@ -177,6 +178,9 @@ export function PaymentDetail() {
           )}
         </div>
       </div>
+
+      {/* Shadow AI Advisory */}
+      <ShadowAIAdvisoryCard paymentId={paymentId} />
 
       {/* Operator Actions */}
       <PaymentActions paymentId={paymentId} currentState={payment.currentState} />

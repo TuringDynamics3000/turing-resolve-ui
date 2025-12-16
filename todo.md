@@ -1265,3 +1265,27 @@
 ### Testing - COMPLETED ✓
 - [x] shadowAI.test.ts (8 tests) - advisory emission, filtering, domain summary, shadow mode principles
 - [x] All 152 tests passing
+
+
+## Final Three Features - COMPLETED ✓
+
+### 1. Shadow AI Advisory Display in Payment Detail - COMPLETED ✓
+- [x] Add tRPC query to fetch Shadow AI advisories for a payment (shadowAI.getForEntity)
+- [x] Create ShadowAIAdvisoryCard component
+- [x] Display AI domain, recommendation, confidence, reasoning
+- [x] Add to PaymentDetail page in Operator Console
+- [x] Maintain shadow mode boundary (display only, no execution)
+
+### 2. Evidence Pack PDF Generation - COMPLETED ✓
+- [x] Add PDF generation library (pdfkit)
+- [x] Create evidence pack PDF template (evidencePackPDF.ts)
+- [x] Add evidencePack.exportPDF endpoint
+- [x] Include decision facts, payment facts, deposit facts, audit trail, Shadow AI advisories
+- [x] Returns base64 PDF for download
+
+### 3. Fact Replay Automation - COMPLETED ✓
+- [x] Create automated-dr-drill.mjs script
+- [x] Schedule weekly DR drills via cron (DR_DRILL_SCHEDULE.md)
+- [x] Generate compliance reports automatically (audit_facts)
+- [x] Store drill results in audit_facts (DR_DRILL_COMPLETED/DR_DRILL_FAILED)
+- [x] All 152 tests passing

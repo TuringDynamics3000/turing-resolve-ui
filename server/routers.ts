@@ -31,6 +31,7 @@ import { advisoryRouter } from "./advisoryRouter";
 import { auditRouter } from "./auditRouter";
 import { publicFactsRouter } from "./publicFactsRouter";
 import { shadowAIRouter } from "./shadowAIRouter";
+import { evidencePackRouter } from "./evidencePackRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -40,6 +41,7 @@ export const appRouter = router({
   audit: auditRouter,
   publicFacts: publicFactsRouter,
   shadowAI: shadowAIRouter,
+  evidencePack: evidencePackRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
