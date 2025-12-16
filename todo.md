@@ -398,3 +398,10 @@
 - [x] Add more evidence packs with varied modules (12 packs)
 - [x] Add more replay proof entries (12 proofs across 4 modules)
 - [x] Add realistic policy evaluations (6 AU v1 policies)
+
+
+## Branding Update - TuringDynamics Core - COMPLETED ✓
+- [x] Update SystemOverview.tsx header title
+- [x] Update GlobalNav.tsx logo text
+- [x] Update page title in index.html
+- [x] Update any other references to "Turing Protocol"

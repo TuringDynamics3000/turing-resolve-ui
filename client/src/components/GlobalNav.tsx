@@ -53,7 +53,7 @@ export function GlobalNav() {
               <Database className="h-5 w-5 text-white" />
             </div>
             <span className="hidden font-bold sm:inline-block bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-              Turing Protocol
+              TuringDynamics Core
             </span>
           </Link>
           <nav className="flex items-center space-x-1 text-sm font-medium">

@@ -609,7 +609,7 @@ export default function SystemOverview() {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-cyan-400 bg-clip-text text-transparent">
-                Turing Protocol
+                TuringDynamics Core
               </h1>
               <p className="text-muted-foreground">System Governance Dashboard</p>
             </div>
