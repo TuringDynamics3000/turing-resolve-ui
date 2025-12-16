@@ -123,7 +123,7 @@ function ModuleCard({ module }: { module: ModuleData }) {
   const testPercentage = (module.testsPassing / module.testsTotal) * 100;
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm border-border/50 hover:border-primary/30 transition-all group">
+    <Card className="glass-panel hover:border-primary/40 transition-all group">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className={`p-2.5 rounded-lg bg-gradient-to-br ${color} bg-opacity-20`}>
@@ -170,7 +170,7 @@ function DecisionFlowVisualization() {
   const [activeStep, setActiveStep] = useState<number | null>(null);
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+    <Card className="glass-panel">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-primary" />
@@ -230,7 +230,7 @@ function LiveDecisionFeed() {
   const { data: decisions, isLoading, refetch } = trpc.governance.listDecisions.useQuery({ limit: 5 });
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+    <Card className="glass-panel">
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
@@ -315,7 +315,7 @@ function SystemSummaryHeader() {
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="glass-panel">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -333,7 +333,7 @@ function SystemSummaryHeader() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="glass-panel">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -348,7 +348,7 @@ function SystemSummaryHeader() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="glass-panel">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>
@@ -367,7 +367,7 @@ function SystemSummaryHeader() {
         </CardContent>
       </Card>
 
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="glass-panel">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div>

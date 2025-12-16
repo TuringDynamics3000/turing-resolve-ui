@@ -373,3 +373,10 @@
 - [x] Verify live data displays correctly in Evidence Vault
 
 **Dashboard now fetches LIVE data from TuringCore-v3 Governance API**
+
+
+## UI Improvements - Panel Visibility - COMPLETED ✓
+- [x] Increase panel border contrast (blue accent borders)
+- [x] Add subtle glow/shadow effects (blue glow on hover)
+- [x] Improve background differentiation (lighter card backgrounds)
+- [x] Enhance card depth perception (multi-layer shadows + inset highlight)

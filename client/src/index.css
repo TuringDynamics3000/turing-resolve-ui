@@ -132,9 +132,9 @@
   --background: oklch(0.12 0.02 250);
   --foreground: oklch(0.92 0.01 250);
   
-  /* Card: Glass Panel */
-  --card: oklch(0.16 0.02 250);
-  --card-foreground: oklch(0.92 0.01 250);
+  /* Card: Glass Panel - Enhanced Contrast */
+  --card: oklch(0.18 0.025 250);
+  --card-foreground: oklch(0.95 0.01 250);
   
   /* Popover: Elevated Glass */
   --popover: oklch(0.18 0.02 250);
@@ -156,9 +156,9 @@
   --destructive: oklch(0.6 0.22 25);
   --destructive-foreground: oklch(0.98 0 0);
   
-  /* Borders: Glass Edge */
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
+  /* Borders: Glass Edge - Enhanced Visibility */
+  --border: oklch(0.65 0.2 250 / 20%);
+  --input: oklch(0.65 0.2 250 / 25%);
   --ring: oklch(0.65 0.2 250);
   
   /* Semantic Status Colors - Glass Fortress Palette */
@@ -261,27 +261,41 @@
     }
   }
   
-  /* Glass Panel Effect */
+  /* Glass Panel Effect - Enhanced Visibility */
   .glass-panel {
-    background: oklch(from var(--card) l c h / 80%);
+    background: oklch(0.18 0.025 250 / 95%);
     backdrop-filter: blur(24px);
-    border: 1px solid oklch(from var(--border) l c h / 50%);
-    border-radius: var(--radius);
-    box-shadow: 
-      0 0 0 1px oklch(1 0 0 / 5%),
-      0 4px 6px -1px oklch(0 0 0 / 10%),
-      0 2px 4px -2px oklch(0 0 0 / 10%);
-  }
-  
-  .glass-panel-elevated {
-    background: oklch(from var(--card) l c h / 90%);
-    backdrop-filter: blur(40px);
-    border: 1px solid oklch(from var(--border) l c h / 60%);
+    border: 1px solid oklch(0.65 0.2 250 / 25%);
     border-radius: var(--radius);
     box-shadow: 
       0 0 0 1px oklch(1 0 0 / 8%),
-      0 10px 15px -3px oklch(0 0 0 / 15%),
-      0 4px 6px -4px oklch(0 0 0 / 10%);
+      0 0 20px 0 oklch(0.65 0.2 250 / 8%),
+      0 8px 16px -4px oklch(0 0 0 / 30%),
+      0 4px 8px -4px oklch(0 0 0 / 20%),
+      inset 0 1px 0 0 oklch(1 0 0 / 5%);
+  }
+  
+  .glass-panel:hover {
+    border-color: oklch(0.65 0.2 250 / 35%);
+    box-shadow: 
+      0 0 0 1px oklch(1 0 0 / 10%),
+      0 0 25px 0 oklch(0.65 0.2 250 / 12%),
+      0 12px 24px -4px oklch(0 0 0 / 35%),
+      0 6px 12px -4px oklch(0 0 0 / 25%),
+      inset 0 1px 0 0 oklch(1 0 0 / 8%);
+  }
+  
+  .glass-panel-elevated {
+    background: oklch(0.20 0.025 250 / 98%);
+    backdrop-filter: blur(40px);
+    border: 1px solid oklch(0.65 0.2 250 / 30%);
+    border-radius: var(--radius);
+    box-shadow: 
+      0 0 0 1px oklch(1 0 0 / 10%),
+      0 0 30px 0 oklch(0.65 0.2 250 / 12%),
+      0 16px 32px -8px oklch(0 0 0 / 40%),
+      0 8px 16px -8px oklch(0 0 0 / 30%),
+      inset 0 1px 0 0 oklch(1 0 0 / 8%);
   }
   
   /* Status Badges */
