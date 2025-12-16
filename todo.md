@@ -1692,3 +1692,69 @@
 - [x] server/lending.property.test.ts exists (7 property tests)
 - [x] server/lending.hardship.test.ts exists (7 hardship tests)
 - [x] All required tests present and passing
+
+
+## Member Loan UI - Read-Only Truth Surface - COMPLETED ✅
+
+### Routes Added
+- [x] /member/loans - Loans overview
+- [x] /member/loans/:loanId - Loan detail
+
+### Member Loan UI Components - COMPLETED ✅
+- [x] Create client/src/pages/member/loans/ directory
+- [x] Create LoansOverview.tsx (list all member loans)
+- [x] Create LoanDetail.tsx (single loan view with facts)
+- [x] Create DerivedSchedule.tsx (estimated repayment schedule)
+- [x] Create banners/MemberLoanTruthBanner.tsx (truth surface disclaimer)
+- [x] Create README.md (read-only invariants)
+
+### Read-Only tRPC Endpoints - COMPLETED ✅
+- [x] Add lending.getDerivedSchedule (derived repayment schedule)
+- [x] Reuse existing lending.listLoans (list member loans)
+- [x] Reuse existing lending.getLoan (get single loan)
+- [x] Ensure NO mutations mounted in member router
+
+### Mandatory Member Copy - COMPLETED ✅
+- [x] Pending: "Funds have not moved yet."
+- [x] In Arrears: "This reflects missed obligations. No additional fees are applied unless confirmed."
+- [x] Hardship: "Your loan is under an approved hardship arrangement."
+- [x] Restructured: "Your future obligations were updated. Past payments remain unchanged."
+
+### CI Guards for Member Loan UI
+- [ ] Block write endpoints (POST, PUT, PATCH, DELETE)
+- [ ] Block core imports (core/lending)
+- [ ] Block balance computation (calculate, compute, reduce)
+
+## Member Notifications - Fact-Driven Alerts
+
+### Notification Model
+- [ ] Create notifications/MemberNotification.ts (derived model)
+- [ ] Create notifications/deriveMemberNotifications.ts (pure function)
+- [ ] Create notifications/MemberNotificationStore.ts (optional derived store)
+- [ ] Implement deterministic ID generation (hash-based)
+
+### Notification Types
+- [ ] Map Payment facts to notifications (7 types)
+- [ ] Map Deposit facts to notifications (4 types)
+- [ ] Map Lending facts to notifications (8 types)
+
+### Notification tRPC Endpoints
+- [ ] Create notificationsRouter.ts
+- [ ] Add notifications.list (read-only)
+- [ ] Add notifications.markRead (UI state only)
+
+### Member Notification UI
+- [ ] Create client/src/pages/member/notifications/ directory
+- [ ] Create NotificationBell.tsx (unread count)
+- [ ] Create NotificationList.tsx (list all notifications)
+- [ ] Create NotificationItem.tsx (single notification)
+
+### Mandatory Notification Copy
+- [ ] Never say "processed" unless settled
+- [ ] Never say "successful" unless settled
+- [ ] Never say "failed" unless no funds moved
+- [ ] Use: "pending", "no funds moved", "confirmed", "derived from system records"
+
+### CI Guards for Notifications
+- [ ] Block fact emission (append, emit, LoanFact, PaymentFact)
+- [ ] Block core imports (core/deposits, core/payments, core/lending)

@@ -441,4 +441,40 @@ export const lendingRouter = router({
         factCount: facts.length,
       };
     }),
+
+  /**
+   * Get derived schedule (read-only, for member UI)
+   */
+  getDerivedSchedule: publicProcedure
+    .input(z.object({ loanId: z.string() }))
+    .query(async ({ input, ctx }) => {
+      const db = getDb();
+      const facts = await loadFacts(db, input.loanId);
+      
+      if (facts.length === 0) {
+        throw new Error(`No facts found for loan ${input.loanId}`);
+      }
+
+      const loan = rebuildFromFacts(facts);
+      const activatedFact = facts.find(f => f.type === "LOAN_ACTIVATED");
+      
+      if (!activatedFact) {
+        return { entries: [] };
+      }
+
+      // Import calculateAmortizationSchedule
+      const { calculateAmortizationSchedule } = await import("../core/lending/derivation/calculateAmortizationSchedule");
+      
+      const schedule = calculateAmortizationSchedule(
+        input.loanId,
+        loan.principal,
+        loan.interestRate,
+        loan.termMonths,
+        facts,
+        activatedFact.occurredAt
+      );
+      
+      return schedule;
+    }),
 });
+
