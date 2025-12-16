@@ -236,6 +236,110 @@ export const paymentFacts = mysqlTable("payment_facts", {
 export type PaymentFact = typeof paymentFacts.$inferSelect;
 export type InsertPaymentFact = typeof paymentFacts.$inferInsert;
 
+// ============================================
+// LENDING CORE v1 TABLES (Event Sourcing)
+// ============================================
+
+/**
+ * Loan Facts - Immutable event log for Lending Core v1.
+ * 
+ * CRITICAL: This is append-only. No UPDATE, no DELETE.
+ * Loan state is rebuilt by replaying facts.
+ */
+export const loanFacts = mysqlTable("loan_facts", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Loan identity
+  loanId: varchar("loanId", { length: 64 }).notNull(),
+  sequence: int("sequence").notNull(), // Monotonic within loan
+  
+  // Fact type and data
+  factType: mysqlEnum("factType", [
+    "LOAN_OFFERED",
+    "LOAN_ACCEPTED",
+    "LOAN_ACTIVATED",
+    "LOAN_PAYMENT_APPLIED",
+    "INTEREST_ACCRUED",
+    "FEE_APPLIED",
+    "LOAN_IN_ARREARS",
+    "HARDSHIP_ENTERED",
+    "HARDSHIP_EXITED",
+    "LOAN_RESTRUCTURED",
+    "LOAN_DEFAULTED",
+    "LOAN_CLOSED",
+    "LOAN_WRITTEN_OFF"
+  ]).notNull(),
+  factData: json("factData").notNull(), // The full fact object
+  
+  // Deposits Core integration - links to deposit facts for disbursement/repayment
+  depositFactId: int("depositFactId"), // FK to deposit_facts when posting applied
+  depositPostingType: varchar("depositPostingType", { length: 32 }), // CREDIT (disbursement), DEBIT (repayment)
+  
+  // Governance links
+  decisionId: varchar("decisionId", { length: 64 }),
+  
+  // Audit
+  occurredAt: timestamp("occurredAt").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LoanFact = typeof loanFacts.$inferSelect;
+export type InsertLoanFact = typeof loanFacts.$inferInsert;
+
+/**
+ * Loans - Derived state for efficient querying.
+ * 
+ * CRITICAL: This is a projection, NOT the source of truth.
+ * Source of truth is loan_facts.
+ */
+export const loans = mysqlTable("loans", {
+  id: int("id").autoincrement().primaryKey(),
+  loanId: varchar("loanId", { length: 64 }).notNull().unique(),
+  
+  // Loan details
+  borrowerAccountId: varchar("borrowerAccountId", { length: 64 }).notNull(),
+  principal: decimal("principal", { precision: 18, scale: 2 }).notNull(),
+  interestRate: decimal("interestRate", { precision: 5, scale: 4 }).notNull(), // e.g., 0.0500 for 5%
+  termMonths: int("termMonths").notNull(),
+  
+  // Current state (derived from facts)
+  state: mysqlEnum("state", [
+    "OFFERED",
+    "ACTIVE",
+    "IN_ARREARS",
+    "HARDSHIP",
+    "DEFAULT",
+    "CLOSED",
+    "WRITTEN_OFF"
+  ]).notNull(),
+  
+  // Disbursement info
+  disbursementAccountId: varchar("disbursementAccountId", { length: 64 }),
+  activatedAt: timestamp("activatedAt"),
+  
+  // Derived balances (computed from facts)
+  totalPaid: decimal("totalPaid", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  principalPaid: decimal("principalPaid", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  interestPaid: decimal("interestPaid", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  feesPaid: decimal("feesPaid", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  
+  // Arrears tracking
+  daysPastDue: int("daysPastDue").default(0),
+  amountOverdue: decimal("amountOverdue", { precision: 18, scale: 2 }).default("0.00"),
+  
+  // Governance links
+  decisionId: varchar("decisionId", { length: 64 }),
+  
+  // Audit
+  offeredAt: timestamp("offeredAt").notNull(),
+  closedAt: timestamp("closedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Loan = typeof loans.$inferSelect;
+export type InsertLoan = typeof loans.$inferInsert;
+
 /**
  * Payments - Derived state for efficient querying.
  * 

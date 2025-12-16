@@ -18,6 +18,7 @@ import EvidenceDetail from "@/pages/EvidenceDetail";
 import LendingDashboard from "@/pages/LendingDashboard";
 import PaymentsDashboard from "@/pages/PaymentsDashboard";
 import DepositsDashboard from "@/pages/DepositsDashboard";
+import LendingCorePage from "@/pages/LendingCorePage";
 import GovernanceControls from "@/pages/GovernanceControls";
 import ReportingDashboard from "@/pages/ReportingDashboard";
 import NotFound from "@/pages/NotFound";
@@ -38,6 +39,7 @@ function MainDashboard() {
         
         {/* Lending Module */}
         <Route path="/lending" component={LendingDashboard} />
+        <Route path="/lending-core" component={LendingCorePage} />
         
         {/* Payments Module */}
         <Route path="/payments" component={PaymentsDashboard} />

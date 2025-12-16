@@ -1371,3 +1371,86 @@
 - Shadow AI Advisories: 443,000
 - SSE Messages Sent: 9,658,040
 - Evidence Packs: 11,084
+
+
+## Lending Core v1 - Fact-Based Loan Primitive - COMPLETED ✅
+
+### Phase L1: Domain Model - COMPLETED ✅
+- [x] Create /core/lending directory structure
+- [x] Implement LoanState.ts (7 states)
+- [x] Implement LoanFact.ts (13 fact types)
+- [x] Implement Loan.ts aggregate with apply(fact)
+- [x] Implement LoanErrors.ts
+
+### Phase L2: Invariants & Replay - COMPLETED ✅
+- [x] Implement LoanInvariants.ts (state transitions, principal validation)
+- [x] Implement rebuildFromFacts.ts (deterministic replay)
+- [x] Principal reduction logic (payments reduce principal directly)
+- [x] Interest/fee capitalization (adds to principal)
+- [x] Write invariant tests (16 tests passing)
+
+### Phase L3: Application Layer - COMPLETED ✅
+- [x] Create /application/lending handlers
+- [x] Implement OfferLoanHandler.ts
+- [x] Implement AcceptLoanHandler.ts
+- [x] Implement ActivateLoanHandler.ts
+- [x] Implement ApplyRepaymentHandler.ts
+- [x] Implement HardshipHandlers.ts (enter/exit/close)
+
+### Phase L4: Database & tRPC - COMPLETED ✅
+- [x] Add loan_facts table to Drizzle schema
+- [x] Add loans projection table (derived state)
+- [x] Implement lendingRouter.ts with tRPC procedures
+- [x] Wire to main appRouter
+- [x] Database migration successful (0008_steep_leader.sql)
+
+### Phase L5: Lending UI (Operator Console) - COMPLETED ✅
+- [x] Create LendingCorePage.tsx
+- [x] Loan list with state badges
+- [x] Loan detail modal with fact timeline
+- [x] Stats cards (total loans, principal, outstanding, active)
+- [x] Hardship/arrears indicators
+- [x] Tabs (overview, active, arrears)
+
+### Phase L6: Governance & Testing - COMPLETED ✅
+- [x] Add replay proof tests (deterministic rebuild)
+- [x] Add property tests (never negative principal, legal transitions)
+- [x] Property-based tests with fast-check (7 tests, 100 runs each)
+- [x] All tests passing (175 total: 16 lending + 7 property)
+
+### Exit Criteria - ALL MET ✅
+- [x] All tests passing (175 tests)
+- [x] Replay proof: rebuild loan state from facts
+- [x] No stored balances or schedules (principal derived from facts)
+- [x] Cash movement only via Deposits Core (repayment flow documented)
+- [x] Hardship/restructure as explicit facts
+- [x] Principal reduction on payment (matches reference)
+- [x] Interest/fees capitalize to principal (matches reference)
+- [x] Closure requires principal === 0n (matches reference)
+- [x] Write-off sets principal to 0n (matches reference)
+
+
+## Lending Core v1 - Alignment with Reference Implementation - COMPLETED ✅
+
+### Invariant Fixes - COMPLETED ✅
+- [x] Fix LOAN_PAYMENT_APPLIED to reduce principal directly (not track separately)
+- [x] Fix INTEREST_ACCRUED to add to principal (capitalizes interest)
+- [x] Fix FEE_APPLIED to add to principal
+- [x] Fix LOAN_CLOSED to require principal === 0n
+- [x] Fix LOAN_WRITTEN_OFF to set principal to 0n
+- [x] Auto-transition to CLOSED when principal reaches 0n
+
+### Repayment Flow Isolation - DOCUMENTED ✅
+- [x] Document that Payments → Deposits → Lending (one-way flow)
+- [x] ApplyRepaymentHandler designed for deposit posting events
+- [x] No direct Payments → Lending coupling
+
+### Property-Based Tests - COMPLETED ✅
+- [x] Add fast-check property test for "never negative principal" (100 runs)
+- [x] Add deterministic replay test (same facts → same state) (100 runs)
+- [x] Add illegal transition rejection tests (5 tests)
+- [x] Add interest/fee capitalization tests (100 runs)
+
+### Cleanup - COMPLETED ✅
+- [x] Core is pure domain logic (no UI dependencies)
+- [x] Loan aggregate is immutable (no setters, only apply(fact))

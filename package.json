@@ -96,6 +96,7 @@
     "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.0",
     "eventsource": "^4.1.0",
+    "fast-check": "^4.4.0",
     "jsdom": "^27.3.0",
     "mysql2": "^3.15.3",
     "nanoid": "^5.1.6",

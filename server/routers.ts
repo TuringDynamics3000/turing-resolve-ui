@@ -32,11 +32,13 @@ import { auditRouter } from "./auditRouter";
 import { publicFactsRouter } from "./publicFactsRouter";
 import { shadowAIRouter } from "./shadowAIRouter";
 import { evidencePackRouter } from "./evidencePackRouter";
+import { lendingRouter } from "./lendingRouter";
 
 export const appRouter = router({
   system: systemRouter,
   deposits: depositsRouter,
   payments: paymentsRouter,
+  lending: lendingRouter,
   advisory: advisoryRouter,
   audit: auditRouter,
   publicFacts: publicFactsRouter,
