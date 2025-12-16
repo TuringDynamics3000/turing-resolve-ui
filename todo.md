@@ -314,3 +314,35 @@
 - [x] Exception management
 - [x] Internal declarations
 - [x] Release information (v1.0-replacement-ready)
+
+
+## TuringCore-v3 API Integration - COMPLETED ✓
+### Phase 1: Analyze API Structure
+- [x] Review TuringCore-v3 module structure
+- [x] Identify available endpoints/services
+- [x] Map data models to UI components
+
+### Phase 2: API Client & Types
+- [x] Create TypeScript types for TuringCore models (server/governance.ts)
+- [x] Create governance data module with mock data matching TuringCore structures
+- [x] Handle data transformation for UI
+
+### Phase 3: tRPC Routes
+- [x] Create tRPC routes for Resolve decisions (listDecisions, getDecision)
+- [x] Create tRPC routes for Evidence packs (listEvidencePacks)
+- [x] Create tRPC routes for Replay proofs (listReplayProofs)
+- [x] Create tRPC routes for Module status (listModules, getSystemSummary)
+
+### Phase 4: Frontend Integration
+- [x] Connect System Overview to live data (7 decisions, 247 tests, 6 modules)
+- [x] Connect Module dashboards to live data
+- [x] Connect Evidence Vault to live data (decisions, evidence packs, replay proofs)
+- [x] Connect Governance Controls to live data
+
+**Dashboard now shows live data from tRPC backend:**
+- 6 modules all GREEN
+- 247/247 tests passing
+- 7 decisions recorded (3 ALLOW, 2 REVIEW, 2 DECLINE)
+- 12/12 replay proofs passing
+- v1.0-replacement-ready release tag
+

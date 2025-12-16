@@ -4,6 +4,17 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import {
+  getDecisions,
+  getDecision,
+  getEvidencePack,
+  getEvidencePacks,
+  getModuleStatus,
+  getModuleStatusById,
+  getGovernanceBoundaries,
+  getReplayProofs,
+  getSystemSummary,
+} from "./governance";
+import {
   createLedgerAccount,
   getLedgerAccount,
   listLedgerAccounts,
@@ -25,6 +36,72 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  // ============================================
+  // GOVERNANCE API (TuringCore-v3 Integration)
+  // ============================================
+  governance: router({
+    // System Summary
+    getSystemSummary: publicProcedure.query(() => {
+      return getSystemSummary();
+    }),
+
+    // Decisions
+    listDecisions: publicProcedure
+      .input(z.object({
+        entityType: z.enum(["LOAN", "PAYMENT", "DEPOSIT", "EXPOSURE"]).optional(),
+        outcome: z.enum(["ALLOW", "REVIEW", "DECLINE"]).optional(),
+        limit: z.number().optional(),
+      }).optional())
+      .query(({ input }) => {
+        return getDecisions(input || {});
+      }),
+
+    getDecision: publicProcedure
+      .input(z.object({ decisionId: z.string() }))
+      .query(({ input }) => {
+        return getDecision(input.decisionId);
+      }),
+
+    // Evidence Packs
+    listEvidencePacks: publicProcedure
+      .input(z.object({
+        entityType: z.string().optional(),
+        limit: z.number().optional(),
+      }).optional())
+      .query(({ input }) => {
+        return getEvidencePacks(input || {});
+      }),
+
+    getEvidencePack: publicProcedure
+      .input(z.object({ decisionId: z.string() }))
+      .query(({ input }) => {
+        return getEvidencePack(input.decisionId);
+      }),
+
+    // Module Status
+    listModules: publicProcedure.query(() => {
+      return getModuleStatus();
+    }),
+
+    getModule: publicProcedure
+      .input(z.object({ moduleId: z.string() }))
+      .query(({ input }) => {
+        return getModuleStatusById(input.moduleId);
+      }),
+
+    // Governance
+    listBoundaries: publicProcedure.query(() => {
+      return getGovernanceBoundaries();
+    }),
+
+    // Replay Proofs
+    listReplayProofs: publicProcedure
+      .input(z.object({ moduleName: z.string().optional() }).optional())
+      .query(({ input }) => {
+        return getReplayProofs(input?.moduleName);
+      }),
   }),
 
   // ============================================
