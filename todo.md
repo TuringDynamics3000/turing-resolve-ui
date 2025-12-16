@@ -1830,14 +1830,15 @@
 - [x] Create NPP_POWERSCRIPT.md for manual push
 
 
-## BECS Payment Rail Implementation (Batch + Delayed Truth)
-- [ ] Create BECS state machine (BATCHED, SUBMITTED, CLEARED, RETURNED)
-- [ ] Create BECS state transitions matrix
-- [ ] Create BECS invariants (batch totals, late returns, file-level failures)
-- [ ] Create BECS events (PaymentBatched, BatchSubmitted, PaymentCleared, PaymentReturned)
-- [ ] Create BECS evidence pack with batch metadata
-- [ ] Write BECS diff documentation (vs NPP)
-- [ ] Write BECS tests (batch reconciliation, late returns, replay)
+## BECS Payment Rail Implementation (Batch + Delayed Truth) - COMPLETED ✓
+- [x] Create BECS state machine (BATCHED, SUBMITTED, CLEARED, RETURNED)
+- [x] Create BECS state transitions matrix
+- [x] Create BECS invariants (batch totals, late returns, file-level failures)
+- [x] Create BECS events (PaymentBatched, BatchSubmitted, PaymentCleared, PaymentReturned)
+- [x] Create BECS payment aggregate (createBECSPayment, applyBECSEvent, rebuildBECSFromEvents)
+- [x] Write BECS diff documentation (vs NPP)
+- [x] Write BECS invariant tests (16 tests - batch reconciliation, return handling, economic invariants)
+- [x] Write BECS replay tests (6 tests - deterministic state reconstruction, late returns)
 - [ ] Save checkpoint and push to GitHub
 
 ## Future Rails (RTGS & Cards) - Deferred
