@@ -380,3 +380,11 @@
 - [x] Add subtle glow/shadow effects (blue glow on hover)
 - [x] Improve background differentiation (lighter card backgrounds)
 - [x] Enhance card depth perception (multi-layer shadows + inset highlight)
+
+
+## UI - Hover Explainers - COMPLETED ✓
+- [x] Add tooltips to summary stat cards (Modules, Tests, Decisions, Release)
+- [x] Add tooltips to Decision Flow steps (Request, Resolve, Decision, Execution, Ledger, Evidence)
+- [x] Add tooltips to Module cards (Resolve, Ledger, Lending, Payments, Exposure, Deposits)
+- [x] Add tooltips to Live Decisions items (explains ALLOW/REVIEW/DECLINE outcomes)
+- [x] Add help icons with "Why it matters" explanations for non-technical viewers
