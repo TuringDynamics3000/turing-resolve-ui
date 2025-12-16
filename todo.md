@@ -1770,13 +1770,14 @@
 - [x] Implement NPPPaymentErrors.ts
 - [x] All 182 tests still passing
 
-### Phase 2: Invariant Enforcement
-- [ ] Implement NPPInvariants.ts (state transitions, economic rules, idempotency)
-- [ ] Add state transition table enforcement
-- [ ] Add economic invariants (no negative amounts, single settlement, funds consistency)
-- [ ] Add idempotency checks (duplicate intent, duplicate callback, out-of-order)
-- [ ] Add NPP-specific invariants (ACK ≠ settlement, late failure allowed)
-- [ ] Write CI tests for all invariants (target: 20+ tests)
+### Phase 2: Invariant Enforcement - COMPLETED ✅
+- [x] Implement NPPInvariants.ts (state transitions, economic rules, idempotency)
+- [x] Add state transition table enforcement (NPPStateTransitions.ts)
+- [x] Add economic invariants (no negative amounts, single settlement, funds consistency)
+- [x] Add idempotency checks (duplicate intent, duplicate callback, out-of-order)
+- [x] Add NPP-specific invariants (ACK ≠ settlement, late failure allowed)
+- [x] Write CI tests for all invariants (20 tests passing)
+- [x] All 202 tests passing (182 existing + 20 new NPP invariant tests)
 
 ### Phase 3: Ops Actions
 - [ ] Create application/payments/npp/ops/ directory
