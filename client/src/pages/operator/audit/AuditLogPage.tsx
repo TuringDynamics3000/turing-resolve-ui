@@ -181,7 +181,7 @@ export function AuditLogPage() {
             <div className="flex gap-4">
               <div className="flex-1">
                 <label className="text-xs text-slate-400 mb-1 block">Action Type</label>
-              <Select value={actionTypeFilter} onValueChange={setActionTypeFilter}>
+                <Select value={actionTypeFilter} onValueChange={setActionTypeFilter}>
                 <SelectTrigger className="bg-slate-800 border-slate-700">
                   <SelectValue />
                 </SelectTrigger>
@@ -211,19 +211,19 @@ export function AuditLogPage() {
                 </SelectContent>
               </Select>
             </div>
-              <div className="w-32">
-                <label className="text-xs text-slate-400 mb-1 block">Limit</label>
-                <Input
-                  type="number"
-                  value={limit}
-                  onChange={(e) => setLimit(parseInt(e.target.value) || 100)}
-                  min={1}
-                  max={1000}
-                  className="bg-slate-800 border-slate-700"
-                />
-              </div>
+            <div className="w-32">
+              <label className="text-xs text-slate-400 mb-1 block">Limit</label>
+              <Input
+                type="number"
+                value={limit}
+                onChange={(e) => setLimit(parseInt(e.target.value) || 100)}
+                min={1}
+                max={1000}
+                className="bg-slate-800 border-slate-700"
+              />
             </div>
           </div>
+        </div>
         </CardContent>
       </Card>
 
