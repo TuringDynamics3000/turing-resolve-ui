@@ -4,6 +4,7 @@ import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import { FactConsumer } from "./fact-consumer.js"
+import { ShadowAIEmitter } from "./shadow-ai-emitter.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
@@ -15,6 +16,10 @@ app.use(cors())
 const turingCoreUrl = process.env.TURINGCORE_URL || "http://localhost:3000";
 const factConsumer = new FactConsumer(turingCoreUrl);
 factConsumer.start();
+
+// Initialize Shadow AI emitter (mock advisory facts)
+const shadowAIEmitter = new ShadowAIEmitter(turingCoreUrl);
+shadowAIEmitter.start();
 
 function load(file) {
   return JSON.parse(fs.readFileSync(path.join(__dirname, "mock", file)))
