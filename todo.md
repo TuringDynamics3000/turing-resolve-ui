@@ -1275,3 +1275,35 @@
 - [x] Add OpenAPI contract validation CI check
 - [x] Add environment isolation CI check
 - [x] Create composite workflow for all governance checks
+
+
+## Verifiable Governance Build Plan
+
+### Workstream A: Merkle Audit Trail + Root Anchoring
+- [x] A1: Add commit_seq + canonical event_digest + leaf_hash computed on write
+- [x] A2: Implement batch sealer (per tenant/env) + storage tables
+- [x] A3: Root signing (KMS/HSM) + metadata hash
+- [x] A4: Root anchoring sink (WORM store) + verification checks
+- [x] A5: Proof API + reference verifier lib
+- [x] A6: Evidence pack embeds inclusion proofs + pack hash
+
+### Workstream B: Resolve DSL Deterministic Policy Runtime
+- [x] B1: DSL grammar + type system + determinism rules document
+- [x] B2: Parser + typechecker + compiler to bytecode
+- [x] B3: Policy registry + signing + versioning + effective dates
+- [x] B4: Runtime interpreter with action masking + parameter bounding
+- [x] B5: Unit test harness + regression simulation runner
+
+### Workstream C: Signed Policy Execution Proofs
+- [x] C1: Decision context capture + facts_hash commitments
+- [x] C2: Evaluation trace hashing + policy hash binding
+- [x] C3: Authorization token service (signed) + core verification
+- [x] C4: Link core executed events back to decision_id/token_id
+- [x] C5: Evidence pack includes all hashes/signatures
+
+### Workstream D: Model Governance
+- [x] D1: Model packaging manifest + artifact hashing + signing
+- [x] D2: Model registry states + lineage events
+- [x] D3: Shadow execution harness + comparison logging
+- [x] D4: Promotion gate checks (constitutional) + approvals workflow
+- [x] D5: Rollback + kill switch + audits/evidence integration
