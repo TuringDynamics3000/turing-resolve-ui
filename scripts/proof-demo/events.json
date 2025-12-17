@@ -1,0 +1,132 @@
+[
+  {
+    "event_id": "dfae7037-dc9c-416c-811f-23673448f018",
+    "tenant_id": "demo-tenant",
+    "environment_id": "staging",
+    "stream_id": "payment-1",
+    "stream_type": "payment",
+    "event_type": "PaymentExecuted",
+    "event_version": 1,
+    "payload": {
+      "amount_cents": 10000,
+      "currency": "AUD",
+      "from_account": "ACC-1000",
+      "to_account": "ACC-2000",
+      "reference": "PAY-DFAE7037"
+    },
+    "metadata": {
+      "correlation_id": "a823eb94-c695-4548-882b-10f8ca65c6cc",
+      "actor_id": "system",
+      "source": "proof-demo"
+    },
+    "occurred_at": "2025-12-17T22:06:10.811499+00:00",
+    "payload_hash": "e04102357ce9af9bbd8d16a6e06938daf3a30b0fef04c0c030bd278ea3703575",
+    "meta_hash": "fb6e58db52ade20cfe6df9bfbf4f01b6ba8a7f98a5273b8ccb6b54f67e7351e9",
+    "event_digest": "0261bc7a6de2a72f4ea133b2ef17610e23dafe1243edb5acd97ab56382cdcfc1",
+    "leaf_hash": "06647478d950b577e2e828e1bd48dac67dffc6d2d79780bdb8b1f5f758c0a4c9"
+  },
+  {
+    "event_id": "97696157-ec12-4de3-bbea-3f9659e3e5f5",
+    "tenant_id": "demo-tenant",
+    "environment_id": "staging",
+    "stream_id": "payment-2",
+    "stream_type": "payment",
+    "event_type": "PaymentExecuted",
+    "event_version": 1,
+    "payload": {
+      "amount_cents": 20000,
+      "currency": "AUD",
+      "from_account": "ACC-1001",
+      "to_account": "ACC-2001",
+      "reference": "PAY-97696157"
+    },
+    "metadata": {
+      "correlation_id": "33d37594-57b9-40dd-bed3-196896096083",
+      "actor_id": "system",
+      "source": "proof-demo"
+    },
+    "occurred_at": "2025-12-17T22:06:10.811739+00:00",
+    "payload_hash": "0038ebb24445a94184a03c9027cb810ed8b72b668a4122bb901e1bfa6cd77041",
+    "meta_hash": "31b64c442cd8aca0960d530674b0cdbec7fee9da6480e0760dd1229317046bd0",
+    "event_digest": "9c1d7e3eb3026ec88eb779c0a250bf9ad379ef6edc3cb759abd3ac897046b2b9",
+    "leaf_hash": "219286a9feb6f0b4d9ed06783c946184cd1dfb37732b6bab8420657f98949bf4"
+  },
+  {
+    "event_id": "c7b43d47-7ceb-4ae9-877e-e94b35f60a41",
+    "tenant_id": "demo-tenant",
+    "environment_id": "staging",
+    "stream_id": "payment-3",
+    "stream_type": "payment",
+    "event_type": "PaymentExecuted",
+    "event_version": 1,
+    "payload": {
+      "amount_cents": 30000,
+      "currency": "AUD",
+      "from_account": "ACC-1002",
+      "to_account": "ACC-2002",
+      "reference": "PAY-C7B43D47"
+    },
+    "metadata": {
+      "correlation_id": "ba36cd5e-88dc-40e6-b7c8-abcb77e345b1",
+      "actor_id": "system",
+      "source": "proof-demo"
+    },
+    "occurred_at": "2025-12-17T22:06:10.811850+00:00",
+    "payload_hash": "2d40001de5f5d9d6448e19352937649fb5b2e0121b8a9f2b0c7307b98396211b",
+    "meta_hash": "46a5da61af077335e740d7b81ab01df964c6703dd1a80fb142cd5e592f0521d6",
+    "event_digest": "24414067b5c3c6537b33f321a3d7613c4e548f34e8e839600a3b0fc83d0178fa",
+    "leaf_hash": "0f54953ba8169a88d9878146406958921acc1b577a81e319e68471ab4a35bce2"
+  },
+  {
+    "event_id": "34bdaced-b063-4885-9ed2-cc7f0c271ef7",
+    "tenant_id": "demo-tenant",
+    "environment_id": "staging",
+    "stream_id": "payment-4",
+    "stream_type": "payment",
+    "event_type": "PaymentExecuted",
+    "event_version": 1,
+    "payload": {
+      "amount_cents": 40000,
+      "currency": "AUD",
+      "from_account": "ACC-1003",
+      "to_account": "ACC-2003",
+      "reference": "PAY-34BDACED"
+    },
+    "metadata": {
+      "correlation_id": "6c6dd965-f4b6-46db-ab17-a512cc25e4e6",
+      "actor_id": "system",
+      "source": "proof-demo"
+    },
+    "occurred_at": "2025-12-17T22:06:10.811927+00:00",
+    "payload_hash": "6bb9485ae75fdc49ffd69b57cce8f3697aac7167d74dfe68676a31536f2baa3e",
+    "meta_hash": "64bb52b99b909d78d85e465974d4bcf0f1957748437cbeff63b6cf3aca66f2f0",
+    "event_digest": "36a5750015f2fc2062ba2911dc3813d5cf31c3c8500d3dcbf92d5856e788707b",
+    "leaf_hash": "8719064b8a13d72b62828bd0fe6467fd6849312721ce651fffc3cbd062c13b06"
+  },
+  {
+    "event_id": "df007ec3-6601-49fd-8a15-5151a5a358c9",
+    "tenant_id": "demo-tenant",
+    "environment_id": "staging",
+    "stream_id": "payment-5",
+    "stream_type": "payment",
+    "event_type": "PaymentExecuted",
+    "event_version": 1,
+    "payload": {
+      "amount_cents": 50000,
+      "currency": "AUD",
+      "from_account": "ACC-1004",
+      "to_account": "ACC-2004",
+      "reference": "PAY-DF007EC3"
+    },
+    "metadata": {
+      "correlation_id": "f6d76a62-4b3c-4f27-9de4-d4be0d9cb910",
+      "actor_id": "system",
+      "source": "proof-demo"
+    },
+    "occurred_at": "2025-12-17T22:06:10.812011+00:00",
+    "payload_hash": "13beb34a079fa36787195ef6da53c498f71655af32cac4afa7f05850f6dc4605",
+    "meta_hash": "71540ea2f25a26e190c89d3d8ade17f0833a4ac587fd6f11daf161171ca42f13",
+    "event_digest": "730d46d96945bdff204dbc7a63638413a8a046976bc88a576e1d4c73f4d00f7b",
+    "leaf_hash": "c52227d2f139de5638b1f93cdefbeaf91c230c40bfafde093467cc1867785a52"
+  }
+]

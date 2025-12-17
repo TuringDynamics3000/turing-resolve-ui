@@ -1343,3 +1343,21 @@
 - [x] Add formal Policy DSL v0 spec (EBNF grammar)
 - [x] Add TypeScript td-verify package
 - [x] Update 000_run_all.sql to reference consolidated migration
+
+## Proof Demo (End-to-End Verification)
+
+- [x] Generate test payment events with proper hashing
+- [x] Build Merkle tree and seal batch with signed root
+- [x] Generate evidence pack with policy stub and event proofs
+- [x] Verify evidence pack with Python td_verify (PASSED)
+- [x] Document the proof demo process
+
+## Merkle Sealing Worker (Production-Ready)
+
+- [x] Create MerkleSealerWorker class with batch selection logic
+- [x] Implement tree building from unsealed events
+- [x] Add root signing with KMS/HSM integration
+- [x] Implement S3 Object Lock anchoring (WORM)
+- [x] Create proof generation API endpoint
+- [x] Add scheduler/cron configuration for periodic sealing
+- [ ] Write integration tests for sealing flow (deferred)

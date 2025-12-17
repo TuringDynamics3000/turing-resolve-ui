@@ -1,0 +1,16 @@
+README.md
+pyproject.toml
+td_verify/__init__.py
+td_verify/__main__.py
+td_verify/canonical_json.py
+td_verify/cli.py
+td_verify/evidence_pack.py
+td_verify/hash.py
+td_verify/merkle.py
+td_verify/sig.py
+td_verify.egg-info/PKG-INFO
+td_verify.egg-info/SOURCES.txt
+td_verify.egg-info/dependency_links.txt
+td_verify.egg-info/entry_points.txt
+td_verify.egg-info/requires.txt
+td_verify.egg-info/top_level.txt

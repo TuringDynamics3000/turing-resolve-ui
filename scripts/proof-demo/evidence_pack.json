@@ -1,0 +1,143 @@
+{
+  "schema": "TD:EVIDENCEPACK:v1",
+  "pack_id": "evp_f12c4f79-99b8-4a46-8323-8d0f10a49428",
+  "decision_id": "dec_a2e97481-a1df-4700-8593-94448d77b593",
+  "tenant_id": "demo-tenant",
+  "environment_id": "staging",
+  "generated_at": "2025-12-17T22:06:10.813299+00:00",
+  "policy": {
+    "policy_id": "payments.authorize.v0",
+    "version": "demo-1.0.0",
+    "bytecode_hash": "4cc7acd3b1a840353376b58b3dc440ec5fe7592cc8a6ae18469351381df0b42b",
+    "signature": "1c369772958758f503eadfd393d23d3ab001e8227e3edf7cfdc6df77a250b27c4d11aade98d7e2d4ac67173b9fa45f740131f6dbde17e534945eeaa2433ef70a",
+    "key_id": "k-policy-demo"
+  },
+  "model": {
+    "model_id": "credit.scoring.v1",
+    "version": "2024.12.1",
+    "artifact_hash": "31184ec316ceac26747021cd6bf11a8a8854fbfb31b35d10ea3291cb3d3362c9",
+    "signature": "e309edda1cf1bc1470de052ac0e80a3906e9137a56e18fa28c502c23b5c2754bdb6b73995382430386c558b74f43d23441c8e7e2153f20ea11e37a1e7159c20c",
+    "key_id": "k-model-demo",
+    "domain_type": "CREDIT",
+    "status": "PRODUCTION",
+    "feature_schema_id": "credit.features.v1",
+    "feature_schema_version": "1.0.0"
+  },
+  "inputs": {
+    "feature_snapshot_hash": "0edd4a4ed27cbb362e0e619e5e7fa27f87c6f9284c4e95e9301fd7d77a7a4b78",
+    "feature_schema_id": "payments.v1",
+    "feature_schema_version": "1.0.0"
+  },
+  "decision_trace": {
+    "trace_hash": "a02ab51f8b0bce7ee48e308c70b089d170fadf7d9e3d2523c4248ebb24f19529",
+    "trace_schema": "TD:TRACE:v1"
+  },
+  "actions": {
+    "recommended": "APPROVE",
+    "gated": "permit",
+    "executed": "APPROVE"
+  },
+  "events": [
+    {
+      "event_id": "dfae7037-dc9c-416c-811f-23673448f018",
+      "event_type": "PaymentExecuted",
+      "occurred_at": "2025-12-17T22:06:10.811499+00:00",
+      "leaf_hash": "06647478d950b577e2e828e1bd48dac67dffc6d2d79780bdb8b1f5f758c0a4c9",
+      "merkle_proof": {
+        "batch_id": "15a0ea35-9800-4b4c-8d3b-c275a731e1b0",
+        "leaf_index": 0,
+        "siblings": [
+          "219286a9feb6f0b4d9ed06783c946184cd1dfb37732b6bab8420657f98949bf4",
+          "b0c4164415bc8abf647150beebc56e87c6359a2142bfc0ede30fc6064c24c3e6",
+          "1fef6e39b577ad76699be69e5e1136248fd65f9fa5274de85b8743e1e5716676"
+        ],
+        "root_hash": "5e19509565b17a222d46fee8aa2e4ff6e47ede276f7827a07a6d1fc780b3775d",
+        "root_signature": "042b3a9ca0c15be75b38e21a3c906db6ecdbaa5c021ea014c7000c33ca983742be0731d1b6f94a6814b19cbfed26328a26f1c894225ee1a1f08b8b74e976d40d",
+        "signing_key_id": "k-merkle-root-demo",
+        "anchor_type": "DEMO",
+        "anchor_ref": "demo://proof-demo/15a0ea35-9800-4b4c-8d3b-c275a731e1b0"
+      }
+    },
+    {
+      "event_id": "97696157-ec12-4de3-bbea-3f9659e3e5f5",
+      "event_type": "PaymentExecuted",
+      "occurred_at": "2025-12-17T22:06:10.811739+00:00",
+      "leaf_hash": "219286a9feb6f0b4d9ed06783c946184cd1dfb37732b6bab8420657f98949bf4",
+      "merkle_proof": {
+        "batch_id": "15a0ea35-9800-4b4c-8d3b-c275a731e1b0",
+        "leaf_index": 1,
+        "siblings": [
+          "06647478d950b577e2e828e1bd48dac67dffc6d2d79780bdb8b1f5f758c0a4c9",
+          "b0c4164415bc8abf647150beebc56e87c6359a2142bfc0ede30fc6064c24c3e6",
+          "1fef6e39b577ad76699be69e5e1136248fd65f9fa5274de85b8743e1e5716676"
+        ],
+        "root_hash": "5e19509565b17a222d46fee8aa2e4ff6e47ede276f7827a07a6d1fc780b3775d",
+        "root_signature": "042b3a9ca0c15be75b38e21a3c906db6ecdbaa5c021ea014c7000c33ca983742be0731d1b6f94a6814b19cbfed26328a26f1c894225ee1a1f08b8b74e976d40d",
+        "signing_key_id": "k-merkle-root-demo",
+        "anchor_type": "DEMO",
+        "anchor_ref": "demo://proof-demo/15a0ea35-9800-4b4c-8d3b-c275a731e1b0"
+      }
+    },
+    {
+      "event_id": "c7b43d47-7ceb-4ae9-877e-e94b35f60a41",
+      "event_type": "PaymentExecuted",
+      "occurred_at": "2025-12-17T22:06:10.811850+00:00",
+      "leaf_hash": "0f54953ba8169a88d9878146406958921acc1b577a81e319e68471ab4a35bce2",
+      "merkle_proof": {
+        "batch_id": "15a0ea35-9800-4b4c-8d3b-c275a731e1b0",
+        "leaf_index": 2,
+        "siblings": [
+          "8719064b8a13d72b62828bd0fe6467fd6849312721ce651fffc3cbd062c13b06",
+          "ba19bce7c81197e2e116eed88745e8b46ec1e92824b8cbe249ab6ff448085997",
+          "1fef6e39b577ad76699be69e5e1136248fd65f9fa5274de85b8743e1e5716676"
+        ],
+        "root_hash": "5e19509565b17a222d46fee8aa2e4ff6e47ede276f7827a07a6d1fc780b3775d",
+        "root_signature": "042b3a9ca0c15be75b38e21a3c906db6ecdbaa5c021ea014c7000c33ca983742be0731d1b6f94a6814b19cbfed26328a26f1c894225ee1a1f08b8b74e976d40d",
+        "signing_key_id": "k-merkle-root-demo",
+        "anchor_type": "DEMO",
+        "anchor_ref": "demo://proof-demo/15a0ea35-9800-4b4c-8d3b-c275a731e1b0"
+      }
+    },
+    {
+      "event_id": "34bdaced-b063-4885-9ed2-cc7f0c271ef7",
+      "event_type": "PaymentExecuted",
+      "occurred_at": "2025-12-17T22:06:10.811927+00:00",
+      "leaf_hash": "8719064b8a13d72b62828bd0fe6467fd6849312721ce651fffc3cbd062c13b06",
+      "merkle_proof": {
+        "batch_id": "15a0ea35-9800-4b4c-8d3b-c275a731e1b0",
+        "leaf_index": 3,
+        "siblings": [
+          "0f54953ba8169a88d9878146406958921acc1b577a81e319e68471ab4a35bce2",
+          "ba19bce7c81197e2e116eed88745e8b46ec1e92824b8cbe249ab6ff448085997",
+          "1fef6e39b577ad76699be69e5e1136248fd65f9fa5274de85b8743e1e5716676"
+        ],
+        "root_hash": "5e19509565b17a222d46fee8aa2e4ff6e47ede276f7827a07a6d1fc780b3775d",
+        "root_signature": "042b3a9ca0c15be75b38e21a3c906db6ecdbaa5c021ea014c7000c33ca983742be0731d1b6f94a6814b19cbfed26328a26f1c894225ee1a1f08b8b74e976d40d",
+        "signing_key_id": "k-merkle-root-demo",
+        "anchor_type": "DEMO",
+        "anchor_ref": "demo://proof-demo/15a0ea35-9800-4b4c-8d3b-c275a731e1b0"
+      }
+    },
+    {
+      "event_id": "df007ec3-6601-49fd-8a15-5151a5a358c9",
+      "event_type": "PaymentExecuted",
+      "occurred_at": "2025-12-17T22:06:10.812011+00:00",
+      "leaf_hash": "c52227d2f139de5638b1f93cdefbeaf91c230c40bfafde093467cc1867785a52",
+      "merkle_proof": {
+        "batch_id": "15a0ea35-9800-4b4c-8d3b-c275a731e1b0",
+        "leaf_index": 4,
+        "siblings": [
+          "c52227d2f139de5638b1f93cdefbeaf91c230c40bfafde093467cc1867785a52",
+          "41a5e4bcf3a07760a75fab64ecefe7ce31140241035c7fe86acefeffafb94895",
+          "6db2325ce0105fad522d639c22f18bed0d5186323c0cb708e342b0c907cbe703"
+        ],
+        "root_hash": "5e19509565b17a222d46fee8aa2e4ff6e47ede276f7827a07a6d1fc780b3775d",
+        "root_signature": "042b3a9ca0c15be75b38e21a3c906db6ecdbaa5c021ea014c7000c33ca983742be0731d1b6f94a6814b19cbfed26328a26f1c894225ee1a1f08b8b74e976d40d",
+        "signing_key_id": "k-merkle-root-demo",
+        "anchor_type": "DEMO",
+        "anchor_ref": "demo://proof-demo/15a0ea35-9800-4b4c-8d3b-c275a731e1b0"
+      }
+    }
+  ],
+  "evidence_pack_hash": "eb04c22a0b96e4ba2c9ff4c820391625ce960e77336b57a13000ccd8c046277e"
+}

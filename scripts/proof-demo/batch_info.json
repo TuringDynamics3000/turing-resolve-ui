@@ -1,0 +1,15 @@
+{
+  "batch_id": "15a0ea35-9800-4b4c-8d3b-c275a731e1b0",
+  "tenant_id": "demo-tenant",
+  "environment_id": "staging",
+  "algo_version": "TD-MERKLE-v1-SHA256",
+  "start_commit_seq": 1,
+  "end_commit_seq": 5,
+  "event_count": 5,
+  "root_hash": "5e19509565b17a222d46fee8aa2e4ff6e47ede276f7827a07a6d1fc780b3775d",
+  "root_signature": "042b3a9ca0c15be75b38e21a3c906db6ecdbaa5c021ea014c7000c33ca983742be0731d1b6f94a6814b19cbfed26328a26f1c894225ee1a1f08b8b74e976d40d",
+  "signing_key_id": "k-merkle-root-demo",
+  "sealed_at": "2025-12-17T22:06:10.812620+00:00",
+  "anchor_type": "DEMO",
+  "anchor_ref": "demo://proof-demo/15a0ea35-9800-4b4c-8d3b-c275a731e1b0"
+}
