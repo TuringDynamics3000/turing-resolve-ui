@@ -21,6 +21,9 @@ import DepositsDashboard from "@/pages/DepositsDashboard";
 import GovernanceControls from "@/pages/GovernanceControls";
 import ReportingDashboard from "@/pages/ReportingDashboard";
 import MLModelsDashboard from "@/pages/MLModelsDashboard";
+import CompareDecisions from "@/pages/CompareDecisions";
+import WhatIfSimulator from "@/pages/WhatIfSimulator";
+import ComplianceReport from "@/pages/ComplianceReport";
 import NotFound from "@/pages/NotFound";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
 
@@ -35,6 +38,8 @@ function MainDashboard() {
         <Route path="/resolve" component={OpsInbox} />
         <Route path="/decisions" component={OpsInbox} />
         <Route path="/decisions/:id" component={DecisionDetail} />
+        <Route path="/compare" component={CompareDecisions} />
+        <Route path="/simulator" component={WhatIfSimulator} />
         <Route path="/policies" component={PolicyViewer} />
         
         {/* Lending Module */}
@@ -56,6 +61,7 @@ function MainDashboard() {
         
         {/* Reporting Module */}
         <Route path="/reporting" component={ReportingDashboard} />
+        <Route path="/compliance" component={ComplianceReport} />
         
         {/* ML Models */}
         <Route path="/ml-models" component={MLModelsDashboard} />

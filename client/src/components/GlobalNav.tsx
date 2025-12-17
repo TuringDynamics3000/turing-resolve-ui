@@ -26,6 +26,10 @@ import {
   Database,
   FileCheck,
   Brain,
+  Wrench,
+  GitCompare,
+  FlaskConical,
+  Scale,
 } from "lucide-react";
 
 export function GlobalNav() {
@@ -87,6 +91,38 @@ export function GlobalNav() {
             {/* Search could go here */}
           </div>
           <div className="flex items-center gap-2">
+            {/* Tools Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Wrench className="h-4 w-4" />
+                  Tools
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Analysis Tools</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <Link href="/compare">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <GitCompare className="h-4 w-4 mr-2" />
+                    Compare Decisions
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/simulator">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <FlaskConical className="h-4 w-4 mr-2" />
+                    What-If Simulator
+                  </DropdownMenuItem>
+                </Link>
+                <Link href="/compliance">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <Scale className="h-4 w-4 mr-2" />
+                    Compliance Reports
+                  </DropdownMenuItem>
+                </Link>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             <Badge variant="outline" className="gap-1 border-blue-500/30 text-blue-400 bg-blue-500/10">
               <Lock className="h-3 w-3" />
               v1.0-replacement-ready

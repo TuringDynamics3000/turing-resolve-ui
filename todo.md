@@ -1473,3 +1473,27 @@
 - [x] Display auto-disable trigger status
 - [x] Show latency/error metrics
 - [x] Add to System Overview page
+
+
+## Decision Analysis & Compliance Tools
+
+### Compare Decisions Feature
+- [x] Create CompareDecisions.tsx page component
+- [x] Add side-by-side decision comparison view
+- [x] Show policy differences and outcome variations
+- [x] Add decision selection UI with checkboxes
+- [x] Add navigation link in GlobalNav Tools dropdown
+
+### What-If Simulator
+- [x] Create WhatIfSimulator.tsx page component
+- [x] Build policy parameter adjustment UI
+- [x] Implement simulated decision preview
+- [x] Show impact analysis with before/after comparison
+- [x] Add scenario save/load functionality
+
+### Compliance Report Generator
+- [x] Create ComplianceReport.tsx page component
+- [x] Build report configuration form (date range, filters)
+- [x] Implement PDF/CSV export functionality
+- [x] Add audit trail summary view
+- [x] Include decision statistics and compliance metrics
