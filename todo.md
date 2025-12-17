@@ -1375,3 +1375,7 @@
 - [x] Replace emitPaymentFact calls with emitGovernedPaymentFact in paymentsRouter
 - [x] Add GET /api/sealer/status endpoint for operator monitoring (trpc: sealer.status)
 - [x] Create GET /api/evidence-packs/:decision_id endpoint for auditor verification (trpc: evidencePacks.generate)
+
+## Deposit Event Integration
+
+- [x] Replace emitDepositFact calls with emitGovernedDepositFact in paymentsRouter (3 calls replaced)

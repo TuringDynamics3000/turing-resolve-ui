@@ -15,7 +15,7 @@ import { getDb } from "./db";
 import { paymentFacts, payments, depositFacts, depositAccounts, depositHolds } from "../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { emitPaymentFact, emitDepositFact, emitGovernedPaymentFact } from "./factStream";
+import { emitPaymentFact, emitDepositFact, emitGovernedPaymentFact, emitGovernedDepositFact } from "./factStream";
 import { emitAuditFact } from "./auditRouter";
 
 // ============================================
@@ -438,8 +438,8 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
-      // Emit fact events for real-time updates
-      emitDepositFact(p.fromAccount, `FACT-${holdId}`, "HOLD_PLACED", depositSeq);
+      // Emit governed fact events for real-time updates with hash computation
+      await emitGovernedDepositFact(p.fromAccount, "HOLD_PLACED", { holdId, amount: p.amount, currency: p.currency, paymentId: input.paymentId }, depositSeq);
       await emitGovernedPaymentFact(input.paymentId, "PAYMENT_HOLD_PLACED", { holdId, amount: p.amount, currency: p.currency }, paymentSeq);
 
       // Update payment projection
@@ -797,8 +797,8 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
-      // Emit fact events for real-time updates
-      emitDepositFact(p.fromAccount, `FACT-${insertedRefundFact.id}`, "CREDIT", depositSeq);
+      // Emit governed fact events for real-time updates with hash computation
+      await emitGovernedDepositFact(p.fromAccount, "CREDIT", { refundFactId: insertedRefundFact.id, amount: p.amount, currency: p.currency, paymentId: input.paymentId }, depositSeq);
       await emitGovernedPaymentFact(input.paymentId, "PAYMENT_REVERSED", { reason: input.reason, refundAmount: p.amount }, paymentSeq);
 
       // Update payment projection
@@ -1349,8 +1349,8 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
-      // Emit fact events for real-time updates
-      emitDepositFact(p.fromAccount, `FACT-${insertedRefundFact.id}`, "CREDIT", depositSeq);
+      // Emit governed fact events for real-time updates with hash computation
+      await emitGovernedDepositFact(p.fromAccount, "CREDIT", { refundFactId: insertedRefundFact.id, amount: p.amount, currency: p.currency, paymentId: input.paymentId }, depositSeq);
       await emitGovernedPaymentFact(input.paymentId, "PAYMENT_REVERSED", { reason: input.reason, refundAmount: p.amount }, paymentSeq);
 
       // Update payment projection
