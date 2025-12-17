@@ -1336,3 +1336,10 @@
 - [x] Implement prepareEventForInsert() for write path integration
 - [x] Implement verifyEventHashes() for integrity checks
 - [x] Implement batch operations for Merkle sealing
+
+## Handover Package Merge
+
+- [x] Add consolidated merkle.sql (single-file DDL)
+- [x] Add formal Policy DSL v0 spec (EBNF grammar)
+- [x] Add TypeScript td-verify package
+- [x] Update 000_run_all.sql to reference consolidated migration

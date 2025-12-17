@@ -1,0 +1,24 @@
+{
+  "name": "@turingdynamics/td-verify",
+  "version": "1.0.0",
+  "description": "TuringDynamics Evidence Pack Verifier - Offline verification of Merkle proofs and cryptographic signatures",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "verify": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "tweetnacl": "^1.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  },
+  "keywords": ["verification", "merkle", "cryptography", "audit", "evidence"],
+  "author": "TuringDynamics",
+  "license": "UNLICENSED"
+}

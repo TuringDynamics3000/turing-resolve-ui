@@ -2,25 +2,26 @@
 -- TuringDynamics Verifiable Governance DDL
 -- Master Migration: Run All
 -- ============================================================
--- Execute this file to run all migrations in order.
--- Alternatively, run each numbered file individually.
+-- 
+-- Two options for running migrations:
 --
--- Order:
---   001_extensions_and_domains.sql  - pgcrypto, hash32, sigbytes
---   002_turing_security_schema.sql  - Key registry
---   003_event_store_columns.sql     - Event store additions
---   004_turing_audit_schema.sql     - Merkle audit trail
---   005_turing_resolve_schema.sql   - Policy registry
---   006_turing_ml_schema.sql        - Model registry
+-- OPTION A: Use consolidated single-file migration (RECOMMENDED)
+--   psql "$DATABASE_URL" -f merkle.sql
+--
+-- OPTION B: Use numbered migrations (for incremental upgrades)
+--   \i 001_extensions_and_domains.sql
+--   \i 002_turing_security_schema.sql
+--   \i 003_event_store_columns.sql
+--   \i 004_turing_audit_schema.sql
+--   \i 005_turing_resolve_schema.sql
+--   \i 006_turing_ml_schema.sql
+--
+-- The consolidated merkle.sql is functionally equivalent to
+-- running all numbered migrations in sequence.
 -- ============================================================
 
--- Run migrations in order
-\i 001_extensions_and_domains.sql
-\i 002_turing_security_schema.sql
-\i 003_event_store_columns.sql
-\i 004_turing_audit_schema.sql
-\i 005_turing_resolve_schema.sql
-\i 006_turing_ml_schema.sql
+-- Run consolidated migration
+\i merkle.sql
 
 -- Verify schemas created
 SELECT schema_name 
