@@ -1317,3 +1317,22 @@
 - [x] Create turing_audit schema with Merkle tables
 - [x] Create turing_resolve schema with policy tables
 - [x] Create turing_ml schema with model tables
+- [x] Create ADR-001: Postgres as Canonical System of Record
+
+## Python td_verify Package
+
+- [x] Create package structure (td_verify/)
+- [x] Implement canonical_json.py (deterministic serialization)
+- [x] Implement hash.py (SHA-256)
+- [x] Implement sig.py (Ed25519, ECDSA verification)
+- [x] Implement merkle.py (inclusion proofs, tree operations)
+- [x] Implement evidence_pack.py (full pack verification)
+- [x] Implement cli.py (command-line interface)
+- [x] Create pyproject.toml and README.md
+
+## Event Hashing Write Path
+
+- [x] Create EventHasher.ts with computeEventHashes()
+- [x] Implement prepareEventForInsert() for write path integration
+- [x] Implement verifyEventHashes() for integrity checks
+- [x] Implement batch operations for Merkle sealing

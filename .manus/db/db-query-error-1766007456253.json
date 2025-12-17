@@ -1,0 +1,8 @@
+{
+  "query": "-- Migration 001: Extensions and Domains\nCREATE EXTENSION IF NOT EXISTS pgcrypto;\n\n-- 32-byte hash domain (SHA-256)\nDO $$\nBEGIN\n  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'hash32') THEN\n    CREATE DOMAIN hash32 AS bytea\n      CHECK (octet_length(VALUE) = 32);\n  END IF;\nEND $$;\n\n-- Generic signature blob\nDO $$\nBEGIN\n  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'sigbytes') THEN\n    CREATE DOMAIN sigbytes AS bytea\n      CHECK (octet_length(VALUE) >= 32 AND octet_length(VALUE) <= 512);\n  END IF;\nEND $$;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user zFXp9RNvPn4ZSGY.19b6520577aa --database jah2eqXz63rtWYSbgQszMm --execute -- Migration 001: Extensions and Domains\nCREATE EXTENSION IF NOT EXISTS pgcrypto;\n\n-- 32-byte hash domain (SHA-256)\nDO $$\nBEGIN\n  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'hash32') THEN\n    CREATE DOMAIN hash32 AS bytea\n      CHECK (octet_length(VALUE) = 32);\n  END IF;\nEND $$;\n\n-- Generic signature blob\nDO $$\nBEGIN\n  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'sigbytes') THEN\n    CREATE DOMAIN sigbytes AS bytea\n      CHECK (octet_length(VALUE) >= 32 AND octet_length(VALUE) <= 512);\n  END IF;\nEND $$;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 2: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 1 column 16 near \"EXTENSION IF NOT EXISTS pgcrypto\""
+  ]
+}

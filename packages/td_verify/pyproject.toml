@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "td_verify"
+version = "1.0.0"
+description = "TuringDynamics Evidence Pack Verifier - Offline verification of Merkle proofs and cryptographic signatures"
+readme = "README.md"
+license = {text = "Proprietary"}
+authors = [
+    {name = "TuringDynamics", email = "engineering@turingdynamics.com"}
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["verification", "merkle", "cryptography", "audit", "evidence"]
+
+dependencies = [
+    "cryptography>=41.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "mypy>=1.0.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+td-verify = "td_verify.cli:main"
+
+[project.urls]
+Homepage = "https://turingdynamics.com"
+Documentation = "https://docs.turingdynamics.com/verification"
+Repository = "https://github.com/turingdynamics/td-verify"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["td_verify*"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+strict = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "D", "UP", "B", "C4", "SIM"]
+ignore = ["D100", "D104"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=td_verify --cov-report=term-missing"
