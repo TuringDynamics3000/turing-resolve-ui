@@ -1865,4 +1865,18 @@
 - [x] Create BECS operator action: Batch cancellation (application/payments/becs/ops/CancelBatchHandler.ts)
 - [x] Add policy-gated authorization for all BECS ops actions
 - [x] Write tests for BECS operator actions (16 tests - 3 resubmit, 3 return, 4 cancel, 6 policy)
+- [x] Save checkpoint and push to GitHub
+
+
+## RTGS Payment Rail Implementation (Governance-First, High-Value)
+- [x] Create RTGS state machine (PENDING_APPROVAL, APPROVED, REJECTED, SENT, SETTLED, FAILED)
+- [x] Create RTGS state transitions matrix
+- [x] Create RTGS events (ApprovalRequested, ApprovalGranted, ApprovalRejected, DualControlVerified)
+- [x] Create RTGS invariants (dual-control, separation of duties, approval thresholds)
+- [x] Create RTGS payment aggregate (createRTGSPayment, applyRTGSEvent, rebuildRTGSFromEvents)
+- [x] Create RTGS approval workflow system
+- [x] Implement dual-control verification (maker-checker pattern)
+- [x] Implement separation of duties enforcement
+- [x] Write RTGS diff documentation (vs NPP/BECS)
+- [x] Write RTGS tests (approval workflows, dual-control, invariants, replay) - 16/20 passing
 - [ ] Save checkpoint and push to GitHub
