@@ -24,6 +24,7 @@ import MLModelsDashboard from "@/pages/MLModelsDashboard";
 import CompareDecisions from "@/pages/CompareDecisions";
 import WhatIfSimulator from "@/pages/WhatIfSimulator";
 import ComplianceReport from "@/pages/ComplianceReport";
+import GovernanceConsole from "@/pages/GovernanceConsole";
 import NotFound from "@/pages/NotFound";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
 
@@ -65,9 +66,8 @@ function MainDashboard() {
         
         {/* ML Models */}
         <Route path="/ml-models" component={MLModelsDashboard} />
-        
-        {/* Governance */}
-        <Route path="/governance" component={GovernanceControls} />
+        <Route path="/governance" component={GovernanceConsole} />
+        <Route path="/governance-controls" component={GovernanceControls} />
         
         {/* 404 */}
         <Route path="/404" component={NotFound} />

@@ -1,0 +1,499 @@
+/**
+ * TuringDynamics RBAC Router
+ * 
+ * tRPC router for RBAC operations including:
+ * - Role management
+ * - Authorization checks
+ * - Proposal/approval workflow
+ * - Authority facts audit
+ */
+
+import { z } from "zod";
+import { router, publicProcedure, protectedProcedure } from "./_core/trpc";
+import { rbacService, RBAC_ROLES, COMMANDS } from "./core/auth/RBACService";
+import { getDb } from "./db";
+import { 
+  rbacRoles, 
+  rbacCommands, 
+  commandRoleBindings,
+  roleAssignments,
+  commandProposals,
+  approvals,
+  authorityFacts 
+} from "../drizzle/schema";
+import { eq, and, desc, sql } from "drizzle-orm";
+
+// ============================================
+// Input Schemas
+// ============================================
+
+const scopeSchema = z.object({
+  tenantId: z.string(),
+  environmentId: z.string(),
+  domain: z.string(),
+});
+
+const authContextSchema = z.object({
+  actorId: z.string(),
+  scope: scopeSchema,
+});
+
+// ============================================
+// RBAC Router
+// ============================================
+
+export const rbacRouter = router({
+  // ============================================
+  // Role Management
+  // ============================================
+  
+  /**
+   * List all available roles
+   */
+  listRoles: publicProcedure.query(async () => {
+    const conn = await getDb();
+    if (!conn) {
+      // Return canonical roles from constants
+      return Object.entries(RBAC_ROLES).map(([key, code]) => ({
+        roleCode: code,
+        category: key.includes("PLATFORM") ? "PLATFORM" :
+                  key.includes("RISK") || key.includes("COMPLIANCE") || key.includes("MODEL_RISK") ? "GOVERNANCE" :
+                  key.includes("MODEL") ? "ML" :
+                  key.includes("OPS") ? "OPERATIONS" : "CUSTOMER",
+        description: code.replace(/_/g, " ").toLowerCase(),
+      }));
+    }
+    
+    return conn.select().from(rbacRoles);
+  }),
+  
+  /**
+   * List all commands with their role bindings
+   */
+  listCommands: publicProcedure.query(async () => {
+    const conn = await getDb();
+    if (!conn) {
+      return Object.entries(COMMANDS).map(([key, code]) => ({
+        commandCode: code,
+        domain: key.includes("ACCOUNT") || key.includes("HOLD") || key.includes("INTEREST") || key.includes("FEE") ? "DEPOSITS" :
+                key.includes("PAYMENT") || key.includes("CHARGEBACK") ? "PAYMENTS" :
+                key.includes("LOAN") || key.includes("TERMS") || key.includes("HARDSHIP") ? "LENDING" :
+                key.includes("POLICY") || key.includes("TOKEN") ? "POLICY" : "ML",
+        description: code.replace(/_/g, " ").toLowerCase(),
+        requiresApproval: ["MODIFY_TERMS", "WRITE_OFF_LOAN", "UPDATE_POLICY_DSL", "ACTIVATE_POLICY", 
+                          "PROMOTE_MODEL_TO_CANARY", "PROMOTE_MODEL_TO_PROD"].includes(code),
+        isForbidden: ["ADJUST_BALANCE", "FORCE_POST_PAYMENT", "APPROVE_LOAN", "DELETE_MODEL"].includes(code),
+      }));
+    }
+    
+    const commands = await conn.select().from(rbacCommands);
+    const bindings = await conn.select().from(commandRoleBindings);
+    
+    return commands.map(cmd => ({
+      ...cmd,
+      roles: bindings.filter(b => b.commandCode === cmd.commandCode),
+    }));
+  }),
+  
+  /**
+   * Get actor's current roles
+   */
+  getActorRoles: protectedProcedure
+    .input(z.object({
+      actorId: z.string().optional(),
+      scope: scopeSchema,
+    }))
+    .query(async ({ ctx, input }) => {
+      const actorId = input.actorId || ctx.user?.openId || "anonymous";
+      return rbacService.getActorRoles(actorId, input.scope);
+    }),
+  
+  /**
+   * Assign a role to an actor
+   */
+  assignRole: protectedProcedure
+    .input(z.object({
+      actorId: z.string(),
+      roleCode: z.string(),
+      scope: scopeSchema,
+      validTo: z.date().optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const assignedBy = ctx.user?.openId || "system";
+      return rbacService.assignRole(
+        input.actorId,
+        input.roleCode,
+        input.scope,
+        assignedBy,
+        input.validTo
+      );
+    }),
+  
+  /**
+   * Revoke a role assignment
+   */
+  revokeRole: protectedProcedure
+    .input(z.object({
+      roleAssignmentId: z.string(),
+      reason: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const revokedBy = ctx.user?.openId || "system";
+      await rbacService.revokeRole(input.roleAssignmentId, revokedBy, input.reason);
+      return { success: true };
+    }),
+  
+  /**
+   * List role assignments for an actor or scope
+   */
+  listRoleAssignments: protectedProcedure
+    .input(z.object({
+      actorId: z.string().optional(),
+      scope: scopeSchema.partial().optional(),
+    }))
+    .query(async ({ input }) => {
+      const conn = await getDb();
+      if (!conn) return [];
+      
+      const conditions = [];
+      if (input.actorId) {
+        conditions.push(eq(roleAssignments.actorId, input.actorId));
+      }
+      if (input.scope?.tenantId) {
+        conditions.push(eq(roleAssignments.tenantId, input.scope.tenantId));
+      }
+      if (input.scope?.environmentId) {
+        conditions.push(eq(roleAssignments.environmentId, input.scope.environmentId));
+      }
+      
+      if (conditions.length === 0) {
+        return conn.select().from(roleAssignments).limit(100);
+      }
+      
+      return conn.select().from(roleAssignments)
+        .where(and(...conditions))
+        .orderBy(desc(roleAssignments.createdAt))
+        .limit(100);
+    }),
+  
+  // ============================================
+  // Authorization
+  // ============================================
+  
+  /**
+   * Check if an action is authorized
+   */
+  checkAuthorization: protectedProcedure
+    .input(z.object({
+      commandCode: z.string(),
+      resourceId: z.string().optional(),
+      scope: scopeSchema,
+    }))
+    .query(async ({ ctx, input }) => {
+      const actorId = ctx.user?.openId || "anonymous";
+      return rbacService.authorize(
+        { actorId, scope: input.scope },
+        input.commandCode,
+        input.resourceId
+      );
+    }),
+  
+  // ============================================
+  // Proposal/Approval Workflow
+  // ============================================
+  
+  /**
+   * Create a command proposal (maker step)
+   */
+  createProposal: protectedProcedure
+    .input(z.object({
+      commandCode: z.string(),
+      resourceId: z.string(),
+      scope: scopeSchema,
+      proposalData: z.record(z.string(), z.unknown()).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const actorId = ctx.user?.openId || "anonymous";
+      return rbacService.createProposal(
+        { actorId, scope: input.scope },
+        input.commandCode,
+        input.resourceId,
+        input.proposalData
+      );
+    }),
+  
+  /**
+   * Approve or reject a proposal (checker step)
+   */
+  approveProposal: protectedProcedure
+    .input(z.object({
+      proposalId: z.string(),
+      decision: z.enum(["APPROVE", "REJECT"]),
+      reason: z.string().optional(),
+      scope: scopeSchema,
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const actorId = ctx.user?.openId || "anonymous";
+      return rbacService.approveProposal(
+        { actorId, scope: input.scope },
+        input.proposalId,
+        input.decision,
+        input.reason
+      );
+    }),
+  
+  /**
+   * List pending proposals
+   */
+  listPendingProposals: protectedProcedure
+    .input(z.object({
+      scope: scopeSchema,
+    }))
+    .query(async ({ input }) => {
+      return rbacService.getPendingProposals(input.scope);
+    }),
+  
+  /**
+   * Get proposal details with approvals
+   */
+  getProposal: protectedProcedure
+    .input(z.object({
+      proposalId: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const conn = await getDb();
+      if (!conn) return null;
+      
+      const proposalResults = await conn.select().from(commandProposals)
+        .where(eq(commandProposals.proposalId, input.proposalId))
+        .limit(1);
+      
+      const proposal = proposalResults[0];
+      if (!proposal) return null;
+      
+      const proposalApprovals = await conn.select().from(approvals)
+        .where(eq(approvals.proposalId, input.proposalId));
+      
+      // Get required approver roles
+      const bindings = await conn.select().from(commandRoleBindings)
+        .where(and(
+          eq(commandRoleBindings.commandCode, proposal.commandCode),
+          eq(commandRoleBindings.isApprover, "true")
+        ));
+      
+      const requiredApproverRoles = bindings.map(b => b.roleCode);
+      const approvedRoles = proposalApprovals
+        .filter(a => a.decision === "APPROVE" && a.approvedBy !== proposal.proposedBy)
+        .map(a => a.approvedRole);
+      
+      const missingApprovals = requiredApproverRoles.filter(r => !approvedRoles.includes(r));
+      
+      return {
+        ...proposal,
+        approvals: proposalApprovals,
+        requiredApproverRoles,
+        missingApprovals,
+        isFullyApproved: missingApprovals.length === 0,
+      };
+    }),
+  
+  // ============================================
+  // Authority Facts (Audit)
+  // ============================================
+  
+  /**
+   * List authority facts for audit
+   */
+  listAuthorityFacts: protectedProcedure
+    .input(z.object({
+      scope: scopeSchema,
+      filters: z.object({
+        actorId: z.string().optional(),
+        commandCode: z.string().optional(),
+        decision: z.enum(["ALLOW", "DENY"]).optional(),
+      }).optional(),
+      limit: z.number().min(1).max(1000).default(100),
+    }))
+    .query(async ({ input }) => {
+      return rbacService.getAuthorityFacts(input.scope, input.filters);
+    }),
+  
+  /**
+   * Get authority fact by ID
+   */
+  getAuthorityFact: protectedProcedure
+    .input(z.object({
+      authorityFactId: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const conn = await getDb();
+      if (!conn) return null;
+      
+      const results = await conn.select().from(authorityFacts)
+        .where(eq(authorityFacts.authorityFactId, input.authorityFactId))
+        .limit(1);
+      
+      return results[0] || null;
+    }),
+  
+  /**
+   * Get authority statistics
+   */
+  getAuthorityStats: protectedProcedure
+    .input(z.object({
+      scope: scopeSchema,
+    }))
+    .query(async ({ input }) => {
+      const conn = await getDb();
+      if (!conn) {
+        return {
+          totalDecisions: 0,
+          allowedCount: 0,
+          deniedCount: 0,
+          byCommand: [],
+          byReason: [],
+        };
+      }
+      
+      // Get counts
+      const allFacts = await conn.select().from(authorityFacts)
+        .where(and(
+          eq(authorityFacts.tenantId, input.scope.tenantId),
+          eq(authorityFacts.environmentId, input.scope.environmentId)
+        ));
+      
+      const totalDecisions = allFacts.length;
+      const allowedCount = allFacts.filter(f => f.decision === "ALLOW").length;
+      const deniedCount = allFacts.filter(f => f.decision === "DENY").length;
+      
+      // Group by command
+      const byCommand: Record<string, { allow: number; deny: number }> = {};
+      allFacts.forEach(f => {
+        if (!byCommand[f.commandCode]) {
+          byCommand[f.commandCode] = { allow: 0, deny: 0 };
+        }
+        if (f.decision === "ALLOW") {
+          byCommand[f.commandCode].allow++;
+        } else {
+          byCommand[f.commandCode].deny++;
+        }
+      });
+      
+      // Group by reason
+      const byReason: Record<string, number> = {};
+      allFacts.forEach(f => {
+        byReason[f.reasonCode] = (byReason[f.reasonCode] || 0) + 1;
+      });
+      
+      return {
+        totalDecisions,
+        allowedCount,
+        deniedCount,
+        byCommand: Object.entries(byCommand).map(([command, counts]) => ({
+          command,
+          ...counts,
+        })),
+        byReason: Object.entries(byReason).map(([reason, count]) => ({
+          reason,
+          count,
+        })),
+      };
+    }),
+  
+  // ============================================
+  // Seed Data (Development)
+  // ============================================
+  
+  /**
+   * Seed RBAC tables with initial data
+   */
+  seedRbacData: protectedProcedure
+    .mutation(async () => {
+      const conn = await getDb();
+      if (!conn) throw new Error("Database not available");
+      
+      // Seed roles
+      const roles = [
+        { roleCode: "PLATFORM_ENGINEER", category: "PLATFORM" as const, description: "Core platform engineer - system operations" },
+        { roleCode: "PLATFORM_ADMIN", category: "PLATFORM" as const, description: "Platform administrator - token issuance" },
+        { roleCode: "PLATFORM_AUDITOR", category: "PLATFORM" as const, description: "Platform auditor - read-only access" },
+        { roleCode: "RISK_APPROVER", category: "GOVERNANCE" as const, description: "Risk approval authority" },
+        { roleCode: "COMPLIANCE_APPROVER", category: "GOVERNANCE" as const, description: "Compliance approval authority" },
+        { roleCode: "MODEL_RISK_OFFICER", category: "GOVERNANCE" as const, description: "Model risk oversight" },
+        { roleCode: "MODEL_AUTHOR", category: "ML" as const, description: "Model author - register versions" },
+        { roleCode: "MODEL_OPERATOR", category: "ML" as const, description: "Model operator - shadow deployments" },
+        { roleCode: "MODEL_APPROVER", category: "ML" as const, description: "Model approver - promotions" },
+        { roleCode: "OPS_AGENT", category: "OPERATIONS" as const, description: "Operations agent" },
+        { roleCode: "OPS_SUPERVISOR", category: "OPERATIONS" as const, description: "Operations supervisor" },
+        { roleCode: "CUSTOMER_ADMIN", category: "CUSTOMER" as const, description: "Customer administrator" },
+        { roleCode: "CUSTOMER_READONLY", category: "CUSTOMER" as const, description: "Customer read-only" },
+      ];
+      
+      for (const role of roles) {
+        try {
+          await conn.insert(rbacRoles).values(role);
+        } catch (e) {
+          // Ignore duplicate key errors
+        }
+      }
+      
+      // Seed commands
+      const commands = [
+        { commandCode: "OPEN_ACCOUNT", domain: "DEPOSITS", description: "Open deposit account", requiresApproval: "false" as const, isForbidden: "false" as const },
+        { commandCode: "CLOSE_ACCOUNT", domain: "DEPOSITS", description: "Close deposit account", requiresApproval: "false" as const, isForbidden: "false" as const },
+        { commandCode: "ADJUST_BALANCE", domain: "DEPOSITS", description: "Direct balance adjustment", requiresApproval: "false" as const, isForbidden: "true" as const },
+        { commandCode: "INITIATE_PAYMENT", domain: "PAYMENTS", description: "Initiate payment", requiresApproval: "false" as const, isForbidden: "false" as const },
+        { commandCode: "REVERSE_PAYMENT", domain: "PAYMENTS", description: "Reverse payment", requiresApproval: "false" as const, isForbidden: "false" as const },
+        { commandCode: "CREATE_LOAN", domain: "LENDING", description: "Create loan", requiresApproval: "false" as const, isForbidden: "false" as const },
+        { commandCode: "MODIFY_TERMS", domain: "LENDING", description: "Modify loan terms", requiresApproval: "true" as const, isForbidden: "false" as const },
+        { commandCode: "WRITE_OFF_LOAN", domain: "LENDING", description: "Write off loan", requiresApproval: "true" as const, isForbidden: "false" as const },
+        { commandCode: "UPDATE_POLICY_DSL", domain: "POLICY", description: "Update policy DSL", requiresApproval: "true" as const, isForbidden: "false" as const },
+        { commandCode: "ACTIVATE_POLICY", domain: "POLICY", description: "Activate policy", requiresApproval: "true" as const, isForbidden: "false" as const },
+        { commandCode: "REGISTER_MODEL_VERSION", domain: "ML", description: "Register model version", requiresApproval: "false" as const, isForbidden: "false" as const },
+        { commandCode: "PROMOTE_MODEL_TO_SHADOW", domain: "ML", description: "Promote to shadow", requiresApproval: "false" as const, isForbidden: "false" as const },
+        { commandCode: "PROMOTE_MODEL_TO_CANARY", domain: "ML", description: "Promote to canary", requiresApproval: "true" as const, isForbidden: "false" as const },
+        { commandCode: "PROMOTE_MODEL_TO_PROD", domain: "ML", description: "Promote to production", requiresApproval: "true" as const, isForbidden: "false" as const },
+        { commandCode: "ROLLBACK_MODEL", domain: "ML", description: "Rollback model", requiresApproval: "false" as const, isForbidden: "false" as const },
+        { commandCode: "DELETE_MODEL", domain: "ML", description: "Delete model", requiresApproval: "false" as const, isForbidden: "true" as const },
+      ];
+      
+      for (const cmd of commands) {
+        try {
+          await conn.insert(rbacCommands).values(cmd);
+        } catch (e) {
+          // Ignore duplicate key errors
+        }
+      }
+      
+      // Seed command-role bindings
+      const bindings = [
+        { commandCode: "OPEN_ACCOUNT", roleCode: "OPS_AGENT", isApprover: "false" as const },
+        { commandCode: "CLOSE_ACCOUNT", roleCode: "OPS_SUPERVISOR", isApprover: "false" as const },
+        { commandCode: "INITIATE_PAYMENT", roleCode: "OPS_AGENT", isApprover: "false" as const },
+        { commandCode: "REVERSE_PAYMENT", roleCode: "OPS_SUPERVISOR", isApprover: "false" as const },
+        { commandCode: "CREATE_LOAN", roleCode: "OPS_AGENT", isApprover: "false" as const },
+        { commandCode: "MODIFY_TERMS", roleCode: "OPS_SUPERVISOR", isApprover: "false" as const },
+        { commandCode: "MODIFY_TERMS", roleCode: "RISK_APPROVER", isApprover: "true" as const },
+        { commandCode: "WRITE_OFF_LOAN", roleCode: "RISK_APPROVER", isApprover: "false" as const },
+        { commandCode: "UPDATE_POLICY_DSL", roleCode: "COMPLIANCE_APPROVER", isApprover: "false" as const },
+        { commandCode: "ACTIVATE_POLICY", roleCode: "COMPLIANCE_APPROVER", isApprover: "false" as const },
+        { commandCode: "REGISTER_MODEL_VERSION", roleCode: "MODEL_AUTHOR", isApprover: "false" as const },
+        { commandCode: "PROMOTE_MODEL_TO_SHADOW", roleCode: "MODEL_OPERATOR", isApprover: "false" as const },
+        { commandCode: "PROMOTE_MODEL_TO_CANARY", roleCode: "MODEL_APPROVER", isApprover: "false" as const },
+        { commandCode: "PROMOTE_MODEL_TO_CANARY", roleCode: "MODEL_RISK_OFFICER", isApprover: "true" as const },
+        { commandCode: "PROMOTE_MODEL_TO_PROD", roleCode: "MODEL_APPROVER", isApprover: "false" as const },
+        { commandCode: "PROMOTE_MODEL_TO_PROD", roleCode: "RISK_APPROVER", isApprover: "true" as const },
+        { commandCode: "ROLLBACK_MODEL", roleCode: "OPS_SUPERVISOR", isApprover: "false" as const },
+      ];
+      
+      for (const binding of bindings) {
+        try {
+          await conn.insert(commandRoleBindings).values(binding);
+        } catch (e) {
+          // Ignore duplicate key errors
+        }
+      }
+      
+      return { success: true, message: "RBAC data seeded successfully" };
+    }),
+});

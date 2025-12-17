@@ -385,3 +385,185 @@ export const auditFacts = mysqlTable("audit_facts", {
 
 export type AuditFact = typeof auditFacts.$inferSelect;
 export type InsertAuditFact = typeof auditFacts.$inferInsert;
+
+
+// ============================================
+// RBAC & AUTHORITY TABLES
+// ============================================
+
+/**
+ * RBAC Roles - Canonical role definitions (immutable reference)
+ */
+export const rbacRoles = mysqlTable("rbac_roles", {
+  id: int("id").autoincrement().primaryKey(),
+  roleCode: varchar("roleCode", { length: 64 }).notNull().unique(),
+  category: mysqlEnum("category", ["PLATFORM", "GOVERNANCE", "ML", "OPERATIONS", "CUSTOMER"]).notNull(),
+  description: text("description").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RbacRole = typeof rbacRoles.$inferSelect;
+export type InsertRbacRole = typeof rbacRoles.$inferInsert;
+
+/**
+ * Role Assignments - Scope-aware role assignments
+ */
+export const roleAssignments = mysqlTable("role_assignments", {
+  id: int("id").autoincrement().primaryKey(),
+  roleAssignmentId: varchar("roleAssignmentId", { length: 64 }).notNull().unique(),
+  
+  actorId: varchar("actorId", { length: 128 }).notNull(),
+  roleCode: varchar("roleCode", { length: 64 }).notNull(),
+  
+  // Scope (MANDATORY)
+  tenantId: varchar("tenantId", { length: 64 }).notNull(),
+  environmentId: varchar("environmentId", { length: 32 }).notNull(), // prod | staging | dev
+  domain: varchar("domain", { length: 32 }).notNull(), // DEPOSITS | PAYMENTS | LENDING | ML | POLICY | OPS | *
+  
+  // Validity
+  validFrom: timestamp("validFrom").defaultNow().notNull(),
+  validTo: timestamp("validTo"),
+  
+  // Audit
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdBy: varchar("createdBy", { length: 128 }).notNull(),
+  revokedAt: timestamp("revokedAt"),
+  revokedBy: varchar("revokedBy", { length: 128 }),
+  revokeReason: text("revokeReason"),
+});
+
+export type RoleAssignment = typeof roleAssignments.$inferSelect;
+export type InsertRoleAssignment = typeof roleAssignments.$inferInsert;
+
+/**
+ * Commands - Authoritative command registry
+ */
+export const rbacCommands = mysqlTable("rbac_commands", {
+  id: int("id").autoincrement().primaryKey(),
+  commandCode: varchar("commandCode", { length: 64 }).notNull().unique(),
+  domain: varchar("domain", { length: 32 }).notNull(),
+  description: text("description").notNull(),
+  requiresApproval: mysqlEnum("requiresApproval", ["true", "false"]).default("false").notNull(),
+  isForbidden: mysqlEnum("isForbidden", ["true", "false"]).default("false").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type RbacCommand = typeof rbacCommands.$inferSelect;
+export type InsertRbacCommand = typeof rbacCommands.$inferInsert;
+
+/**
+ * Command Role Bindings - Which roles can execute which commands
+ */
+export const commandRoleBindings = mysqlTable("command_role_bindings", {
+  id: int("id").autoincrement().primaryKey(),
+  commandCode: varchar("commandCode", { length: 64 }).notNull(),
+  roleCode: varchar("roleCode", { length: 64 }).notNull(),
+  isApprover: mysqlEnum("isApprover", ["true", "false"]).default("false").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CommandRoleBinding = typeof commandRoleBindings.$inferSelect;
+export type InsertCommandRoleBinding = typeof commandRoleBindings.$inferInsert;
+
+/**
+ * Command Proposals - Pending proposals for maker/checker workflow
+ */
+export const commandProposals = mysqlTable("command_proposals", {
+  id: int("id").autoincrement().primaryKey(),
+  proposalId: varchar("proposalId", { length: 64 }).notNull().unique(),
+  
+  commandCode: varchar("commandCode", { length: 64 }).notNull(),
+  resourceId: varchar("resourceId", { length: 128 }).notNull(),
+  
+  // Proposer
+  proposedBy: varchar("proposedBy", { length: 128 }).notNull(),
+  proposedRole: varchar("proposedRole", { length: 64 }).notNull(),
+  
+  // Scope
+  tenantId: varchar("tenantId", { length: 64 }).notNull(),
+  environmentId: varchar("environmentId", { length: 32 }).notNull(),
+  domain: varchar("domain", { length: 32 }).notNull(),
+  
+  // Data
+  proposalData: json("proposalData"),
+  
+  // Status
+  status: mysqlEnum("status", ["PENDING", "APPROVED", "REJECTED", "EXPIRED", "EXECUTED"]).default("PENDING").notNull(),
+  
+  // Timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  expiresAt: timestamp("expiresAt"),
+  resolvedAt: timestamp("resolvedAt"),
+});
+
+export type CommandProposal = typeof commandProposals.$inferSelect;
+export type InsertCommandProposal = typeof commandProposals.$inferInsert;
+
+/**
+ * Approvals - Approval records for maker/checker workflow
+ */
+export const approvals = mysqlTable("approvals", {
+  id: int("id").autoincrement().primaryKey(),
+  approvalId: varchar("approvalId", { length: 64 }).notNull().unique(),
+  
+  proposalId: varchar("proposalId", { length: 64 }).notNull(),
+  
+  // Approver
+  approvedBy: varchar("approvedBy", { length: 128 }).notNull(),
+  approvedRole: varchar("approvedRole", { length: 64 }).notNull(),
+  
+  // Scope
+  tenantId: varchar("tenantId", { length: 64 }).notNull(),
+  environmentId: varchar("environmentId", { length: 32 }).notNull(),
+  domain: varchar("domain", { length: 32 }).notNull(),
+  
+  // Decision
+  decision: mysqlEnum("decision", ["APPROVE", "REJECT"]).notNull(),
+  reason: text("reason"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Approval = typeof approvals.$inferSelect;
+export type InsertApproval = typeof approvals.$inferInsert;
+
+/**
+ * Authority Facts - Append-only authority decision log (CRITICAL)
+ * 
+ * IMMUTABLE: Authority facts are never updated or deleted.
+ * This is how you prove impossibility, not just permission.
+ */
+export const authorityFacts = mysqlTable("authority_facts", {
+  id: int("id").autoincrement().primaryKey(),
+  authorityFactId: varchar("authorityFactId", { length: 64 }).notNull().unique(),
+  
+  // Actor
+  actorId: varchar("actorId", { length: 128 }).notNull(),
+  actorRole: varchar("actorRole", { length: 64 }).notNull(),
+  
+  // Command
+  commandCode: varchar("commandCode", { length: 64 }).notNull(),
+  resourceId: varchar("resourceId", { length: 128 }),
+  
+  // Scope
+  tenantId: varchar("tenantId", { length: 64 }).notNull(),
+  environmentId: varchar("environmentId", { length: 32 }).notNull(),
+  domain: varchar("domain", { length: 32 }).notNull(),
+  
+  // Decision
+  decision: mysqlEnum("decision", ["ALLOW", "DENY"]).notNull(),
+  reasonCode: varchar("reasonCode", { length: 64 }).notNull(),
+  
+  // Links
+  proposalId: varchar("proposalId", { length: 64 }),
+  evidencePackId: varchar("evidencePackId", { length: 64 }),
+  
+  // Metadata
+  metadata: json("metadata"),
+  
+  // Timestamp (immutable)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuthorityFact = typeof authorityFacts.$inferSelect;
+export type InsertAuthorityFact = typeof authorityFacts.$inferInsert;

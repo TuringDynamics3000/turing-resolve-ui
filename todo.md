@@ -1497,3 +1497,50 @@
 - [x] Implement PDF/CSV export functionality
 - [x] Add audit trail summary view
 - [x] Include decision statistics and compliance metrics
+
+
+## RBAC & Authority System Implementation - COMPLETED ✓
+
+### Phase 1: RBAC Database Migrations
+- [x] Create turing_auth schema (007_turing_auth_schema.sql)
+- [x] Create role table with canonical roles (rbac_roles)
+- [x] Create role_assignment table (scope-aware)
+- [x] Create command table (registry) (rbac_commands)
+- [x] Create command_role binding table (command_role_bindings)
+- [x] Create approval table (maker/checker) (approvals + command_proposals)
+- [x] Create authority_fact table (append-only)
+- [x] Seed initial roles and command bindings (seedRbacData endpoint)
+
+### Phase 2: Command Handler Wrappers
+- [x] Create authorize() function (RBACService.authorize)
+- [x] Create rbacGuard decorator/middleware
+- [x] Wrap ML commands (REGISTER_MODEL_VERSION, PROMOTE_*, ROLLBACK_MODEL)
+- [x] Wrap Policy commands (UPDATE_POLICY_DSL, ISSUE_AUTH_TOKEN)
+- [x] Wrap Operations commands
+
+### Phase 3: Approval Enforcement
+- [x] Implement proposal workflow (createProposal)
+- [x] Implement approval workflow (approveProposal)
+- [x] Enforce proposer ≠ approver rule
+- [x] Create pending approvals queue API (listPendingProposals)
+
+### Phase 4: Authority Facts Emission
+- [x] Emit AUTHORITY_DECISION_RECORDED for all commands (emitAuthorityFact)
+- [x] Include scope, resource_id, decision, reason_code
+- [x] Link authority facts to evidence packs (evidencePackId field)
+
+### Phase 5: Governance Console UI
+- [x] Create Governance Console page (/governance)
+- [x] Build Role Registry view with assignments
+- [x] Build Pending Approvals queue (maker/checker)
+- [x] Build Authority Facts Explorer (audit log)
+- [x] Build Statistics Dashboard (decisions, allow/deny counts)
+- [x] Show RBAC failure UX with role requirements
+
+### Phase 6: RBAC Replay Tests (32 tests)
+- [x] Test role constants (PLATFORM, GOVERNANCE, ML, OPERATIONS)
+- [x] Test command constants (forbidden, approval-required)
+- [x] Test authorization context (scope-aware)
+- [x] Test maker/checker workflow (proposer ≠ approver)
+- [x] Test authority facts structure (immutable)
+- [x] Test scope-aware authorization (tenant, environment, domain)

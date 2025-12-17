@@ -50,6 +50,13 @@
       "when": 1765899090399,
       "tag": "0006_amused_ironclad",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1766012535144,
+      "tag": "0007_lucky_ultron",
+      "breakpoints": true
     }
   ]
 }
