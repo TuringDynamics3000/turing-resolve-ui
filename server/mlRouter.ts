@@ -11,6 +11,13 @@
 
 import { z } from 'zod';
 import { router, publicProcedure, protectedProcedure } from './_core/trpc';
+import { TRPCError } from '@trpc/server';
+import { 
+  RBACService, 
+  COMMANDS, 
+  RBAC_ROLES,
+  type AuthorizationContext 
+} from './core/auth/RBACService';
 import {
   ModelRegistryV2,
   InferenceService,
@@ -144,6 +151,41 @@ function getAutoDisableMonitor(model_id: string): AutoDisableMonitor {
 // Store inference facts (in production, emit to event store)
 const inferenceFacts: InferenceFact[] = [];
 
+// RBAC Service instance
+const rbacService = new RBACService();
+
+/**
+ * RBAC Authorization Helper
+ * Checks authorization and emits authority fact
+ */
+async function checkRBAC(
+  ctx: { user?: { openId: string; name?: string | null } | null },
+  commandCode: string,
+  resourceId?: string,
+  tenantId: string = 'default',
+  environmentId: string = 'prod'
+): Promise<void> {
+  const actorId = ctx.user?.openId || 'anonymous';
+  
+  const authCtx: AuthorizationContext = {
+    actorId,
+    scope: {
+      tenantId,
+      environmentId,
+      domain: 'ML',
+    },
+  };
+  
+  const result = await rbacService.authorize(authCtx, commandCode, resourceId);
+  
+  if (!result.authorized) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: `RBAC_DENIED: ${result.reasonCode}. Required roles: ${result.requiredRoles.join(', ')}. Your roles: ${result.actorRoles.join(', ') || 'none'}`,
+    });
+  }
+}
+
 // ============================================================
 // ML ROUTER
 // ============================================================
@@ -170,6 +212,7 @@ export const mlRouter = router({
   
   /**
    * Register model version (POST /ml/models/{model_id}/versions)
+   * RBAC: Requires MODEL_AUTHOR role
    */
   registerVersion: protectedProcedure
     .input(z.object({
@@ -177,6 +220,9 @@ export const mlRouter = router({
       manifest: ModelManifestSchema,
     }))
     .mutation(async ({ input, ctx }) => {
+      // RBAC Check: MODEL_AUTHOR required
+      await checkRBAC(ctx, COMMANDS.REGISTER_MODEL_VERSION, input.model_id);
+      
       const reg = getRegistry();
       const created_by = ctx.user?.name || 'system';
       
@@ -197,6 +243,10 @@ export const mlRouter = router({
   
   /**
    * Promote model (POST /ml/models/{model_id}/versions/{version}/promote)
+   * RBAC: 
+   *   - SHADOW: MODEL_OPERATOR
+   *   - CANARY: MODEL_APPROVER + approval required
+   *   - PRODUCTION: RISK_APPROVER + approval required
    */
   promote: protectedProcedure
     .input(z.object({
@@ -206,6 +256,15 @@ export const mlRouter = router({
       promotion_packet: PromotionPacketSchema.nullable(),
     }))
     .mutation(async ({ input, ctx }) => {
+      // RBAC Check based on target status
+      const commandCode = input.target_status === 'SHADOW' 
+        ? COMMANDS.PROMOTE_MODEL_TO_SHADOW
+        : input.target_status === 'CANARY'
+          ? COMMANDS.PROMOTE_MODEL_TO_CANARY
+          : COMMANDS.PROMOTE_MODEL_TO_PROD;
+      
+      await checkRBAC(ctx, commandCode, `${input.model_id}:${input.version}`);
+      
       const reg = getRegistry();
       const approved_by = ctx.user?.name || 'system';
       
@@ -226,6 +285,7 @@ export const mlRouter = router({
   
   /**
    * Rollback model (POST /ml/models/{model_id}/versions/{version}/rollback)
+   * RBAC: Requires MODEL_OPERATOR role
    */
   rollback: protectedProcedure
     .input(z.object({
@@ -235,6 +295,9 @@ export const mlRouter = router({
       reason: z.string().min(1),
     }))
     .mutation(async ({ input, ctx }) => {
+      // RBAC Check: MODEL_OPERATOR required
+      await checkRBAC(ctx, COMMANDS.ROLLBACK_MODEL, `${input.model_id}:${input.from_version}`);
+      
       const reg = getRegistry();
       const rolled_back_by = ctx.user?.name || 'system';
       

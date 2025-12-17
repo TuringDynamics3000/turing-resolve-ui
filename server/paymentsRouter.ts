@@ -10,7 +10,13 @@
  */
 
 import { z } from "zod";
-import { router, publicProcedure } from "./_core/trpc";
+import { router, publicProcedure, protectedProcedure } from "./_core/trpc";
+import { TRPCError } from '@trpc/server';
+import { 
+  RBACService, 
+  COMMANDS,
+  type AuthorizationContext 
+} from './core/auth/RBACService';
 import { getDb } from "./db";
 import { paymentFacts, payments, depositFacts, depositAccounts, depositHolds } from "../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
@@ -97,6 +103,40 @@ function formatMoney(cents: bigint): string {
   const remainder = absCents % BigInt(100);
   const sign = isNegative ? "-" : "";
   return `${sign}${dollars}.${remainder.toString().padStart(2, "0")}`;
+}
+
+// ============================================
+// RBAC SERVICE
+// ============================================
+
+const rbacService = new RBACService();
+
+async function checkPaymentsRBAC(
+  ctx: { user?: { openId: string; name?: string | null } | null },
+  commandCode: string,
+  resourceId?: string,
+  tenantId: string = 'default',
+  environmentId: string = 'prod'
+): Promise<void> {
+  const actorId = ctx.user?.openId || 'anonymous';
+  
+  const authCtx: AuthorizationContext = {
+    actorId,
+    scope: {
+      tenantId,
+      environmentId,
+      domain: 'PAYMENTS',
+    },
+  };
+  
+  const result = await rbacService.authorize(authCtx, commandCode, resourceId);
+  
+  if (!result.authorized) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: `RBAC_DENIED: ${result.reasonCode}. Required roles: ${result.requiredRoles.join(', ')}. Your roles: ${result.actorRoles.join(', ') || 'none'}`,
+    });
+  }
 }
 
 // ============================================
@@ -696,13 +736,18 @@ export const paymentsRouter = router({
    * Emits: PAYMENT_REVERSED fact
    * Deposits: CREDIT (refund to source)
    * Returns: Payment state + Deposit outcome
+   * 
+   * RBAC: Requires OPS_SUPERVISOR role
    */
-  reversePayment: publicProcedure
+  reversePayment: protectedProcedure
     .input(z.object({
       paymentId: z.string(),
       reason: z.string(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
+      // RBAC Check: OPS_SUPERVISOR required for payment reversal
+      await checkPaymentsRBAC(ctx, COMMANDS.REVERSE_PAYMENT, input.paymentId);
+      
       const db = await getDb();
       if (!db) throw new Error("Database not available");
       

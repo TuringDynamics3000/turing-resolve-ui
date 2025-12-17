@@ -6,7 +6,13 @@
  * for business logic validation, not for storage.
  */
 import { z } from "zod";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { TRPCError } from '@trpc/server';
+import { 
+  RBACService, 
+  COMMANDS,
+  type AuthorizationContext 
+} from './core/auth/RBACService';
 import { getDb } from "./db";
 import { nanoid } from "nanoid";
 import { eq, asc, desc } from "drizzle-orm";
@@ -143,6 +149,40 @@ function formatMoney(cents: bigint): string {
   const remainder = absCents % BigInt(100);
   const sign = isNegative ? "-" : "";
   return `${sign}${dollars}.${remainder.toString().padStart(2, "0")}`;
+}
+
+// ============================================
+// RBAC SERVICE
+// ============================================
+
+const rbacService = new RBACService();
+
+async function checkDepositsRBAC(
+  ctx: { user?: { openId: string; name?: string | null } | null },
+  commandCode: string,
+  resourceId?: string,
+  tenantId: string = 'default',
+  environmentId: string = 'prod'
+): Promise<void> {
+  const actorId = ctx.user?.openId || 'anonymous';
+  
+  const authCtx: AuthorizationContext = {
+    actorId,
+    scope: {
+      tenantId,
+      environmentId,
+      domain: 'DEPOSITS',
+    },
+  };
+  
+  const result = await rbacService.authorize(authCtx, commandCode, resourceId);
+  
+  if (!result.authorized) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: `RBAC_DENIED: ${result.reasonCode}. Required roles: ${result.requiredRoles.join(', ')}. Your roles: ${result.actorRoles.join(', ') || 'none'}`,
+    });
+  }
 }
 
 export const depositsRouter = router({

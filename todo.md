@@ -1544,3 +1544,28 @@
 - [x] Test maker/checker workflow (proposer ≠ approver)
 - [x] Test authority facts structure (immutable)
 - [x] Test scope-aware authorization (tenant, environment, domain)
+
+
+## Wire rbacGuard to Existing Handlers - COMPLETED ✓
+
+### ML Model Handlers
+- [x] Wire REGISTER_MODEL_VERSION to rbacGuard (MODEL_AUTHOR role)
+- [x] Wire PROMOTE_MODEL_TO_SHADOW to rbacGuard (MODEL_OPERATOR role)
+- [x] Wire PROMOTE_MODEL_TO_CANARY to rbacGuard (MODEL_APPROVER role + approval)
+- [x] Wire PROMOTE_MODEL_TO_PROD to rbacGuard (RISK_APPROVER role + approval)
+- [x] Wire ROLLBACK_MODEL to rbacGuard (MODEL_OPERATOR role)
+- [ ] Wire DELETE_MODEL to rbacGuard (FORBIDDEN) - No handler exists yet
+
+### Policy Handlers
+- [ ] Wire UPDATE_POLICY_DSL to rbacGuard - No handler exists yet
+- [ ] Wire ISSUE_AUTH_TOKEN to rbacGuard - No handler exists yet
+
+### Operations Handlers
+- [x] RBAC helper added to depositsRouter (checkDepositsRBAC)
+- [x] RBAC helper added to paymentsRouter (checkPaymentsRBAC)
+- [x] Wire REVERSE_PAYMENT to rbacGuard (OPS_SUPERVISOR role)
+
+### Testing
+- [x] RBAC authorization emits authority facts
+- [x] Unauthorized access returns FORBIDDEN error with role info
+- [x] 32 RBAC tests passing
