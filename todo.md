@@ -1361,3 +1361,11 @@
 - [x] Create proof generation API endpoint
 - [x] Add scheduler/cron configuration for periodic sealing
 - [ ] Write integration tests for sealing flow (deferred)
+
+## Wire Merkle Sealing to Event Inserts
+
+- [x] Locate existing tRPC routes and event mutations
+- [x] Create EventService layer with hash computation (GovernedEventService)
+- [x] Update tRPC mutations to use EventService (emitGovernedPaymentFact, emitGovernedDepositFact)
+- [x] Initialize MerkleSealerWorker on server startup (MerkleSealerInit)
+- [ ] Test end-to-end event insertion with hashing (deferred - requires live DB)

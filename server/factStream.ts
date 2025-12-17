@@ -14,6 +14,7 @@
 
 import { EventEmitter } from "events";
 import type { Response } from "express";
+import { writePaymentEvent, writeDepositEvent, type EventWriteResult } from './services/GovernedEventService';
 
 // Global event emitter for fact notifications
 export const factEventEmitter = new EventEmitter();
@@ -146,6 +147,45 @@ export function emitPaymentFact(
 }
 
 /**
+ * GOVERNED: Emit payment fact with hash computation for Merkle sealing.
+ * Use this instead of emitPaymentFact for new code.
+ */
+export async function emitGovernedPaymentFact(
+  paymentId: string,
+  factType: string,
+  factData: Record<string, unknown>,
+  sequence: number,
+  decisionContext?: {
+    decisionId: string;
+    policyId: string;
+    policyVersion: string;
+    outcome: 'ALLOW' | 'REVIEW' | 'DECLINE';
+  }
+): Promise<{ eventId: number; writeResult: EventWriteResult }> {
+  // Write to governed event store with hash computation
+  const writeResult = await writePaymentEvent(
+    paymentId,
+    factType,
+    { ...factData, sequence },
+    decisionContext
+  );
+  
+  // Emit SSE notification
+  const eventId = emitFactEvent({
+    type: "payment_fact",
+    paymentId,
+    factId: writeResult.eventId,
+    factType,
+    sequence,
+    occurredAt: new Date().toISOString(),
+  });
+  
+  console.log(`[GovernedFact] Payment ${paymentId} ${factType} → leafHash: ${writeResult.leafHash.slice(0, 16)}...`);
+  
+  return { eventId, writeResult };
+}
+
+/**
  * Helper to emit deposit fact from router
  */
 export function emitDepositFact(
@@ -162,6 +202,45 @@ export function emitDepositFact(
     sequence,
     occurredAt: new Date().toISOString(),
   });
+}
+
+/**
+ * GOVERNED: Emit deposit fact with hash computation for Merkle sealing.
+ * Use this instead of emitDepositFact for new code.
+ */
+export async function emitGovernedDepositFact(
+  accountId: string,
+  factType: string,
+  factData: Record<string, unknown>,
+  sequence: number,
+  decisionContext?: {
+    decisionId: string;
+    policyId: string;
+    policyVersion: string;
+    outcome: 'ALLOW' | 'REVIEW' | 'DECLINE';
+  }
+): Promise<{ eventId: number; writeResult: EventWriteResult }> {
+  // Write to governed event store with hash computation
+  const writeResult = await writeDepositEvent(
+    accountId,
+    factType,
+    { ...factData, sequence },
+    decisionContext
+  );
+  
+  // Emit SSE notification
+  const eventId = emitFactEvent({
+    type: "deposit_fact",
+    accountId,
+    factId: writeResult.eventId,
+    factType,
+    sequence,
+    occurredAt: new Date().toISOString(),
+  });
+  
+  console.log(`[GovernedFact] Deposit ${accountId} ${factType} → leafHash: ${writeResult.leafHash.slice(0, 16)}...`);
+  
+  return { eventId, writeResult };
 }
 
 /**
