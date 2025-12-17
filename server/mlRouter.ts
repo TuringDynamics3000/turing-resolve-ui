@@ -20,6 +20,12 @@ import {
   type InferenceFact,
   type ModelStatus,
 } from './core/model/ModelGovernanceV2';
+import {
+  getModelServiceClient,
+  createFallbackExecutor,
+  ModelServiceError,
+  type InferenceResponse as ModelServiceResponse,
+} from './core/model/ModelServiceClient';
 
 // ============================================================
 // SCHEMAS
@@ -308,30 +314,85 @@ export const mlRouter = router({
   /**
    * Score endpoint (POST /ml/infer)
    * Shadow-safe: pure function, emits InferenceFact
+   * 
+   * Wired to external model service with:
+   * - Retry logic with exponential backoff
+   * - Circuit breaker for fault tolerance
+   * - Fallback to conservative prediction on failure
+   * - Latency tracking for monitoring
    */
   infer: publicProcedure
     .input(z.object({
       model_id: z.string().min(1),
       request: InferenceRequestSchema,
+      use_fallback: z.boolean().optional().default(false),
     }))
     .mutation(async ({ input }) => {
       const svc = getInferenceService();
       const monitor = getAutoDisableMonitor(input.model_id);
+      const modelServiceClient = getModelServiceClient();
       
-      // Demo model executor (in production, call actual model service)
+      // Get production version for this model
+      const reg = getRegistry();
+      const prodVersion = reg.getProduction(input.model_id);
+      const modelVersion = prodVersion?.version_label || 'latest';
+      
+      // Model executor that calls external service with fallback
       const modelExecutor = async (features: Record<string, unknown>) => {
-        // Simulate inference
-        await new Promise(resolve => setTimeout(resolve, Math.random() * 50));
+        // If explicitly using fallback, skip external service
+        if (input.use_fallback) {
+          const fallback = createFallbackExecutor();
+          const result = await fallback(features);
+          return {
+            prediction: result.prediction,
+            confidence: result.confidence,
+            distribution: result.distribution?.map(d => ({
+              action: d.label,
+              probability: d.probability,
+            })),
+          };
+        }
         
-        return {
-          prediction: { score: Math.random(), action: 'APPROVE' },
-          confidence: 0.85 + Math.random() * 0.1,
-          distribution: [
-            { action: 'APPROVE', probability: 0.7 },
-            { action: 'REVIEW', probability: 0.2 },
-            { action: 'DECLINE', probability: 0.1 },
-          ],
-        };
+        try {
+          // Try external model service
+          const response = await modelServiceClient.infer({
+            model_id: input.model_id,
+            model_version: modelVersion,
+            features,
+            request_id: input.request.decision_id,
+            tenant_id: input.request.tenant_id,
+          });
+          
+          return {
+            prediction: response.prediction,
+            confidence: response.confidence,
+            distribution: response.distribution?.map(d => ({
+              action: d.label,
+              probability: d.probability,
+            })),
+            _served_by: response.served_by,
+            _external_latency_ms: response.latency_ms,
+          };
+        } catch (error) {
+          // Log error and use fallback
+          console.warn(
+            `[ML] Model service error for ${input.model_id}: ${(error as Error).message}. Using fallback.`
+          );
+          
+          // Use fallback executor
+          const fallback = createFallbackExecutor();
+          const result = await fallback(features);
+          return {
+            prediction: result.prediction,
+            confidence: result.confidence,
+            distribution: result.distribution?.map(d => ({
+              action: d.label,
+              probability: d.probability,
+            })),
+            _served_by: 'fallback',
+            _fallback_reason: (error as Error).message,
+          };
+        }
       };
       
       const { response, fact } = await svc.infer(
@@ -349,10 +410,18 @@ export const mlRouter = router({
       // Check auto-disable
       const disableCheck = monitor.shouldDisable();
       
+      // Get service metrics
+      const serviceMetrics = modelServiceClient.getMetrics();
+      
       return {
         ...response,
         auto_disable_triggered: disableCheck.disable,
         auto_disable_reason: disableCheck.reason,
+        service_metrics: {
+          circuit_state: serviceMetrics.circuit_state,
+          avg_latency_ms: serviceMetrics.avg_latency_ms,
+          error_rate: serviceMetrics.failed_requests / Math.max(serviceMetrics.total_requests, 1),
+        },
       };
     }),
   
@@ -376,12 +445,15 @@ export const mlRouter = router({
     }))
     .query(async ({ input }) => {
       const monitor = autoDisableMonitors.get(input.model_id);
+      const modelServiceClient = getModelServiceClient();
+      const serviceMetrics = modelServiceClient.getMetrics();
       
       if (!monitor) {
         return {
           model_id: input.model_id,
           total_inferences: 0,
           health: 'UNKNOWN' as const,
+          service_metrics: serviceMetrics,
         };
       }
       
@@ -391,7 +463,70 @@ export const mlRouter = router({
         model_id: input.model_id,
         health: disableCheck.disable ? 'DEGRADED' : 'HEALTHY',
         auto_disable_reason: disableCheck.reason,
+        service_metrics: serviceMetrics,
       };
+    }),
+  
+  /**
+   * Get model service metrics (circuit breaker, latency, etc.)
+   */
+  getServiceMetrics: publicProcedure
+    .query(async () => {
+      const modelServiceClient = getModelServiceClient();
+      return modelServiceClient.getMetrics();
+    }),
+  
+  /**
+   * Health check for model service
+   */
+  serviceHealthCheck: publicProcedure
+    .mutation(async () => {
+      const modelServiceClient = getModelServiceClient();
+      return modelServiceClient.healthCheck();
+    }),
+  
+  /**
+   * Reset circuit breaker (admin action)
+   */
+  resetCircuitBreaker: protectedProcedure
+    .mutation(async () => {
+      const modelServiceClient = getModelServiceClient();
+      modelServiceClient.resetCircuitBreaker();
+      return { success: true, message: 'Circuit breaker reset' };
+    }),
+  
+  /**
+   * List all registered models
+   */
+  listModels: publicProcedure
+    .query(async () => {
+      const reg = getRegistry();
+      return reg.listModels();
+    }),
+  
+  /**
+   * List all versions for a model
+   */
+  listVersions: publicProcedure
+    .input(z.object({
+      model_id: z.string().min(1),
+    }))
+    .query(async ({ input }) => {
+      const reg = getRegistry();
+      return reg.listVersions(input.model_id);
+    }),
+  
+  /**
+   * Get lifecycle events for a model
+   */
+  getLifecycleEvents: publicProcedure
+    .input(z.object({
+      model_id: z.string().min(1),
+      limit: z.number().min(1).max(100).optional().default(50),
+    }))
+    .query(async ({ input }) => {
+      const reg = getRegistry();
+      return reg.getLifecycleEvents(input.model_id, input.limit);
     }),
 });
 

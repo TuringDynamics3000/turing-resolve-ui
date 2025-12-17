@@ -20,6 +20,7 @@ import PaymentsDashboard from "@/pages/PaymentsDashboard";
 import DepositsDashboard from "@/pages/DepositsDashboard";
 import GovernanceControls from "@/pages/GovernanceControls";
 import ReportingDashboard from "@/pages/ReportingDashboard";
+import MLModelsDashboard from "@/pages/MLModelsDashboard";
 import NotFound from "@/pages/NotFound";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
 
@@ -55,6 +56,9 @@ function MainDashboard() {
         
         {/* Reporting Module */}
         <Route path="/reporting" component={ReportingDashboard} />
+        
+        {/* ML Models */}
+        <Route path="/ml-models" component={MLModelsDashboard} />
         
         {/* Governance */}
         <Route path="/governance" component={GovernanceControls} />

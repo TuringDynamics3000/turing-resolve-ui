@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { formatDistanceToNow } from "date-fns";
+import { ModelHealthWidget } from "@/components/ModelHealthWidget";
 
 // ============================================
 // PLAIN-LANGUAGE EXPLAINERS FOR NON-TECHNICAL VIEWERS
@@ -713,6 +714,9 @@ export default function SystemOverview() {
             {/* Live Decisions Sidebar */}
             <div className="space-y-6">
               <LiveDecisionFeed />
+              
+              {/* ML Model Health Widget */}
+              <ModelHealthWidget />
               
               {/* Quick Links */}
               <Card className="glass-panel">

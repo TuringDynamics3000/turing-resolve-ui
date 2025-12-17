@@ -1450,3 +1450,26 @@
 - [x] GET ml.getModelHealth - Get model health metrics
 
 **ML Governance is now production-grade with full provenance chain.**
+
+
+## ML Dashboard Enhancements
+
+### ML Models Dashboard Tab
+- [x] Create MLModels.tsx page component
+- [x] Add models list with lifecycle state badges
+- [x] Add model version history view
+- [x] Add promotion history timeline
+- [x] Add tRPC queries for model data (mock data for now)
+- [x] Add navigation link in GlobalNav
+
+### Wire Inference to Model Service
+- [x] Create ModelServiceClient for external model calls
+- [x] Update mlRouter.infer to use real model service
+- [x] Add retry logic and circuit breaker
+- [x] Add latency tracking
+
+### Model Health Monitoring Widget
+- [x] Create ModelHealthWidget component
+- [x] Display auto-disable trigger status
+- [x] Show latency/error metrics
+- [x] Add to System Overview page

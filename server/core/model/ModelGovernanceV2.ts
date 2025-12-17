@@ -465,6 +465,42 @@ export class ModelRegistryV2 {
   getCanary(model_id: string): ModelVersion | undefined {
     return this.models.get(model_id)?.find(v => v.status === 'CANARY');
   }
+  
+  /**
+   * List all registered models
+   */
+  listModels(): Array<{ model_id: string; version_count: number; production_version?: string }> {
+    const result: Array<{ model_id: string; version_count: number; production_version?: string }> = [];
+    for (const [model_id, versions] of this.models.entries()) {
+      const prodVersion = versions.find(v => v.status === 'PRODUCTION');
+      result.push({
+        model_id,
+        version_count: versions.length,
+        production_version: prodVersion?.version_label,
+      });
+    }
+    return result;
+  }
+  
+  /**
+   * List all versions for a model
+   */
+  listVersions(model_id: string): ModelVersion[] {
+    return this.models.get(model_id) || [];
+  }
+  
+  /**
+   * Get lifecycle events for a model
+   */
+  getLifecycleEvents(model_id: string, limit: number = 50): ModelLifecycleEvent[] {
+    const versions = this.models.get(model_id);
+    if (!versions) return [];
+    
+    const versionIds = new Set(versions.map(v => v.model_version_id));
+    return this.lifecycleEvents
+      .filter(e => versionIds.has(e.model_version_id))
+      .slice(-limit);
+  }
 }
 
 // ============================================================
