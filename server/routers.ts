@@ -31,6 +31,8 @@ import { advisoryRouter } from "./advisoryRouter";
 import { auditRouter } from "./auditRouter";
 import { mlRouter } from "./mlRouter";
 import { rbacRouter } from "./rbacRouter";
+import { policyRouter } from "./policyRouter";
+import { forbiddenRouter } from "./forbiddenRouter";
 import { getSealerStatus, forceSeal, generateEvidencePack, verifyEvidencePack, type EvidencePack as VerifiableEvidencePack } from "./services";
 
 export const appRouter = router({
@@ -41,6 +43,8 @@ export const appRouter = router({
   audit: auditRouter,
   ml: mlRouter,
   rbac: rbacRouter,
+  policy: policyRouter,
+  forbidden: forbiddenRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

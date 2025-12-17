@@ -1569,3 +1569,26 @@
 - [x] RBAC authorization emits authority facts
 - [x] Unauthorized access returns FORBIDDEN error with role info
 - [x] 32 RBAC tests passing
+
+
+## RBAC Enhancements - Phase 2 - COMPLETED ✓
+
+### Seed RBAC Button in Governance Console
+- [x] Add "Seed RBAC Data" button to Governance Console
+- [x] Call seedRbacData endpoint on click
+- [x] Show success/error toast notification
+- [x] Auto-refresh roles list after seeding
+
+### Policy Handlers with Maker/Checker
+- [x] Create policyRouter.ts with policy management endpoints
+- [x] Add UPDATE_POLICY_DSL handler with RBAC (POLICY_AUTHOR + approval)
+- [x] Add ACTIVATE_POLICY handler with RBAC (COMPLIANCE_APPROVER + approval)
+- [x] Wire maker/checker workflow for policy changes (proposer ≠ approver)
+
+### Forbidden Commands
+- [x] Add ADJUST_BALANCE handler that always returns FORBIDDEN
+- [x] Add WRITE_OFF_LOAN handler that always returns FORBIDDEN
+- [x] Add FORCE_POST_PAYMENT handler that always returns FORBIDDEN
+- [x] Add DELETE_MODEL handler that always returns FORBIDDEN
+- [x] Emit authority facts for forbidden command attempts
+- [x] Created forbiddenRouter.ts with compliance rationale

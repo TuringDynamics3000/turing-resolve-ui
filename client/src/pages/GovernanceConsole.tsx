@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -181,6 +183,16 @@ export default function GovernanceConsole() {
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [decisionFilter, setDecisionFilter] = useState("all");
+  
+  // Seed RBAC mutation
+  const seedRbacMutation = trpc.rbac.seedRbacData.useMutation({
+    onSuccess: (data) => {
+      toast.success(data.message || 'RBAC data seeded successfully');
+    },
+    onError: (error) => {
+      toast.error(`Failed to seed RBAC data: ${error.message}`);
+    },
+  });
 
   const filteredFacts = MOCK_AUTHORITY_FACTS.filter(fact => {
     if (decisionFilter !== "all" && fact.decision !== decisionFilter) return false;
@@ -217,6 +229,26 @@ export default function GovernanceConsole() {
                 <Activity className="h-3 w-3 mr-1" />
                 System Healthy
               </Badge>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400"
+                onClick={async () => {
+                  try {
+                    await seedRbacMutation.mutateAsync();
+                  } catch (e) {
+                    // Error handled by mutation
+                  }
+                }}
+                disabled={seedRbacMutation.isPending}
+              >
+                {seedRbacMutation.isPending ? (
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Zap className="h-4 w-4 mr-2" />
+                )}
+                Seed RBAC Data
+              </Button>
               <Button variant="outline" size="sm" className="border-zinc-700 hover:bg-zinc-800">
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
