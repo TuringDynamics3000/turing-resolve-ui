@@ -1307,3 +1307,13 @@
 - [x] D3: Shadow execution harness + comparison logging
 - [x] D4: Promotion gate checks (constitutional) + approvals workflow
 - [x] D5: Rollback + kill switch + audits/evidence integration
+
+
+## Postgres DDL Migrations
+
+- [x] Create extensions and domains (hash32, sigbytes)
+- [x] Create turing_security schema with signing_keys table
+- [x] Create event store column additions (commit_seq, hashes)
+- [x] Create turing_audit schema with Merkle tables
+- [x] Create turing_resolve schema with policy tables
+- [x] Create turing_ml schema with model tables
