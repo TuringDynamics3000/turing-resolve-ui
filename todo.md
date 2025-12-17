@@ -1221,3 +1221,12 @@
 - [x] Capture metrics (auth TPS: 311K, memory: 186MB, duration: 0.9s)
 - [x] Run load tests and verify acceptance criteria
 - [x] Save checkpoint and push to GitHub
+
+
+## Payments Spine v1.0.0 Release
+- [x] Create INVARIANTS_FROZEN.md documenting frozen invariants across all rails
+- [x] Create BASELINE_CONTRACT.md documenting what will never change
+- [x] Create RELEASE_NOTES_v1.0.0.md with comprehensive changelog
+- [ ] Tag v1.0.0 release in Git
+- [ ] Push release tag to GitHub
+- [ ] Create GitHub release with documentation
