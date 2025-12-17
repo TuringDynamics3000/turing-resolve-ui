@@ -1383,3 +1383,70 @@
 ## Dashboard Sealer Widget
 
 - [x] Add sealer status widget to Overview page stat cards (5th card with seal count, health, last seal time)
+
+## ML Production Grade Handover Pack Integration
+
+### Phase 1: Copy Files
+- [ ] Copy schemas (model_manifest.schema.json, inference_fact.schema.json)
+- [ ] Copy SQL (ml_registry_postgres.sql)
+- [ ] Copy docs (service_contracts.md, monitoring_metrics.md)
+- [ ] Copy runbooks (shadow_ops.md, rollback.md)
+- [ ] Copy checklists (promotion_packet_template.md, prod_readiness_gate.md)
+
+### Phase 2: Gap Analysis
+- [ ] Compare existing ModelGovernance.ts with pack requirements
+- [ ] Document gaps and alignment needs
+
+### Phase 3: Align ModelGovernance.ts
+- [ ] Update types to match model_manifest.schema.json
+- [ ] Update inference logging to match inference_fact.schema.json
+- [ ] Add lifecycle event types from ml_registry_postgres.sql
+
+### Phase 4: Model Registry API
+- [ ] POST /ml/models - Create model
+- [ ] POST /ml/models/{model_id}/versions - Register version
+- [ ] POST /ml/models/{model_id}/versions/{version}/promote - Promote
+- [ ] POST /ml/models/{model_id}/versions/{version}/rollback - Rollback
+
+### Phase 5: Inference API
+- [ ] POST /ml/infer - Score endpoint with provenance logging
+- [ ] Emit InferenceFact to event stream
+
+
+## ML Production Grade Handover Pack Integration - COMPLETED ✓
+
+### Files Copied
+- [x] schemas/model_manifest.schema.json
+- [x] schemas/inference_fact.schema.json
+- [x] sql/ml_registry_postgres.sql
+- [x] docs/service_contracts.md
+- [x] docs/monitoring_metrics.md
+- [x] runbooks/shadow_ops.md
+- [x] runbooks/rollback.md
+- [x] checklists/promotion_packet_template.md
+- [x] checklists/prod_readiness_gate.md
+
+### Gap Analysis
+- [x] Created GAP_ANALYSIS.md comparing existing vs. pack requirements
+- [x] Identified 20 gaps out of 45 required fields/features
+
+### Implementation
+- [x] Created ModelGovernanceV2.ts aligned with pack schemas
+- [x] Added CANARY and REVOKED lifecycle states
+- [x] Added full model manifest with all required fields
+- [x] Added InferenceFact with full provenance
+- [x] Added PromotionPacket for CANARY/PRODUCTION gates
+- [x] Added AutoDisableMonitor with latency/timeout/error triggers
+
+### API Endpoints (mlRouter.ts)
+- [x] POST ml.createModel - Create model
+- [x] POST ml.registerVersion - Register model version
+- [x] POST ml.promote - Promote (SHADOW → CANARY → PRODUCTION)
+- [x] POST ml.rollback - Rollback model
+- [x] GET ml.getVersion - Get model version
+- [x] GET ml.getProduction - Get production model
+- [x] POST ml.infer - Score endpoint with provenance
+- [x] GET ml.getInferenceFacts - Get inference facts for decision
+- [x] GET ml.getModelHealth - Get model health metrics
+
+**ML Governance is now production-grade with full provenance chain.**

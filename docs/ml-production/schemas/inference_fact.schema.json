@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "InferenceFact",
+  "type": "object",
+  "required": [
+    "fact_type",
+    "decision_id",
+    "timestamp_utc",
+    "tenant_id",
+    "environment_id",
+    "model_id",
+    "model_version",
+    "model_artifact_hash",
+    "model_signing_key_id",
+    "feature_schema_id",
+    "feature_schema_version",
+    "feature_snapshot_hash",
+    "prediction",
+    "latency_ms",
+    "status"
+  ],
+  "properties": {
+    "fact_type": {
+      "type": "string",
+      "const": "INFERENCE_EMITTED"
+    },
+    "decision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "timestamp_utc": {
+      "type": "string",
+      "minLength": 1
+    },
+    "tenant_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "environment_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "model_artifact_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "model_signing_key_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "feature_schema_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "feature_schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "feature_snapshot_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "prediction": {
+      "type": [
+        "number",
+        "string",
+        "object",
+        "array"
+      ]
+    },
+    "confidence": {
+      "type": [
+        "number",
+        "null"
+      ]
+    },
+    "action_distribution": {
+      "type": [
+        "array",
+        "null"
+      ]
+    },
+    "latency_ms": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "OK",
+        "TIMEOUT",
+        "ERROR",
+        "SKIPPED"
+      ]
+    },
+    "error_code": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

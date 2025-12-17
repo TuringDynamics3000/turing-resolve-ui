@@ -29,6 +29,7 @@ import { depositsRouter } from "./depositsRouter";
 import { paymentsRouter } from "./paymentsRouter";
 import { advisoryRouter } from "./advisoryRouter";
 import { auditRouter } from "./auditRouter";
+import { mlRouter } from "./mlRouter";
 import { getSealerStatus, forceSeal, generateEvidencePack, verifyEvidencePack, type EvidencePack as VerifiableEvidencePack } from "./services";
 
 export const appRouter = router({
@@ -37,6 +38,7 @@ export const appRouter = router({
   payments: paymentsRouter,
   advisory: advisoryRouter,
   audit: auditRouter,
+  ml: mlRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

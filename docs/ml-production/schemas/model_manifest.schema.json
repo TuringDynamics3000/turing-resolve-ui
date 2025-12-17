@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ModelManifest",
+  "type": "object",
+  "required": [
+    "model_id",
+    "version",
+    "artifact_uri",
+    "artifact_hash",
+    "manifest_hash",
+    "trainer_code_hash",
+    "inference_runtime_hash",
+    "feature_schema_id",
+    "feature_schema_version",
+    "dataset_snapshot_id",
+    "dataset_hash",
+    "evaluation_report_hash",
+    "signature",
+    "signing_key_id"
+  ],
+  "properties": {
+    "model_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "REGISTERED",
+        "SHADOW",
+        "CANARY",
+        "PRODUCTION",
+        "RETIRED",
+        "REVOKED"
+      ]
+    },
+    "artifact_uri": {
+      "type": "string",
+      "minLength": 1
+    },
+    "artifact_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "manifest_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "trainer_code_hash": {
+      "type": "string",
+      "minLength": 6
+    },
+    "inference_runtime_hash": {
+      "type": "string",
+      "minLength": 6
+    },
+    "feature_schema_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "feature_schema_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset_snapshot_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dataset_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "evaluation_report_hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "signature": {
+      "type": "string",
+      "pattern": "^[0-9a-f]+$"
+    },
+    "signing_key_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "created_at": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}
