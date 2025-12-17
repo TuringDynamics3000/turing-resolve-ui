@@ -15,7 +15,7 @@ import { getDb } from "./db";
 import { paymentFacts, payments, depositFacts, depositAccounts, depositHolds } from "../drizzle/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
-import { emitPaymentFact, emitDepositFact } from "./factStream";
+import { emitPaymentFact, emitDepositFact, emitGovernedPaymentFact } from "./factStream";
 import { emitAuditFact } from "./auditRouter";
 
 // ============================================
@@ -254,8 +254,8 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
-      // Emit fact event for real-time updates
-      emitPaymentFact(paymentId, `${paymentId}:1`, "PAYMENT_INITIATED", 1);
+      // Emit governed fact event with hash computation for Merkle sealing
+      await emitGovernedPaymentFact(paymentId, "PAYMENT_INITIATED", factData, 1);
 
       // Create payment projection
       await db.insert(payments).values({
@@ -440,7 +440,7 @@ export const paymentsRouter = router({
 
       // Emit fact events for real-time updates
       emitDepositFact(p.fromAccount, `FACT-${holdId}`, "HOLD_PLACED", depositSeq);
-      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_HOLD_PLACED", paymentSeq);
+      await emitGovernedPaymentFact(input.paymentId, "PAYMENT_HOLD_PLACED", { holdId, amount: p.amount, currency: p.currency }, paymentSeq);
 
       // Update payment projection
       await db.update(payments)
@@ -601,8 +601,8 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
-      // Emit fact event for PAYMENT_SENT
-      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_SENT", paymentSeq);
+      // Emit governed fact event for PAYMENT_SENT
+      await emitGovernedPaymentFact(input.paymentId, "PAYMENT_SENT", { amount: p.amount, currency: p.currency, destination: p.toAccount || p.toExternal }, paymentSeq);
 
       // If internal transfer, credit destination
       if (p.toAccount) {
@@ -665,8 +665,8 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
-      // Emit fact event for PAYMENT_SETTLED
-      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_SETTLED", paymentSeq);
+      // Emit governed fact event for PAYMENT_SETTLED
+      await emitGovernedPaymentFact(input.paymentId, "PAYMENT_SETTLED", { amount: p.amount, currency: p.currency, settledAt: now.toISOString() }, paymentSeq);
 
       // Update payment projection
       await db.update(payments)
@@ -799,7 +799,7 @@ export const paymentsRouter = router({
 
       // Emit fact events for real-time updates
       emitDepositFact(p.fromAccount, `FACT-${insertedRefundFact.id}`, "CREDIT", depositSeq);
-      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_REVERSED", paymentSeq);
+      await emitGovernedPaymentFact(input.paymentId, "PAYMENT_REVERSED", { reason: input.reason, refundAmount: p.amount }, paymentSeq);
 
       // Update payment projection
       await db.update(payments)
@@ -1205,7 +1205,12 @@ export const paymentsRouter = router({
         occurredAt: now,
       });
 
-      emitPaymentFact(input.paymentId, `${input.paymentId}:${seq}`, "PAYMENT_INITIATED", seq);
+      await emitGovernedPaymentFact(input.paymentId, "PAYMENT_INITIATED", {
+        retryOf: input.paymentId,
+        reason: input.reason,
+        actor,
+        idempotencyKey,
+      }, seq);
 
       // Emit audit fact for operator action
       await emitAuditFact({
@@ -1346,7 +1351,7 @@ export const paymentsRouter = router({
 
       // Emit fact events for real-time updates
       emitDepositFact(p.fromAccount, `FACT-${insertedRefundFact.id}`, "CREDIT", depositSeq);
-      emitPaymentFact(input.paymentId, `${input.paymentId}:${paymentSeq}`, "PAYMENT_REVERSED", paymentSeq);
+      await emitGovernedPaymentFact(input.paymentId, "PAYMENT_REVERSED", { reason: input.reason, refundAmount: p.amount }, paymentSeq);
 
       // Update payment projection
       await db.update(payments)

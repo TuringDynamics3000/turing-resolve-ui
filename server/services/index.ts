@@ -26,3 +26,16 @@ export {
   getSealerStatus,
   forceSeal,
 } from './MerkleSealerInit';
+
+export {
+  EvidencePackGenerator,
+  getEvidencePackGenerator,
+  generateEvidencePack,
+  verifyEvidencePack,
+  type EvidencePack,
+  type EvidencePackRequest,
+  type PolicyInfo,
+  type ModelInfo,
+  type DecisionTrace,
+  type EventProof,
+} from './EvidencePackAPI';

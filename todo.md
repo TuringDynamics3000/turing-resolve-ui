@@ -1369,3 +1369,9 @@
 - [x] Update tRPC mutations to use EventService (emitGovernedPaymentFact, emitGovernedDepositFact)
 - [x] Initialize MerkleSealerWorker on server startup (MerkleSealerInit)
 - [ ] Test end-to-end event insertion with hashing (deferred - requires live DB)
+
+## Production Integration
+
+- [x] Replace emitPaymentFact calls with emitGovernedPaymentFact in paymentsRouter
+- [x] Add GET /api/sealer/status endpoint for operator monitoring (trpc: sealer.status)
+- [x] Create GET /api/evidence-packs/:decision_id endpoint for auditor verification (trpc: evidencePacks.generate)

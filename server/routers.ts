@@ -29,6 +29,7 @@ import { depositsRouter } from "./depositsRouter";
 import { paymentsRouter } from "./paymentsRouter";
 import { advisoryRouter } from "./advisoryRouter";
 import { auditRouter } from "./auditRouter";
+import { getSealerStatus, forceSeal, generateEvidencePack, verifyEvidencePack, type EvidencePack as VerifiableEvidencePack } from "./services";
 
 export const appRouter = router({
   system: systemRouter,
@@ -45,6 +46,64 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+  }),
+
+  // ============================================
+  // MERKLE SEALER API
+  // ============================================
+  sealer: router({
+    // Get sealer status for operator monitoring
+    status: publicProcedure.query(() => {
+      const status = getSealerStatus();
+      return {
+        enabled: status.enabled,
+        running: status.running,
+        isSealing: status.isSealing,
+        sealCount: status.sealCount,
+        lastSealTime: status.lastSealTime?.toISOString() || null,
+        health: status.running ? 'HEALTHY' : 'STOPPED',
+      };
+    }),
+
+    // Force immediate seal (admin only in production)
+    forceSeal: publicProcedure.mutation(async () => {
+      await forceSeal();
+      return { success: true, message: 'Seal triggered' };
+    }),
+  }),
+
+  // ============================================
+  // EVIDENCE PACK API
+  // ============================================
+  evidencePacks: router({
+    // Generate evidence pack for a decision
+    generate: publicProcedure
+      .input(z.object({
+        decisionId: z.string(),
+        includeEvents: z.boolean().optional(),
+        includeProofs: z.boolean().optional(),
+      }))
+      .query(async ({ input }) => {
+        const pack = await generateEvidencePack(input.decisionId);
+        return pack;
+      }),
+
+    // Verify an evidence pack
+    verify: publicProcedure
+      .input(z.object({
+        pack: z.any(), // EvidencePack type
+      }))
+      .mutation(({ input }) => {
+        const result = verifyEvidencePack(input.pack as VerifiableEvidencePack);
+        return result;
+      }),
+
+    // Get evidence pack by decision ID (alias for generate)
+    getByDecisionId: publicProcedure
+      .input(z.object({ decisionId: z.string() }))
+      .query(async ({ input }) => {
+        return await generateEvidencePack(input.decisionId);
+      }),
   }),
 
   // ============================================
