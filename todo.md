@@ -1379,3 +1379,7 @@
 ## Deposit Event Integration
 
 - [x] Replace emitDepositFact calls with emitGovernedDepositFact in paymentsRouter (3 calls replaced)
+
+## Dashboard Sealer Widget
+
+- [x] Add sealer status widget to Overview page stat cards (5th card with seal count, health, last seal time)

@@ -30,6 +30,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { formatDistanceToNow } from "date-fns";
 
 // ============================================
 // PLAIN-LANGUAGE EXPLAINERS FOR NON-TECHNICAL VIEWERS
@@ -52,6 +53,10 @@ const summaryExplainers = {
   release: {
     title: "What is the Release?",
     description: "This is the current version of the system. 'v1.0-replacement-ready' means this version is production-ready and can replace legacy systems. 'All surfaces frozen' means no unauthorized changes can be made.",
+  },
+  sealer: {
+    title: "What is the Merkle Sealer?",
+    description: "The Merkle Sealer cryptographically anchors batches of events into tamper-evident audit trails. Each seal creates a signed root hash that proves the integrity of all events in that batch.",
   },
 };
 
@@ -489,11 +494,12 @@ function LiveDecisionFeed() {
 
 function SystemSummaryHeader() {
   const { data: summary, isLoading } = trpc.governance.getSystemSummary.useQuery();
+  const { data: sealerStatus } = trpc.sealer.status.useQuery();
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        {[1, 2, 3, 4, 5].map((i) => (
           <Skeleton key={i} className="h-24" />
         ))}
       </div>
@@ -501,7 +507,7 @@ function SystemSummaryHeader() {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
       <ExplainerTooltip
         title={summaryExplainers.modules.title}
         description={summaryExplainers.modules.description}
@@ -587,6 +593,32 @@ function SystemSummaryHeader() {
             <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
               <Lock className="h-3 w-3" />
               All surfaces frozen
+            </p>
+          </CardContent>
+        </Card>
+      </ExplainerTooltip>
+
+      <ExplainerTooltip
+        title={summaryExplainers.sealer.title}
+        description={summaryExplainers.sealer.description}
+      >
+        <Card className="glass-panel">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Merkle Sealer</p>
+                <p className="text-2xl font-bold">{sealerStatus?.sealCount || 0}</p>
+              </div>
+              <div className={`p-3 rounded-full ${sealerStatus?.health === 'HEALTHY' ? 'bg-emerald-500/10' : 'bg-amber-500/10'}`}>
+                <RefreshCw className={`h-5 w-5 ${sealerStatus?.health === 'HEALTHY' ? 'text-emerald-500' : 'text-amber-500'} ${sealerStatus?.isSealing ? 'animate-spin' : ''}`} />
+              </div>
+            </div>
+            <p className={`text-xs mt-2 flex items-center gap-1 ${sealerStatus?.health === 'HEALTHY' ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <CheckCircle2 className="h-3 w-3" />
+              {sealerStatus?.lastSealTime 
+                ? `Last seal ${formatDistanceToNow(new Date(sealerStatus.lastSealTime), { addSuffix: true })}`
+                : sealerStatus?.health === 'HEALTHY' ? 'Ready' : 'Stopped'
+              }
             </p>
           </CardContent>
         </Card>
