@@ -1,0 +1,823 @@
+openapi: 3.1.0
+info:
+  title: TuringCore Commands API
+  description: |
+    Command API for TuringCore - the event-sourced, constitutionally-governed banking platform.
+    
+    All commands flow through the ProtocolGateway and are subject to constitutional constraints.
+    Every command produces facts that are immutable and replayable.
+  version: 1.0.0
+  contact:
+    name: TuringDynamics Engineering
+    email: engineering@turingdynamics.com
+  license:
+    name: Proprietary
+    url: https://turingdynamics.com/license
+
+servers:
+  - url: https://api.turingdynamics.com/v1
+    description: Production
+  - url: https://staging-api.turingdynamics.com/v1
+    description: Staging
+  - url: http://localhost:3000/api
+    description: Development
+
+tags:
+  - name: Deposits
+    description: Deposit account operations
+  - name: Payments
+    description: Payment operations
+  - name: Decisions
+    description: Resolve decision operations
+  - name: Evidence
+    description: Evidence pack operations
+
+paths:
+  # ============================================================
+  # DEPOSITS COMMANDS
+  # ============================================================
+  
+  /deposits/accounts:
+    post:
+      operationId: createAccount
+      summary: Create a new deposit account
+      description: |
+        Creates a new deposit account and emits an ACCOUNT_OPENED fact.
+        The account starts in CREATED state with zero balance.
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountCommand'
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountCreatedResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /deposits/accounts/{accountId}/credit:
+    post:
+      operationId: creditAccount
+      summary: Credit an account
+      description: |
+        Credits the specified account and emits a CREDIT fact.
+        Subject to constitutional constraints (exposure limits, etc.).
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreditCommand'
+      responses:
+        '200':
+          description: Credit applied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ConstitutionalViolation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /deposits/accounts/{accountId}/debit:
+    post:
+      operationId: debitAccount
+      summary: Debit an account
+      description: |
+        Debits the specified account and emits a DEBIT fact.
+        Subject to constitutional constraints (available balance, holds, etc.).
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebitCommand'
+      responses:
+        '200':
+          description: Debit applied successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ConstitutionalViolation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/InsufficientFunds'
+
+  /deposits/accounts/{accountId}/hold:
+    post:
+      operationId: placeHold
+      summary: Place a hold on an account
+      description: |
+        Places a hold on the specified account and emits a HOLD_PLACED fact.
+        Reduces available balance without affecting ledger balance.
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlaceHoldCommand'
+      responses:
+        '200':
+          description: Hold placed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HoldResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ConstitutionalViolation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/InsufficientFunds'
+
+  /deposits/accounts/{accountId}/hold/{holdId}/release:
+    post:
+      operationId: releaseHold
+      summary: Release a hold
+      description: |
+        Releases a hold on the specified account and emits a HOLD_RELEASED fact.
+        Restores available balance.
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/accountId'
+        - $ref: '#/components/parameters/holdId'
+      responses:
+        '200':
+          description: Hold released successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # PAYMENTS COMMANDS
+  # ============================================================
+
+  /payments:
+    post:
+      operationId: initiatePayment
+      summary: Initiate a new payment
+      description: |
+        Initiates a new payment and emits a PAYMENT_INITIATED fact.
+        The payment starts in INITIATED state.
+      tags:
+        - Payments
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InitiatePaymentCommand'
+      responses:
+        '201':
+          description: Payment initiated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentInitiatedResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /payments/{paymentId}/hold:
+    post:
+      operationId: placePaymentHold
+      summary: Place hold for payment
+      description: |
+        Places a hold on the source account for the payment amount.
+        Emits PAYMENT_HOLD_PLACED fact and links to deposit HOLD_PLACED fact.
+      tags:
+        - Payments
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/paymentId'
+      responses:
+        '200':
+          description: Hold placed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentFactResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ConstitutionalViolation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Invalid state transition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateTransitionError'
+
+  /payments/{paymentId}/settle:
+    post:
+      operationId: settlePayment
+      summary: Settle a payment
+      description: |
+        Settles the payment by debiting source and crediting destination.
+        Emits PAYMENT_SENT and PAYMENT_SETTLED facts.
+      tags:
+        - Payments
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/paymentId'
+      responses:
+        '200':
+          description: Payment settled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentFactResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/ConstitutionalViolation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Invalid state transition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateTransitionError'
+
+  /payments/{paymentId}/reverse:
+    post:
+      operationId: reversePayment
+      summary: Reverse a payment
+      description: |
+        Reverses a settled payment by crediting source account.
+        Emits PAYMENT_REVERSED fact.
+      tags:
+        - Payments
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/paymentId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReversePaymentCommand'
+      responses:
+        '200':
+          description: Payment reversed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentFactResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Invalid state transition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StateTransitionError'
+
+  # ============================================================
+  # DECISION COMMANDS
+  # ============================================================
+
+  /decisions:
+    post:
+      operationId: requestDecision
+      summary: Request a Resolve decision
+      description: |
+        Submits a request to Resolve for a governance decision.
+        Returns ALLOW, REVIEW, or DECLINE with evidence.
+      tags:
+        - Decisions
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+      responses:
+        '200':
+          description: Decision rendered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from authentication flow
+
+  parameters:
+    accountId:
+      name: accountId
+      in: path
+      required: true
+      description: Unique account identifier
+      schema:
+        type: string
+        pattern: '^acc_[a-zA-Z0-9]{12}$'
+        example: acc_abc123def456
+
+    paymentId:
+      name: paymentId
+      in: path
+      required: true
+      description: Unique payment identifier
+      schema:
+        type: string
+        pattern: '^pmt_[a-zA-Z0-9]{12}$'
+        example: pmt_xyz789ghi012
+
+    holdId:
+      name: holdId
+      in: path
+      required: true
+      description: Unique hold identifier
+      schema:
+        type: string
+        pattern: '^hld_[a-zA-Z0-9]{12}$'
+        example: hld_hold12345678
+
+  schemas:
+    # ============================================================
+    # DEPOSITS SCHEMAS
+    # ============================================================
+    
+    CreateAccountCommand:
+      type: object
+      required:
+        - customerId
+        - productType
+        - currency
+      properties:
+        customerId:
+          type: string
+          description: Customer identifier
+          example: cust_12345
+        productType:
+          type: string
+          enum: [SAVINGS, TRANSACTION, TERM_DEPOSIT]
+          description: Type of deposit product
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          description: ISO 4217 currency code
+          example: AUD
+        idempotencyKey:
+          type: string
+          description: Idempotency key to prevent duplicate creation
+          example: create_acc_20241218_001
+
+    AccountCreatedResponse:
+      type: object
+      properties:
+        accountId:
+          type: string
+          example: acc_abc123def456
+        state:
+          type: string
+          enum: [CREATED]
+        factId:
+          type: integer
+          description: ID of the ACCOUNT_OPENED fact
+        factHash:
+          type: string
+          description: SHA-256 hash of the fact
+        createdAt:
+          type: string
+          format: date-time
+
+    CreditCommand:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{2})?$'
+          description: Amount to credit (string to preserve precision)
+          example: "1000.00"
+        description:
+          type: string
+          description: Transaction description
+          example: "Salary deposit"
+        reference:
+          type: string
+          description: External reference
+        idempotencyKey:
+          type: string
+          description: Idempotency key
+
+    DebitCommand:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{2})?$'
+          description: Amount to debit (string to preserve precision)
+          example: "500.00"
+        description:
+          type: string
+          description: Transaction description
+        reference:
+          type: string
+          description: External reference
+        idempotencyKey:
+          type: string
+          description: Idempotency key
+
+    PlaceHoldCommand:
+      type: object
+      required:
+        - amount
+        - reason
+      properties:
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{2})?$'
+          description: Amount to hold
+          example: "250.00"
+        reason:
+          type: string
+          description: Reason for the hold
+          example: "Pending payment authorization"
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the hold expires (optional)
+        reference:
+          type: string
+          description: External reference (e.g., payment ID)
+
+    HoldResponse:
+      type: object
+      properties:
+        holdId:
+          type: string
+          example: hld_hold12345678
+        factId:
+          type: integer
+        factHash:
+          type: string
+        amount:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    FactResponse:
+      type: object
+      properties:
+        factId:
+          type: integer
+          description: Unique fact identifier
+        factType:
+          type: string
+          description: Type of fact emitted
+        factHash:
+          type: string
+          description: SHA-256 hash of the fact data
+        timestamp:
+          type: string
+          format: date-time
+
+    # ============================================================
+    # PAYMENTS SCHEMAS
+    # ============================================================
+
+    InitiatePaymentCommand:
+      type: object
+      required:
+        - fromAccountId
+        - toAccountId
+        - amount
+        - currency
+        - scheme
+      properties:
+        fromAccountId:
+          type: string
+          description: Source account ID
+          example: acc_abc123def456
+        toAccountId:
+          type: string
+          description: Destination account ID
+          example: acc_xyz789ghi012
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{2})?$'
+          description: Payment amount
+          example: "1500.00"
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: AUD
+        scheme:
+          type: string
+          enum: [NPP, BECS, RTGS, INTERNAL]
+          description: Payment scheme/rail
+        description:
+          type: string
+          description: Payment description
+        idempotencyKey:
+          type: string
+          description: Idempotency key (required for production)
+
+    PaymentInitiatedResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          example: pmt_xyz789ghi012
+        state:
+          type: string
+          enum: [INITIATED]
+        factId:
+          type: integer
+        factHash:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentFactResponse:
+      type: object
+      properties:
+        paymentId:
+          type: string
+        state:
+          type: string
+          enum: [INITIATED, HELD, SENT, SETTLED, FAILED, REVERSED]
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FactResponse'
+        depositFacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/FactResponse'
+          description: Linked deposit facts (for audit trail)
+
+    ReversePaymentCommand:
+      type: object
+      required:
+        - reason
+      properties:
+        reason:
+          type: string
+          description: Reason for reversal
+          example: "Customer dispute - unauthorized transaction"
+
+    StateTransitionError:
+      type: object
+      properties:
+        error:
+          type: string
+          example: INVALID_STATE_TRANSITION
+        message:
+          type: string
+          example: "Cannot transition from INITIATED to SETTLED"
+        currentState:
+          type: string
+        attemptedTransition:
+          type: string
+        allowedTransitions:
+          type: array
+          items:
+            type: string
+
+    # ============================================================
+    # DECISION SCHEMAS
+    # ============================================================
+
+    DecisionRequest:
+      type: object
+      required:
+        - module
+        - entityId
+        - requestType
+        - facts
+      properties:
+        module:
+          type: string
+          enum: [deposits, payments, lending, exposure]
+          description: Module requesting decision
+        entityId:
+          type: string
+          description: Entity the decision is about
+        requestType:
+          type: string
+          description: Type of request (e.g., CREDIT, DEBIT, LOAN_APPROVAL)
+        facts:
+          type: object
+          additionalProperties: true
+          description: Facts to evaluate against policies
+        policies:
+          type: array
+          items:
+            type: string
+          description: Specific policies to evaluate (optional, defaults to all)
+
+    DecisionResponse:
+      type: object
+      properties:
+        decisionId:
+          type: string
+          example: dec_decision12345
+        outcome:
+          type: string
+          enum: [ALLOW, REVIEW, DECLINE]
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyEvaluation'
+        evidenceHash:
+          type: string
+          description: Hash of the evidence pack
+        timestamp:
+          type: string
+          format: date-time
+
+    PolicyEvaluation:
+      type: object
+      properties:
+        policyId:
+          type: string
+          example: LIMIT-AU-TOTAL-001
+        policyName:
+          type: string
+          example: Total Exposure Cap
+        outcome:
+          type: string
+          enum: [PASS, FAIL, REVIEW]
+        threshold:
+          type: number
+        actualValue:
+          type: number
+        message:
+          type: string
+
+    # ============================================================
+    # ERROR SCHEMAS
+    # ============================================================
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          additionalProperties: true
+          description: Additional error details
+
+    ValidationError:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            fields:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+    ConstitutionalViolation:
+      allOf:
+        - $ref: '#/components/schemas/Error'
+        - type: object
+          properties:
+            violatedPolicies:
+              type: array
+              items:
+                $ref: '#/components/schemas/PolicyEvaluation'
+
+  responses:
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationError'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Resource already exists (idempotency violation)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    ConstitutionalViolation:
+      description: Constitutional constraint violated
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ConstitutionalViolation'
+
+    InsufficientFunds:
+      description: Insufficient available balance
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+security:
+  - bearerAuth: []

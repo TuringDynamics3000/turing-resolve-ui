@@ -1,0 +1,1156 @@
+openapi: 3.1.0
+info:
+  title: TuringCore Queries API
+  description: |
+    Query API for TuringCore - read-only access to accounts, payments, decisions, and evidence.
+    
+    All queries return derived state that can be reconstructed from facts.
+    Evidence packs provide cryptographic proof of system state.
+  version: 1.0.0
+  contact:
+    name: TuringDynamics Engineering
+    email: engineering@turingdynamics.com
+  license:
+    name: Proprietary
+    url: https://turingdynamics.com/license
+
+servers:
+  - url: https://api.turingdynamics.com/v1
+    description: Production
+  - url: https://staging-api.turingdynamics.com/v1
+    description: Staging
+  - url: http://localhost:3000/api
+    description: Development
+
+tags:
+  - name: Deposits
+    description: Deposit account queries
+  - name: Payments
+    description: Payment queries
+  - name: Decisions
+    description: Decision queries
+  - name: Evidence
+    description: Evidence pack queries
+  - name: Replay
+    description: Replay proof queries
+  - name: System
+    description: System status queries
+
+paths:
+  # ============================================================
+  # DEPOSITS QUERIES
+  # ============================================================
+
+  /deposits/accounts:
+    get:
+      operationId: listAccounts
+      summary: List deposit accounts
+      description: Returns a paginated list of deposit accounts
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/customerId'
+        - $ref: '#/components/parameters/state'
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: List of accounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /deposits/accounts/{accountId}:
+    get:
+      operationId: getAccount
+      summary: Get account details
+      description: Returns account details including derived balances
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/accountIdPath'
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /deposits/accounts/{accountId}/facts:
+    get:
+      operationId: getAccountFacts
+      summary: Get account facts
+      description: Returns the complete fact history for an account
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/accountIdPath'
+        - $ref: '#/components/parameters/fromSequence'
+        - $ref: '#/components/parameters/toSequence'
+        - $ref: '#/components/parameters/factType'
+      responses:
+        '200':
+          description: Account facts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FactListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /deposits/accounts/{accountId}/holds:
+    get:
+      operationId: getAccountHolds
+      summary: Get active holds
+      description: Returns active holds on the account
+      tags:
+        - Deposits
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/accountIdPath'
+        - name: includeReleased
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: Include released holds in response
+      responses:
+        '200':
+          description: Account holds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HoldListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # PAYMENTS QUERIES
+  # ============================================================
+
+  /payments:
+    get:
+      operationId: listPayments
+      summary: List payments
+      description: Returns a paginated list of payments
+      tags:
+        - Payments
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: fromAccountId
+          in: query
+          schema:
+            type: string
+          description: Filter by source account
+        - name: toAccountId
+          in: query
+          schema:
+            type: string
+          description: Filter by destination account
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [INITIATED, HELD, SENT, SETTLED, FAILED, REVERSED]
+          description: Filter by payment state
+        - name: scheme
+          in: query
+          schema:
+            type: string
+            enum: [NPP, BECS, RTGS, INTERNAL]
+          description: Filter by payment scheme
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payments/{paymentId}:
+    get:
+      operationId: getPayment
+      summary: Get payment details
+      description: Returns payment details including state and linked facts
+      tags:
+        - Payments
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/paymentIdPath'
+      responses:
+        '200':
+          description: Payment details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /payments/{paymentId}/facts:
+    get:
+      operationId: getPaymentFacts
+      summary: Get payment facts
+      description: Returns the complete fact history for a payment
+      tags:
+        - Payments
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/paymentIdPath'
+      responses:
+        '200':
+          description: Payment facts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentFactListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # DECISIONS QUERIES
+  # ============================================================
+
+  /decisions:
+    get:
+      operationId: listDecisions
+      summary: List decisions
+      description: Returns a paginated list of Resolve decisions
+      tags:
+        - Decisions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: module
+          in: query
+          schema:
+            type: string
+            enum: [deposits, payments, lending, exposure]
+          description: Filter by module
+        - name: outcome
+          in: query
+          schema:
+            type: string
+            enum: [ALLOW, REVIEW, DECLINE]
+          description: Filter by outcome
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter from date
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter to date
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: List of decisions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /decisions/{decisionId}:
+    get:
+      operationId: getDecision
+      summary: Get decision details
+      description: Returns decision details including policy evaluations
+      tags:
+        - Decisions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: decisionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Decision details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionDetailResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # EVIDENCE QUERIES
+  # ============================================================
+
+  /evidence:
+    get:
+      operationId: listEvidencePacks
+      summary: List evidence packs
+      description: Returns a paginated list of evidence packs
+      tags:
+        - Evidence
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: module
+          in: query
+          schema:
+            type: string
+          description: Filter by module
+        - name: entityId
+          in: query
+          schema:
+            type: string
+          description: Filter by entity ID
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: List of evidence packs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /evidence/{evidenceId}:
+    get:
+      operationId: getEvidencePack
+      summary: Get evidence pack
+      description: Returns a complete evidence pack with verification data
+      tags:
+        - Evidence
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: evidenceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Evidence pack
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidencePackResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /evidence/{evidenceId}/verify:
+    get:
+      operationId: verifyEvidencePack
+      summary: Verify evidence pack
+      description: Verifies the integrity of an evidence pack
+      tags:
+        - Evidence
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: evidenceId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # REPLAY QUERIES
+  # ============================================================
+
+  /replay/proofs:
+    get:
+      operationId: listReplayProofs
+      summary: List replay proofs
+      description: Returns a list of replay proof results
+      tags:
+        - Replay
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: module
+          in: query
+          schema:
+            type: string
+          description: Filter by module
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PASS, FAIL]
+          description: Filter by status
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: List of replay proofs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplayProofListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /replay/{entityType}/{entityId}:
+    post:
+      operationId: executeReplay
+      summary: Execute replay
+      description: Replays facts for an entity and verifies determinism
+      tags:
+        - Replay
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: entityType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [account, payment, loan]
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Replay result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplayResultResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # SYSTEM QUERIES
+  # ============================================================
+
+  /system/status:
+    get:
+      operationId: getSystemStatus
+      summary: Get system status
+      description: Returns system health and module status
+      tags:
+        - System
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: System status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatusResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /system/modules:
+    get:
+      operationId: listModules
+      summary: List modules
+      description: Returns status of all system modules
+      tags:
+        - System
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Module list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModuleListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /system/gateway/audit:
+    get:
+      operationId: getGatewayAudit
+      summary: Get gateway audit log
+      description: Returns recent gateway audit records
+      tags:
+        - System
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: module
+          in: query
+          schema:
+            type: string
+          description: Filter by module
+        - name: operation
+          in: query
+          schema:
+            type: string
+          description: Filter by operation type
+        - $ref: '#/components/parameters/limit'
+        - $ref: '#/components/parameters/offset'
+      responses:
+        '200':
+          description: Audit log
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GatewayAuditResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    accountIdPath:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    paymentIdPath:
+      name: paymentId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    customerId:
+      name: customerId
+      in: query
+      schema:
+        type: string
+      description: Filter by customer ID
+
+    state:
+      name: state
+      in: query
+      schema:
+        type: string
+      description: Filter by state
+
+    limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Maximum number of results
+
+    offset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: Offset for pagination
+
+    fromSequence:
+      name: fromSequence
+      in: query
+      schema:
+        type: integer
+      description: Start from sequence number
+
+    toSequence:
+      name: toSequence
+      in: query
+      schema:
+        type: integer
+      description: End at sequence number
+
+    factType:
+      name: factType
+      in: query
+      schema:
+        type: string
+      description: Filter by fact type
+
+  schemas:
+    # ============================================================
+    # DEPOSITS SCHEMAS
+    # ============================================================
+
+    AccountListResponse:
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccountSummary'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    AccountSummary:
+      type: object
+      properties:
+        accountId:
+          type: string
+        customerId:
+          type: string
+        productType:
+          type: string
+        currency:
+          type: string
+        state:
+          type: string
+        derivedLedgerBalance:
+          type: string
+        derivedAvailableBalance:
+          type: string
+
+    AccountResponse:
+      allOf:
+        - $ref: '#/components/schemas/AccountSummary'
+        - type: object
+          properties:
+            holds:
+              type: array
+              items:
+                $ref: '#/components/schemas/HoldSummary'
+            factCount:
+              type: integer
+            lastFactSequence:
+              type: integer
+            createdAt:
+              type: string
+              format: date-time
+            updatedAt:
+              type: string
+              format: date-time
+
+    FactListResponse:
+      type: object
+      properties:
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fact'
+        total:
+          type: integer
+
+    Fact:
+      type: object
+      properties:
+        id:
+          type: integer
+        sequence:
+          type: integer
+        factType:
+          type: string
+        factData:
+          type: object
+        factHash:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+
+    HoldListResponse:
+      type: object
+      properties:
+        holds:
+          type: array
+          items:
+            $ref: '#/components/schemas/HoldSummary'
+        totalHeldAmount:
+          type: string
+
+    HoldSummary:
+      type: object
+      properties:
+        holdId:
+          type: string
+        amount:
+          type: string
+        reason:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, RELEASED, EXPIRED]
+        placedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        releasedAt:
+          type: string
+          format: date-time
+
+    # ============================================================
+    # PAYMENTS SCHEMAS
+    # ============================================================
+
+    PaymentListResponse:
+      type: object
+      properties:
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentSummary'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    PaymentSummary:
+      type: object
+      properties:
+        paymentId:
+          type: string
+        fromAccountId:
+          type: string
+        toAccountId:
+          type: string
+        amount:
+          type: string
+        currency:
+          type: string
+        scheme:
+          type: string
+        state:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    PaymentResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaymentSummary'
+        - type: object
+          properties:
+            factCount:
+              type: integer
+            depositFactIds:
+              type: array
+              items:
+                type: integer
+            idempotencyKey:
+              type: string
+            updatedAt:
+              type: string
+              format: date-time
+
+    PaymentFactListResponse:
+      type: object
+      properties:
+        paymentFacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentFact'
+        depositFacts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fact'
+
+    PaymentFact:
+      allOf:
+        - $ref: '#/components/schemas/Fact'
+        - type: object
+          properties:
+            depositFactId:
+              type: integer
+              description: Linked deposit fact ID
+
+    # ============================================================
+    # DECISIONS SCHEMAS
+    # ============================================================
+
+    DecisionListResponse:
+      type: object
+      properties:
+        decisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DecisionSummary'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+
+    DecisionSummary:
+      type: object
+      properties:
+        decisionId:
+          type: string
+        module:
+          type: string
+        entityId:
+          type: string
+        requestType:
+          type: string
+        outcome:
+          type: string
+          enum: [ALLOW, REVIEW, DECLINE]
+        timestamp:
+          type: string
+          format: date-time
+
+    DecisionDetailResponse:
+      allOf:
+        - $ref: '#/components/schemas/DecisionSummary'
+        - type: object
+          properties:
+            policies:
+              type: array
+              items:
+                $ref: '#/components/schemas/PolicyEvaluation'
+            facts:
+              type: object
+              description: Facts evaluated
+            evidenceHash:
+              type: string
+
+    PolicyEvaluation:
+      type: object
+      properties:
+        policyId:
+          type: string
+        policyName:
+          type: string
+        outcome:
+          type: string
+          enum: [PASS, FAIL, REVIEW]
+        threshold:
+          type: number
+        actualValue:
+          type: number
+        message:
+          type: string
+
+    # ============================================================
+    # EVIDENCE SCHEMAS
+    # ============================================================
+
+    EvidenceListResponse:
+      type: object
+      properties:
+        evidencePacks:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceSummary'
+        total:
+          type: integer
+
+    EvidenceSummary:
+      type: object
+      properties:
+        evidenceId:
+          type: string
+        module:
+          type: string
+        entityId:
+          type: string
+        packHash:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    EvidencePackResponse:
+      type: object
+      properties:
+        evidenceId:
+          type: string
+        module:
+          type: string
+        entityId:
+          type: string
+        packHash:
+          type: string
+        facts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fact'
+        decisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DecisionSummary'
+        metadata:
+          type: object
+        createdAt:
+          type: string
+          format: date-time
+
+    VerificationResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        evidenceId:
+          type: string
+        packHash:
+          type: string
+        computedHash:
+          type: string
+        factHashes:
+          type: array
+          items:
+            type: object
+            properties:
+              factId:
+                type: integer
+              storedHash:
+                type: string
+              computedHash:
+                type: string
+              valid:
+                type: boolean
+        verifiedAt:
+          type: string
+          format: date-time
+
+    # ============================================================
+    # REPLAY SCHEMAS
+    # ============================================================
+
+    ReplayProofListResponse:
+      type: object
+      properties:
+        proofs:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReplayProofSummary'
+        total:
+          type: integer
+
+    ReplayProofSummary:
+      type: object
+      properties:
+        proofId:
+          type: string
+        module:
+          type: string
+        entityId:
+          type: string
+        status:
+          type: string
+          enum: [PASS, FAIL]
+        executedAt:
+          type: string
+          format: date-time
+
+    ReplayResultResponse:
+      type: object
+      properties:
+        proofId:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        status:
+          type: string
+          enum: [PASS, FAIL]
+        originalStateHash:
+          type: string
+        replayedStateHash:
+          type: string
+        factCount:
+          type: integer
+        replayDuration:
+          type: number
+          description: Duration in milliseconds
+        divergences:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              originalValue:
+                type: string
+              replayedValue:
+                type: string
+
+    # ============================================================
+    # SYSTEM SCHEMAS
+    # ============================================================
+
+    SystemStatusResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [HEALTHY, DEGRADED, UNHEALTHY]
+        modules:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [GREEN, YELLOW, RED]
+        testsPassing:
+          type: integer
+        testsTotal:
+          type: integer
+        lastVerified:
+          type: string
+          format: date-time
+        version:
+          type: string
+
+    ModuleListResponse:
+      type: object
+      properties:
+        modules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ModuleStatus'
+
+    ModuleStatus:
+      type: object
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [GREEN, YELLOW, RED]
+        testsPassing:
+          type: integer
+        testsTotal:
+          type: integer
+        surfaceFrozen:
+          type: boolean
+        lastVerified:
+          type: string
+          format: date-time
+
+    GatewayAuditResponse:
+      type: object
+      properties:
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/GatewayAuditRecord'
+        total:
+          type: integer
+        stats:
+          type: object
+          properties:
+            totalOperations:
+              type: integer
+            successRate:
+              type: number
+            byOperation:
+              type: object
+              additionalProperties:
+                type: integer
+            byModule:
+              type: object
+              additionalProperties:
+                type: integer
+
+    GatewayAuditRecord:
+      type: object
+      properties:
+        operationId:
+          type: string
+        operation:
+          type: string
+        module:
+          type: string
+        entityId:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        callerContext:
+          type: string
+        factHash:
+          type: string
+        success:
+          type: boolean
+        errorMessage:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+security:
+  - bearerAuth: []

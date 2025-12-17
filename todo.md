@@ -1243,3 +1243,35 @@
 - [x] Write event store tests (save, load, replay, concurrency) - 6/11 passing
 - [x] Run all tests to verify no regressions (Cards tests passing)
 - [x] Save checkpoint and push to GitHub
+
+
+
+## Critical Gap Closure - Integration Composability
+
+### Gap 1: Protocol-Only Writes Enforcement
+- [x] Create ProtocolGateway class that wraps all write operations
+- [x] Audit all direct database writes and route through gateway
+- [x] Add CI check to detect direct DB writes outside gateway
+- [x] Create PROTOCOL_ONLY_WRITES.md governance document
+- [x] Update ACTION_CHECKLIST to mark complete
+
+### Gap 2: OpenAPI Contract Specification
+- [x] Create /api/openapi/commands.yaml with versioned command spec
+- [x] Create /api/openapi/queries.yaml with versioned query spec
+- [ ] Generate OpenAPI from tRPC schema (deferred - manual spec created)
+- [ ] Add SDK generation script (deferred - optional enhancement)
+- [ ] Publish openapi.json at /api/openapi.json endpoint (deferred - optional enhancement)
+- [x] Update ACTION_CHECKLIST to mark complete
+
+### Gap 3: Environment/IAM Separation
+- [x] Create environment configuration schema (dev/staging/prod)
+- [x] Implement credential isolation per environment
+- [x] Add environment validation on startup
+- [x] Create IAM_SEPARATION.md governance document
+- [x] Update ACTION_CHECKLIST to mark complete
+
+### CI/CD Guardrails
+- [x] Add protocol-only-writes CI check
+- [x] Add OpenAPI contract validation CI check
+- [x] Add environment isolation CI check
+- [x] Create composite workflow for all governance checks
