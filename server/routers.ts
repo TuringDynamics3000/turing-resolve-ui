@@ -29,23 +29,13 @@ import { depositsRouter } from "./depositsRouter";
 import { paymentsRouter } from "./paymentsRouter";
 import { advisoryRouter } from "./advisoryRouter";
 import { auditRouter } from "./auditRouter";
-import { publicFactsRouter } from "./publicFactsRouter";
-import { shadowAIRouter } from "./shadowAIRouter";
-import { evidencePackRouter } from "./evidencePackRouter";
-import { lendingRouter } from "./lendingRouter";
-import { exportsRouter } from "./exportsRouter";
 
 export const appRouter = router({
   system: systemRouter,
   deposits: depositsRouter,
   payments: paymentsRouter,
-  lending: lendingRouter,
-  exports: exportsRouter,
   advisory: advisoryRouter,
   audit: auditRouter,
-  publicFacts: publicFactsRouter,
-  shadowAI: shadowAIRouter,
-  evidencePack: evidencePackRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

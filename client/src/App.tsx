@@ -18,13 +18,10 @@ import EvidenceDetail from "@/pages/EvidenceDetail";
 import LendingDashboard from "@/pages/LendingDashboard";
 import PaymentsDashboard from "@/pages/PaymentsDashboard";
 import DepositsDashboard from "@/pages/DepositsDashboard";
-import LendingCorePage from "@/pages/LendingCorePage";
 import GovernanceControls from "@/pages/GovernanceControls";
 import ReportingDashboard from "@/pages/ReportingDashboard";
 import NotFound from "@/pages/NotFound";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
-import { LoansOverview } from "@/pages/member/loans/LoansOverview";
-import { LoanDetail } from "@/pages/member/loans/LoanDetail";
 
 function MainDashboard() {
   return (
@@ -41,7 +38,6 @@ function MainDashboard() {
         
         {/* Lending Module */}
         <Route path="/lending" component={LendingDashboard} />
-        <Route path="/lending-core" component={LendingCorePage} />
         
         {/* Payments Module */}
         <Route path="/payments" component={PaymentsDashboard} />
@@ -74,25 +70,9 @@ function MainDashboard() {
 function Router() {
   // Check if we're on an operator route
   const [isOperator] = useRoute("/operator/*?");
-  const [isMemberLoans] = useRoute("/member/loans/*?");
-  const [isMemberLoansOverview] = useRoute("/member/loans");
   
   if (isOperator) {
     return <OperatorPage />;
-  }
-  
-  // Member routes (read-only truth surfaces)
-  if (isMemberLoansOverview) {
-    return <LoansOverview />;
-  }
-  
-  if (isMemberLoans) {
-    return (
-      <Switch>
-        <Route path="/member/loans/:loanId" component={LoanDetail} />
-        <Route path="/member/loans" component={LoansOverview} />
-      </Switch>
-    );
   }
   
   return <MainDashboard />;
