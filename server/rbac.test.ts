@@ -784,3 +784,91 @@ describe("TuringSentinel Command Breakdown", () => {
     });
   });
 });
+
+
+describe("TuringSentinel Domain Filters and CSV Export", () => {
+  describe("getRecentAuthorityFacts with domain filter", () => {
+    it("should accept domain filter parameter", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const facts = await caller.rbac.getRecentAuthorityFacts({ limit: 10, domain: "ML" });
+      
+      expect(Array.isArray(facts)).toBe(true);
+    });
+    
+    it("should return facts without domain filter", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const facts = await caller.rbac.getRecentAuthorityFacts({ limit: 10 });
+      
+      expect(Array.isArray(facts)).toBe(true);
+    });
+  });
+  
+  describe("getDecisionsByCommand with domain filter", () => {
+    it("should accept domain filter parameter", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const breakdown = await caller.rbac.getDecisionsByCommand({ domain: "DEPOSITS" });
+      
+      expect(Array.isArray(breakdown)).toBe(true);
+    });
+    
+    it("should return breakdown without domain filter", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const breakdown = await caller.rbac.getDecisionsByCommand();
+      
+      expect(Array.isArray(breakdown)).toBe(true);
+    });
+  });
+  
+  describe("exportAuthorityFactsCSV", () => {
+    it("should return CSV data with expected structure", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const result = await caller.rbac.exportAuthorityFactsCSV();
+      
+      expect(result).toHaveProperty("csv");
+      expect(result).toHaveProperty("count");
+      expect(typeof result.csv).toBe("string");
+      expect(typeof result.count).toBe("number");
+    });
+    
+    it("should include CSV headers", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const result = await caller.rbac.exportAuthorityFactsCSV();
+      
+      expect(result.csv).toContain("authority_fact_id");
+      expect(result.csv).toContain("actor_id");
+      expect(result.csv).toContain("command_code");
+      expect(result.csv).toContain("decision");
+    });
+    
+    it("should accept domain filter", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const result = await caller.rbac.exportAuthorityFactsCSV({ domain: "ML" });
+      
+      expect(result).toHaveProperty("csv");
+      expect(result).toHaveProperty("count");
+    });
+    
+    it("should return non-negative count", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const result = await caller.rbac.exportAuthorityFactsCSV();
+      
+      expect(result.count).toBeGreaterThanOrEqual(0);
+    });
+  });
+});

@@ -456,18 +456,20 @@ export const rbacRouter = router({
   getRecentAuthorityFacts: publicProcedure
     .input(z.object({
       limit: z.number().min(1).max(50).default(10),
+      domain: z.string().optional(),
     }))
     .query(async ({ input }) => {
       const conn = await getDb();
       if (!conn) {
         // Return mock data when DB not available
-        return [
+        const mockData = [
           {
             authorityFactId: "auth-001",
             actorId: "alice@turingdynamics.com",
             actorRole: "MODEL_APPROVER",
             commandCode: "PROMOTE_MODEL_TO_CANARY",
             resourceId: "fraud-detection-v1.2.0",
+            domain: "ML",
             decision: "ALLOW",
             reasonCode: "AUTHORIZED",
             createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
@@ -478,6 +480,7 @@ export const rbacRouter = router({
             actorRole: "MODEL_AUTHOR",
             commandCode: "PROMOTE_MODEL_TO_PROD",
             resourceId: "credit-risk-v2.2.0",
+            domain: "ML",
             decision: "DENY",
             reasonCode: "ROLE_MISSING",
             createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
@@ -488,18 +491,49 @@ export const rbacRouter = router({
             actorRole: "OPS_AGENT",
             commandCode: "ADJUST_BALANCE",
             resourceId: "ACC-001234",
+            domain: "DEPOSITS",
             decision: "DENY",
             reasonCode: "FORBIDDEN_COMMAND",
             createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
           },
+          {
+            authorityFactId: "auth-004",
+            actorId: "bob@turingdynamics.com",
+            actorRole: "OPS_SUPERVISOR",
+            commandCode: "INITIATE_PAYMENT",
+            resourceId: "PAY-005678",
+            domain: "PAYMENTS",
+            decision: "ALLOW",
+            reasonCode: "AUTHORIZED",
+            createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          },
+          {
+            authorityFactId: "auth-005",
+            actorId: "carol@turingdynamics.com",
+            actorRole: "RISK_APPROVER",
+            commandCode: "CREATE_LOAN",
+            resourceId: "LOAN-009012",
+            domain: "LENDING",
+            decision: "ALLOW",
+            reasonCode: "AUTHORIZED",
+            createdAt: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+          },
         ];
+        return input.domain ? mockData.filter(d => d.domain === input.domain) : mockData;
       }
       
-      const facts = await conn.select().from(authorityFacts)
-        .orderBy(desc(authorityFacts.createdAt))
-        .limit(input.limit);
+      let query = conn.select().from(authorityFacts);
       
-      return facts.map(f => ({
+      const facts = await query
+        .orderBy(desc(authorityFacts.createdAt))
+        .limit(input.limit * 2); // Get more to filter
+      
+      let filtered = facts;
+      if (input.domain) {
+        filtered = facts.filter(f => f.domain === input.domain);
+      }
+      
+      return filtered.slice(0, input.limit).map(f => ({
         ...f,
         createdAt: f.createdAt?.toISOString() || new Date().toISOString(),
       }));
@@ -868,47 +902,106 @@ export const rbacRouter = router({
   /**
    * Get decision breakdown by command type
    */
-  getDecisionsByCommand: publicProcedure.query(async () => {
-    const conn = await getDb();
-    
-    if (!conn) {
-      // Return mock data when DB not available
-      return [
-        { command: "OPEN_ACCOUNT", domain: "DEPOSITS", allowed: 145, denied: 8 },
-        { command: "INITIATE_PAYMENT", domain: "PAYMENTS", allowed: 234, denied: 19 },
-        { command: "CREATE_LOAN", domain: "LENDING", allowed: 89, denied: 12 },
-        { command: "PROMOTE_MODEL_TO_PROD", domain: "ML", allowed: 23, denied: 9 },
-        { command: "MODIFY_TERMS", domain: "LENDING", allowed: 45, denied: 15 },
-        { command: "UPDATE_POLICY_DSL", domain: "POLICY", allowed: 34, denied: 6 },
-        { command: "REGISTER_MODEL_VERSION", domain: "ML", allowed: 67, denied: 2 },
-        { command: "ADJUST_BALANCE", domain: "DEPOSITS", allowed: 0, denied: 12 },
-      ];
-    }
-    
-    const allFacts = await conn.select().from(authorityFacts);
-    
-    // Group by command
-    const byCommand: Record<string, { command: string; domain: string; allowed: number; denied: number }> = {};
-    
-    allFacts.forEach(fact => {
-      if (!byCommand[fact.commandCode]) {
-        byCommand[fact.commandCode] = {
-          command: fact.commandCode,
-          domain: fact.domain,
-          allowed: 0,
-          denied: 0,
-        };
+  getDecisionsByCommand: publicProcedure
+    .input(z.object({
+      domain: z.string().optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const conn = await getDb();
+      const domainFilter = input?.domain;
+      
+      if (!conn) {
+        // Return mock data when DB not available
+        const mockData = [
+          { command: "OPEN_ACCOUNT", domain: "DEPOSITS", allowed: 145, denied: 8 },
+          { command: "INITIATE_PAYMENT", domain: "PAYMENTS", allowed: 234, denied: 19 },
+          { command: "CREATE_LOAN", domain: "LENDING", allowed: 89, denied: 12 },
+          { command: "PROMOTE_MODEL_TO_PROD", domain: "ML", allowed: 23, denied: 9 },
+          { command: "MODIFY_TERMS", domain: "LENDING", allowed: 45, denied: 15 },
+          { command: "UPDATE_POLICY_DSL", domain: "POLICY", allowed: 34, denied: 6 },
+          { command: "REGISTER_MODEL_VERSION", domain: "ML", allowed: 67, denied: 2 },
+          { command: "ADJUST_BALANCE", domain: "DEPOSITS", allowed: 0, denied: 12 },
+        ];
+        return domainFilter ? mockData.filter(d => d.domain === domainFilter) : mockData;
       }
-      if (fact.decision === "ALLOW") {
-        byCommand[fact.commandCode].allowed++;
-      } else {
-        byCommand[fact.commandCode].denied++;
+      
+      let allFacts = await conn.select().from(authorityFacts);
+      
+      if (domainFilter) {
+        allFacts = allFacts.filter(f => f.domain === domainFilter);
       }
-    });
-    
-    // Sort by total count descending
-    return Object.values(byCommand)
-      .sort((a, b) => (b.allowed + b.denied) - (a.allowed + a.denied))
-      .slice(0, 10); // Top 10 commands
-  }),
+      
+      // Group by command
+      const byCommand: Record<string, { command: string; domain: string; allowed: number; denied: number }> = {};
+      
+      allFacts.forEach(fact => {
+        if (!byCommand[fact.commandCode]) {
+          byCommand[fact.commandCode] = {
+            command: fact.commandCode,
+            domain: fact.domain,
+            allowed: 0,
+            denied: 0,
+          };
+        }
+        if (fact.decision === "ALLOW") {
+          byCommand[fact.commandCode].allowed++;
+        } else {
+          byCommand[fact.commandCode].denied++;
+        }
+      });
+      
+      // Sort by total count descending
+      return Object.values(byCommand)
+        .sort((a, b) => (b.allowed + b.denied) - (a.allowed + a.denied))
+        .slice(0, 10); // Top 10 commands
+    }),
+
+  /**
+   * Export authority facts as CSV
+   */
+  exportAuthorityFactsCSV: publicProcedure
+    .input(z.object({
+      domain: z.string().optional(),
+      startDate: z.string().optional(),
+      endDate: z.string().optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const conn = await getDb();
+      const domainFilter = input?.domain;
+      const startDate = input?.startDate ? new Date(input.startDate) : null;
+      const endDate = input?.endDate ? new Date(input.endDate) : null;
+      
+      if (!conn) {
+        // Return mock CSV data
+        const headers = "authority_fact_id,actor_id,actor_role,command_code,resource_id,domain,decision,reason_code,created_at";
+        const rows = [
+          "auth-001,alice@turingdynamics.com,MODEL_APPROVER,PROMOTE_MODEL_TO_CANARY,fraud-detection-v1.2.0,ML,ALLOW,AUTHORIZED,2025-12-18T10:00:00Z",
+          "auth-002,dave@turingdynamics.com,MODEL_AUTHOR,PROMOTE_MODEL_TO_PROD,credit-risk-v2.2.0,ML,DENY,ROLE_MISSING,2025-12-18T09:30:00Z",
+          "auth-003,eve@turingdynamics.com,OPS_AGENT,ADJUST_BALANCE,ACC-001234,DEPOSITS,DENY,FORBIDDEN_COMMAND,2025-12-18T09:00:00Z",
+        ];
+        return { csv: [headers, ...rows].join("\n"), count: rows.length };
+      }
+      
+      let facts = await conn.select().from(authorityFacts)
+        .orderBy(desc(authorityFacts.createdAt));
+      
+      // Apply filters
+      if (domainFilter) {
+        facts = facts.filter(f => f.domain === domainFilter);
+      }
+      if (startDate) {
+        facts = facts.filter(f => f.createdAt && new Date(f.createdAt) >= startDate);
+      }
+      if (endDate) {
+        facts = facts.filter(f => f.createdAt && new Date(f.createdAt) <= endDate);
+      }
+      
+      // Generate CSV
+      const headers = "authority_fact_id,actor_id,actor_role,command_code,resource_id,domain,decision,reason_code,created_at";
+      const rows = facts.map(f => 
+        `${f.authorityFactId},${f.actorId},${f.actorRole},${f.commandCode},${f.resourceId || ""},${f.domain},${f.decision},${f.reasonCode},${f.createdAt?.toISOString() || ""}`
+      );
+      
+      return { csv: [headers, ...rows].join("\n"), count: facts.length };
+    }),
 });

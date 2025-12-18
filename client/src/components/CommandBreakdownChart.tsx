@@ -51,10 +51,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function CommandBreakdownChart() {
-  const { data: commandData, isLoading } = trpc.rbac.getDecisionsByCommand.useQuery(undefined, {
-    refetchInterval: 60000,
-  });
+interface CommandBreakdownChartProps {
+  domain?: string;
+}
+
+export function CommandBreakdownChart({ domain }: CommandBreakdownChartProps) {
+  const { data: commandData, isLoading } = trpc.rbac.getDecisionsByCommand.useQuery(
+    domain ? { domain } : undefined,
+    { refetchInterval: 60000 }
+  );
 
   if (isLoading) {
     return (

@@ -23,8 +23,18 @@ import {
   GitBranch,
   ArrowRight,
   RefreshCw,
-  TrendingUp
+  TrendingUp,
+  Download,
+  Filter
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 import {
   AreaChart,
   Area,
@@ -155,8 +165,15 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+const DOMAINS = ["ALL", "DEPOSITS", "PAYMENTS", "LENDING", "ML", "POLICY"] as const;
+type Domain = typeof DOMAINS[number];
+
 export default function TuringSentinelLanding() {
   const [selectedPeriod, setSelectedPeriod] = useState<Period>("7d");
+  const [selectedDomain, setSelectedDomain] = useState<Domain>("ALL");
+  const [isExporting, setIsExporting] = useState(false);
+  
+  const domainFilter = selectedDomain === "ALL" ? undefined : selectedDomain;
   
   // Fetch live metrics from tRPC
   const { data: metrics, isLoading, refetch } = trpc.rbac.getSentinelMetrics.useQuery(undefined, {
@@ -168,6 +185,35 @@ export default function TuringSentinelLanding() {
     { period: selectedPeriod },
     { refetchInterval: 60000 } // Refresh every minute
   );
+  
+  // CSV export query
+  const { refetch: fetchCSV } = trpc.rbac.exportAuthorityFactsCSV.useQuery(
+    { domain: domainFilter },
+    { enabled: false }
+  );
+  
+  const handleExportCSV = async () => {
+    setIsExporting(true);
+    try {
+      const result = await fetchCSV();
+      if (result.data) {
+        const blob = new Blob([result.data.csv], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `authority-facts-${selectedDomain.toLowerCase()}-${new Date().toISOString().split("T")[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        toast.success(`Exported ${result.data.count} records to CSV`);
+      }
+    } catch (error) {
+      toast.error("Failed to export CSV");
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -403,11 +449,45 @@ export default function TuringSentinelLanding() {
         </Card>
       </div>
 
+      {/* Domain Filter and Export */}
+      <div className="container pb-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-zinc-500" />
+              <span className="text-sm text-zinc-400">Filter by Domain:</span>
+            </div>
+            <Select value={selectedDomain} onValueChange={(v) => setSelectedDomain(v as Domain)}>
+              <SelectTrigger className="w-40 bg-zinc-900 border-zinc-700">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DOMAINS.map((domain) => (
+                  <SelectItem key={domain} value={domain}>
+                    {domain === "ALL" ? "All Domains" : domain}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            disabled={isExporting}
+            className="border-zinc-700 hover:bg-zinc-800"
+          >
+            <Download className={`h-4 w-4 mr-2 ${isExporting ? 'animate-pulse' : ''}`} />
+            {isExporting ? 'Exporting...' : 'Export CSV'}
+          </Button>
+        </div>
+      </div>
+
       {/* Command Breakdown and Live Feed */}
       <div className="container pb-12">
         <div className="grid grid-cols-2 gap-6">
-          <CommandBreakdownChart />
-          <LiveDecisionFeed />
+          <CommandBreakdownChart domain={domainFilter} />
+          <LiveDecisionFeed domain={domainFilter} />
         </div>
       </div>
 

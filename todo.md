@@ -1731,3 +1731,10 @@
 - [x] Create LiveDecisionFeed component with auto-scroll
 - [x] Integrate all components into TuringSentinelLanding
 - [x] Add WebSocket subscription for real-time updates (polling)
+
+## TuringSentinel Filters and Export
+- [x] Add domain filter dropdown to TuringSentinelLanding
+- [x] Update getRecentAuthorityFacts to accept domain filter
+- [x] Update getDecisionsByCommand to accept domain filter
+- [x] Add CSV export endpoint for authority facts
+- [x] Add export button to dashboard UI

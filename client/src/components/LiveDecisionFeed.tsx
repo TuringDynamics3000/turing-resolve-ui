@@ -127,11 +127,15 @@ function FeedSkeleton() {
   );
 }
 
-export function LiveDecisionFeed() {
+interface LiveDecisionFeedProps {
+  domain?: string;
+}
+
+export function LiveDecisionFeed({ domain }: LiveDecisionFeedProps) {
   const feedRef = useRef<HTMLDivElement>(null);
   
   const { data: facts, isLoading } = trpc.rbac.getRecentAuthorityFacts.useQuery(
-    { limit: 20 },
+    { limit: 20, domain },
     { refetchInterval: 10000 } // Refresh every 10 seconds
   );
 
