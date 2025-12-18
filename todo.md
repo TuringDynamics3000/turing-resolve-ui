@@ -2054,3 +2054,21 @@
 - [x] Request limit increase form
 - [x] Track pending decisions with timeline
 - [x] Notification when decisions are made
+
+
+## Human-Machine Contract Implementation
+
+### Documentation
+- [x] Create DESIGN_PHILOSOPHY.md with human-machine contract principles
+- [x] Document server-driven state architecture
+- [x] Document append-only decision store with hash chain
+
+### Member Portal Decision API Integration
+- [x] Wire limit increase requests to POST /decisions
+- [x] Connect approve/reject flow to decision API
+- [x] Add decision status polling/updates
+
+### Hash Chain Visualization
+- [x] Add cryptographic seal indicator to member requests
+- [x] Show hash chain proof for completed decisions
+- [x] Build transparency timeline showing immutable audit trail
