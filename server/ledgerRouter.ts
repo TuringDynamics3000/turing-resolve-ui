@@ -1112,10 +1112,14 @@ export const ledgerRouter = router({
   getCustomerWallet: publicProcedure
     .input(z.object({
       customerId: z.string(),
+      reportingCurrency: z.string().optional(),  // Override customer's default reporting currency
     }))
     .query(async ({ input }) => {
       const { multiCurrencyWalletService } = await import("./core/ledger/MultiCurrencyWalletService");
-      const wallet = multiCurrencyWalletService.getWallet(input.customerId);
+      const wallet = multiCurrencyWalletService.getWallet(
+        input.customerId,
+        input.reportingCurrency as any
+      );
       
       if (!wallet) {
         return null;
@@ -1124,6 +1128,7 @@ export const ledgerRouter = router({
       return {
         customerId: wallet.customerId,
         customerName: wallet.customerName,
+        reportingCurrency: wallet.reportingCurrency,
         balances: wallet.balances.map(b => ({
           currency: b.currency,
           balance: b.balance.toDisplayString(),
@@ -1132,6 +1137,8 @@ export const ledgerRouter = router({
           balanceValue: Number(b.balance.amount) / 100,
           isActive: b.isActive,
         })),
+        totalValue: wallet.totalValue.toDisplayString(),
+        totalValueNum: Number(wallet.totalValue.amount) / 100,
         totalValueAUD: wallet.totalValueAUD.toDisplayString(),
         totalValueAUDNum: Number(wallet.totalValueAUD.amount) / 100,
         lastUpdated: wallet.lastUpdated,
@@ -1150,8 +1157,11 @@ export const ledgerRouter = router({
         wallets: wallets.map(w => ({
           customerId: w.customerId,
           customerName: w.customerName,
+          reportingCurrency: w.reportingCurrency,
           currencyCount: w.balances.length,
           currencies: w.balances.map(b => b.currency),
+          totalValue: w.totalValue.toDisplayString(),
+          totalValueNum: Number(w.totalValue.amount) / 100,
           totalValueAUD: w.totalValueAUD.toDisplayString(),
           totalValueAUDNum: Number(w.totalValueAUD.amount) / 100,
         })),

@@ -1826,3 +1826,10 @@
 - [x] Currency conversion execution with GL postings
 - [x] tRPC endpoints for wallet operations
 - [x] Customer wallet UI with currency breakdown
+
+## Configurable Base Currency
+
+- [x] ADI-level functional currency configuration
+- [x] Customer-level reporting currency preference
+- [x] Dynamic total value calculation based on preference
+- [ ] UI currency selector for reporting

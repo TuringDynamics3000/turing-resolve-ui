@@ -26,6 +26,37 @@ export const SUPPORTED_CURRENCIES = [
 export type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
 
 // ============================================
+// CONFIGURABLE BASE CURRENCY
+// ============================================
+
+/**
+ * ADI-level functional currency configuration.
+ * This is the currency used for regulatory reporting and GL consolidation.
+ * Default: AUD (Australian Dollar) for APRA-regulated entities.
+ */
+export interface ADICurrencyConfig {
+  functionalCurrency: SupportedCurrency;  // Primary reporting currency
+  presentationCurrencies: SupportedCurrency[];  // Additional presentation currencies
+  rateSource: "REUTERS" | "BLOOMBERG" | "RBA" | "INTERNAL";
+  rateUpdateFrequency: "REALTIME" | "HOURLY" | "DAILY";
+}
+
+/**
+ * Default ADI configuration for Australian ADIs.
+ */
+export const DEFAULT_ADI_CONFIG: ADICurrencyConfig = {
+  functionalCurrency: "AUD",
+  presentationCurrencies: ["USD", "EUR", "GBP"],
+  rateSource: "REUTERS",
+  rateUpdateFrequency: "REALTIME",
+};
+
+/**
+ * Customer-level reporting currency preference.
+ */
+export type CustomerReportingCurrency = SupportedCurrency | "FUNCTIONAL";  // "FUNCTIONAL" = use ADI default
+
+// ============================================
 // FX RATE TYPES
 // ============================================
 
@@ -77,7 +108,9 @@ export interface CustomerWallet {
   customerId: string;
   customerName: string;
   balances: CurrencyBalance[];
-  totalValueAUD: Money;
+  reportingCurrency: SupportedCurrency;
+  totalValue: Money;  // In customer's reporting currency
+  totalValueAUD: Money;  // Always in AUD for regulatory reporting
   lastUpdated: string;
 }
 
@@ -156,6 +189,7 @@ interface CustomerData {
   customerId: string;
   customerName: string;
   tier: "RETAIL" | "PREMIUM" | "CORPORATE";
+  reportingCurrency: SupportedCurrency;  // Customer's preferred reporting currency
   balances: Map<SupportedCurrency, { balance: bigint; available: bigint; hold: bigint }>;
 }
 
@@ -164,6 +198,7 @@ const sampleCustomers: CustomerData[] = [
     customerId: "CUST-001",
     customerName: "Sarah Mitchell",
     tier: "PREMIUM",
+    reportingCurrency: "AUD",  // Australian expat, prefers AUD
     balances: new Map([
       ["AUD", { balance: BigInt(2500000), available: BigInt(2500000), hold: BigInt(0) }],
       ["USD", { balance: BigInt(150000), available: BigInt(150000), hold: BigInt(0) }],
@@ -174,6 +209,7 @@ const sampleCustomers: CustomerData[] = [
     customerId: "CUST-002",
     customerName: "James Chen",
     tier: "RETAIL",
+    reportingCurrency: "GBP",  // UK citizen, prefers GBP
     balances: new Map([
       ["AUD", { balance: BigInt(850000), available: BigInt(800000), hold: BigInt(50000) }],
       ["GBP", { balance: BigInt(25000), available: BigInt(25000), hold: BigInt(0) }],
@@ -183,6 +219,7 @@ const sampleCustomers: CustomerData[] = [
     customerId: "CUST-003",
     customerName: "TechCorp Pty Ltd",
     tier: "CORPORATE",
+    reportingCurrency: "USD",  // US parent company, reports in USD
     balances: new Map([
       ["AUD", { balance: BigInt(15000000), available: BigInt(14500000), hold: BigInt(500000) }],
       ["USD", { balance: BigInt(5000000), available: BigInt(5000000), hold: BigInt(0) }],
@@ -195,6 +232,7 @@ const sampleCustomers: CustomerData[] = [
     customerId: "CUST-004",
     customerName: "Emma Wilson",
     tier: "RETAIL",
+    reportingCurrency: "NZD",  // NZ citizen, prefers NZD
     balances: new Map([
       ["AUD", { balance: BigInt(320000), available: BigInt(320000), hold: BigInt(0) }],
       ["NZD", { balance: BigInt(45000), available: BigInt(45000), hold: BigInt(0) }],
@@ -204,6 +242,7 @@ const sampleCustomers: CustomerData[] = [
     customerId: "CUST-005",
     customerName: "Global Trade Ltd",
     tier: "CORPORATE",
+    reportingCurrency: "USD",  // International trade company, reports in USD
     balances: new Map([
       ["AUD", { balance: BigInt(8500000), available: BigInt(8000000), hold: BigInt(500000) }],
       ["USD", { balance: BigInt(3200000), available: BigInt(3200000), hold: BigInt(0) }],
@@ -431,12 +470,14 @@ class MultiCurrencyWalletService {
   /**
    * Get customer wallet with all currency balances.
    */
-  getWallet(customerId: string): CustomerWallet | null {
+  getWallet(customerId: string, overrideReportingCurrency?: SupportedCurrency): CustomerWallet | null {
     const customer = this.customers.get(customerId);
     if (!customer) return null;
 
+    const reportingCurrency = overrideReportingCurrency || customer.reportingCurrency;
     const balances: CurrencyBalance[] = [];
     let totalValueAUDCents = BigInt(0);
+    let totalValueReportingCents = BigInt(0);
 
     for (const [currency, bal] of customer.balances) {
       const balance = new Money(bal.balance, currency);
@@ -452,13 +493,23 @@ class MultiCurrencyWalletService {
         lastUpdated: new Date().toISOString(),
       });
 
-      // Convert to AUD for total
+      // Convert to AUD for regulatory reporting
       if (currency === "AUD") {
         totalValueAUDCents += bal.balance;
       } else {
-        const rate = this.getRate(currency, "AUD");
-        if (rate) {
-          totalValueAUDCents += BigInt(Math.floor(Number(bal.balance) * rate.midRate));
+        const rateToAUD = this.getRate(currency, "AUD");
+        if (rateToAUD) {
+          totalValueAUDCents += BigInt(Math.floor(Number(bal.balance) * rateToAUD.midRate));
+        }
+      }
+
+      // Convert to customer's reporting currency
+      if (currency === reportingCurrency) {
+        totalValueReportingCents += bal.balance;
+      } else {
+        const rateToReporting = this.getRate(currency, reportingCurrency);
+        if (rateToReporting) {
+          totalValueReportingCents += BigInt(Math.floor(Number(bal.balance) * rateToReporting.midRate));
         }
       }
     }
@@ -467,6 +518,8 @@ class MultiCurrencyWalletService {
       customerId,
       customerName: customer.customerName,
       balances,
+      reportingCurrency,
+      totalValue: new Money(totalValueReportingCents, reportingCurrency),
       totalValueAUD: new Money(totalValueAUDCents, "AUD"),
       lastUpdated: new Date().toISOString(),
     };
