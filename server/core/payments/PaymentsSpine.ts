@@ -17,6 +17,7 @@
  */
 
 import { nanoid } from "nanoid";
+import { schemeAdapterRegistry } from "./SchemeAdapterInterface";
 
 // ============================================
 // PAYMENT TYPES
@@ -396,10 +397,12 @@ class PaymentsSpine {
 
   /**
    * Submit payment to scheme.
+   * Uses registered scheme adapters for actual submission.
    */
   async submitToScheme(paymentId: string): Promise<{
     success: boolean;
     schemeReference?: string;
+    messageId?: string;
     error?: string;
   }> {
     const payment = this.payments.get(paymentId);
@@ -411,8 +414,46 @@ class PaymentsSpine {
       return { success: false, error: `Cannot submit payment in ${payment.status} status` };
     }
     
-    // Generate scheme reference
-    const schemeReference = `${payment.instruction.scheme}-${Date.now()}-${nanoid(6)}`;
+    const scheme = payment.instruction.scheme;
+    const adapter = schemeAdapterRegistry.get(scheme);
+    
+    // If adapter is registered, use it
+    if (adapter) {
+      const result = await adapter.submit(payment);
+      
+      if (result.success) {
+        payment.status = "SUBMITTED";
+        payment.schemeReference = result.schemeReference;
+        payment.schemeStatus = "PENDING";
+        payment.updatedAt = new Date().toISOString();
+        
+        this.recordEvent(payment, "PAYMENT_SUBMITTED", {
+          scheme,
+          schemeReference: result.schemeReference,
+          messageId: result.messageId,
+        }, "SYSTEM");
+        
+        return {
+          success: true,
+          schemeReference: result.schemeReference,
+          messageId: result.messageId,
+        };
+      } else {
+        this.recordEvent(payment, "PAYMENT_FAILED", {
+          scheme,
+          error: result.error,
+          errorCode: result.errorCode,
+        }, "SYSTEM");
+        
+        return {
+          success: false,
+          error: result.error,
+        };
+      }
+    }
+    
+    // Fallback: Generate scheme reference without adapter (for INTERNAL, etc.)
+    const schemeReference = `${scheme}-${Date.now()}-${nanoid(6)}`;
     
     payment.status = "SUBMITTED";
     payment.schemeReference = schemeReference;
@@ -420,7 +461,7 @@ class PaymentsSpine {
     payment.updatedAt = new Date().toISOString();
     
     this.recordEvent(payment, "PAYMENT_SUBMITTED", {
-      scheme: payment.instruction.scheme,
+      scheme,
       schemeReference,
     }, "SYSTEM");
     

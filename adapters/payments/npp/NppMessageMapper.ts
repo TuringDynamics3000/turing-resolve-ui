@@ -20,7 +20,7 @@ import type {
   NppTransactionStatus,
   NppRejectReasonCode,
 } from "./NppTypes";
-import type { Payment, PaymentInstruction, PaymentParty } from "../../server/core/payments/PaymentsSpine";
+import type { Payment, PaymentInstruction, PaymentParty } from "../../../server/core/payments/PaymentsSpine";
 
 // ============================================
 // INTERNAL TO NPP MAPPING

@@ -34,7 +34,7 @@ import {
   validateNppCreditTransfer,
   type PaymentFactType,
 } from "./NppMessageMapper";
-import type { Payment } from "../../server/core/payments/PaymentsSpine";
+import type { Payment } from "../../../server/core/payments/PaymentsSpine";
 
 // ============================================
 // NPP ADAPTER RESULT TYPES

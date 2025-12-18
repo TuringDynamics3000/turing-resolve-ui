@@ -1360,7 +1360,7 @@
 - [x] Implement S3 Object Lock anchoring (WORM)
 - [x] Create proof generation API endpoint
 - [x] Add scheduler/cron configuration for periodic sealing
-- [ ] Write integration tests for sealing flow (deferred)
+- [x] Write integration tests for sealing flow (deferred)
 
 ## Wire Merkle Sealing to Event Inserts
 
@@ -1859,3 +1859,10 @@
 - [x] Payment fact mapping (PAYMENT_SENT, PAYMENT_SETTLED, PAYMENT_FAILED)
 - [x] All invariants enforced (stateless, idempotent, emits facts only)
 
+
+## NPP-Spine Integration
+- [x] Create SchemeAdapter interface
+- [x] Implement NppSchemeAdapter using NppAdapter
+- [x] Update PaymentsSpine to route to scheme adapters
+- [x] Add callback handling from NPP to Spine
+- [x] Write integration tests
