@@ -30,6 +30,7 @@ import {
   GitCompare,
   FlaskConical,
   Scale,
+  BookOpen,
 } from "lucide-react";
 
 export function GlobalNav() {
@@ -48,6 +49,7 @@ export function GlobalNav() {
     { href: "/ml-models", label: "ML Models", icon: Brain, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'SYSTEM_ADMIN'] },
     { href: "/evidence", label: "Evidence", icon: FileCheck, roles: ['COMPLIANCE_VIEWER', 'OPS_SUPERVISOR', 'BOARD_VIEWER'] },
     { href: "/sentinel", label: "TuringSentinel", icon: Shield, roles: ['COMPLIANCE_VIEWER', 'BOARD_VIEWER', 'SYSTEM_ADMIN'] },
+    { href: "/gl", label: "GL Ledger", icon: BookOpen, roles: ['OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'SYSTEM_ADMIN'] },
   ];
 
   const filteredNavItems = navItems.filter(item => item.roles.includes(role));

@@ -1752,3 +1752,11 @@
 - [ ] Implement reversePosting function with audit trail
 - [ ] Add reversal reason codes and validation
 - [ ] Write comprehensive tests for all fixes
+
+## GL Ledger Enhancements
+- [x] Multi-currency support with FX rates
+- [x] Sub-ledger reconciliation service
+- [x] GL Ledger UI page
+- [ ] Chart of accounts viewer
+- [ ] Trial balance report UI
+- [ ] Posting interface

@@ -275,6 +275,115 @@ export const ledgerRouter = router({
       checkedAt: new Date().toISOString(),
     };
   }),
+
+  // ============================================
+  // Reconciliation Operations
+  // ============================================
+  
+  /**
+   * Run reconciliation for a specific sub-ledger.
+   */
+  reconcileSubLedger: publicProcedure
+    .input(z.object({
+      subLedgerType: z.enum(["DEPOSITS", "LOANS", "PAYMENTS", "CARDS"]),
+      asOfDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      currency: z.string().length(3).default("AUD"),
+    }))
+    .query(async ({ input }) => {
+      const { reconciliationService } = await import("./core/ledger/ReconciliationService");
+      const result = await reconciliationService.reconcileSubLedger(
+        input.subLedgerType,
+        input.asOfDate,
+        input.currency
+      );
+      return {
+        ...result,
+        subLedgerTotal: result.subLedgerTotal.toDisplayString(),
+        glControlTotal: result.glControlTotal.toDisplayString(),
+        variance: result.variance.toDisplayString(),
+      };
+    }),
+  
+  /**
+   * Run full reconciliation across all sub-ledgers.
+   */
+  runFullReconciliation: publicProcedure
+    .input(z.object({
+      asOfDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      currency: z.string().length(3).default("AUD"),
+    }))
+    .query(async ({ input }) => {
+      const { reconciliationService } = await import("./core/ledger/ReconciliationService");
+      const report = await reconciliationService.runFullReconciliation(
+        input.asOfDate,
+        input.currency
+      );
+      return {
+        ...report,
+        reconciliations: report.reconciliations.map(r => ({
+          ...r,
+          subLedgerTotal: r.subLedgerTotal.toDisplayString(),
+          glControlTotal: r.glControlTotal.toDisplayString(),
+          variance: r.variance.toDisplayString(),
+        })),
+        totalVariance: report.totalVariance.toDisplayString(),
+      };
+    }),
+  
+  // ============================================
+  // FX Operations
+  // ============================================
+  
+  /**
+   * Get supported currencies.
+   */
+  getSupportedCurrencies: publicProcedure.query(async () => {
+    const { CURRENCY_INFO } = await import("../core/ledger/MultiCurrencyLedger");
+    return Object.values(CURRENCY_INFO);
+  }),
+  
+  /**
+   * Get current FX rate.
+   */
+  getFXRate: publicProcedure
+    .input(z.object({
+      baseCurrency: z.string().length(3),
+      quoteCurrency: z.string().length(3),
+    }))
+    .query(async ({ input }) => {
+      const { fxRateService } = await import("../core/ledger/MultiCurrencyLedger");
+      fxRateService.loadDefaultRates();
+      const rate = fxRateService.getRate(input.baseCurrency, input.quoteCurrency);
+      return rate;
+    }),
+  
+  /**
+   * Convert currency amount.
+   */
+  convertCurrency: publicProcedure
+    .input(z.object({
+      amountCents: z.number().int().positive(),
+      fromCurrency: z.string().length(3),
+      toCurrency: z.string().length(3),
+      rateType: z.enum(["BID", "ASK", "MID"]).default("MID"),
+    }))
+    .query(async ({ input }) => {
+      const { fxRateService } = await import("../core/ledger/MultiCurrencyLedger");
+      const { Money } = await import("../core/deposits/ledger/Money");
+      fxRateService.loadDefaultRates();
+      const amount = new Money(BigInt(input.amountCents), input.fromCurrency);
+      const conversion = fxRateService.convert(amount, input.toCurrency, input.rateType);
+      if (!conversion) {
+        return { success: false, error: "No FX rate available" };
+      }
+      return {
+        success: true,
+        fromAmount: conversion.fromAmount.toDisplayString(),
+        toAmount: conversion.toAmount.toDisplayString(),
+        rateUsed: conversion.rateUsed.midRate,
+        rateType: conversion.rateType,
+      };
+    }),
 });
 
 export default ledgerRouter;

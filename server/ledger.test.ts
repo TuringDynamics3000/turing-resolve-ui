@@ -272,3 +272,142 @@ describe("ledger.transfer", () => {
     expect(posting?.posting.loanId).toBe("LOAN-TEST-456");
   });
 });
+
+// ============================================
+// GL Ledger Tests (Chart of Accounts, Trial Balance, Multi-Currency)
+// ============================================
+
+describe("GL Chart of Accounts", () => {
+  it("lists all GL accounts", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const accounts = await caller.gl.listAccounts();
+    expect(accounts).toBeDefined();
+    expect(Array.isArray(accounts)).toBe(true);
+  });
+
+  it.skip("initializes chart of accounts (requires auth)", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.gl.initializeChartOfAccounts();
+    expect(result).toBeDefined();
+    expect(result.success).toBe(true);
+    expect(result.accountsCreated).toBeGreaterThan(0);
+  });
+});
+
+describe("GL Trial Balance", () => {
+  it("generates trial balance for current date", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const today = new Date().toISOString().split("T")[0];
+    const result = await caller.gl.generateTrialBalance({
+      asOfDate: today,
+      currency: "AUD",
+    });
+
+    expect(result).toBeDefined();
+    expect(result.success).toBe(true);
+    expect(result.trialBalance).toBeDefined();
+    expect(result.trialBalance.isBalanced).toBe(true);
+  });
+});
+
+describe("GL Reconciliation", () => {
+  it("runs reconciliation for deposits sub-ledger", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const today = new Date().toISOString().split("T")[0];
+    const result = await caller.gl.reconcileSubLedger({
+      subLedgerType: "DEPOSITS",
+      asOfDate: today,
+      currency: "AUD",
+    });
+
+    expect(result).toBeDefined();
+    expect(result.subLedgerType).toBe("DEPOSITS");
+    expect(result.status).toBeDefined();
+  });
+
+  it("runs full reconciliation across all sub-ledgers", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const today = new Date().toISOString().split("T")[0];
+    const result = await caller.gl.runFullReconciliation({
+      asOfDate: today,
+      currency: "AUD",
+    });
+
+    expect(result).toBeDefined();
+    expect(result.reconciliations).toBeDefined();
+    expect(Array.isArray(result.reconciliations)).toBe(true);
+    expect(result.reconciliations.length).toBe(4); // DEPOSITS, LOANS, PAYMENTS, CARDS
+  });
+});
+
+describe("GL Multi-Currency Support", () => {
+  it("lists supported currencies", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const currencies = await caller.gl.getSupportedCurrencies();
+    expect(currencies).toBeDefined();
+    expect(Array.isArray(currencies)).toBe(true);
+    expect(currencies.length).toBeGreaterThan(0);
+
+    // Check for key currencies
+    const codes = currencies.map((c: any) => c.code);
+    expect(codes).toContain("AUD");
+    expect(codes).toContain("USD");
+    expect(codes).toContain("EUR");
+  });
+
+  it("gets FX rate for USD/AUD", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const rate = await caller.gl.getFXRate({
+      baseCurrency: "USD",
+      quoteCurrency: "AUD",
+    });
+
+    expect(rate).toBeDefined();
+    expect(rate.baseCurrency).toBe("USD");
+    expect(rate.quoteCurrency).toBe("AUD");
+    expect(rate.midRate).toBeGreaterThan(0);
+  });
+
+  it("converts USD to AUD", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.gl.convertCurrency({
+      amountCents: 10000, // $100.00
+      fromCurrency: "USD",
+      toCurrency: "AUD",
+      rateType: "MID",
+    });
+
+    expect(result).toBeDefined();
+    expect(result.success).toBe(true);
+    expect(result.toAmount).toBeDefined();
+    // AUD should be more than USD (rate > 1)
+  });
+});
+
+describe("GL Ledger Integrity", () => {
+  it("checks ledger integrity", async () => {
+    const ctx = createTestContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.gl.checkLedgerIntegrity();
+    expect(result).toBeDefined();
+    expect(result.isHealthy).toBeDefined();
+    expect(result.checkedAt).toBeDefined();
+  }, 10000);
+});

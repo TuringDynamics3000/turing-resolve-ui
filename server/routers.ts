@@ -227,6 +227,9 @@ export const appRouter = router({
   // LEDGER API (Double-Entry Accounting)
   // ============================================
   ledger: router({
+    // GL Operations (from glLedgerRouter)
+    ...glLedgerRouter._def.procedures,
+    
     // Account Operations
     createAccount: publicProcedure
       .input(z.object({

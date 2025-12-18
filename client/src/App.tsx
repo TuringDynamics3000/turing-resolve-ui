@@ -28,6 +28,7 @@ import TuringSentinel from "@/pages/TuringSentinel";
 import TuringSentinelLanding from "@/pages/TuringSentinelLanding";
 import CaseManagement from "@/pages/CaseManagement";
 import PolicyEditor from "@/pages/PolicyEditor";
+import GLLedger from "@/pages/GLLedger";
 import NotFound from "@/pages/NotFound";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
 
@@ -56,6 +57,9 @@ function MainDashboard() {
         
         {/* Deposits Module */}
         <Route path="/deposits" component={DepositsDashboard} />
+        
+        {/* General Ledger */}
+        <Route path="/gl" component={GLLedger} />
         
         {/* Exposure Module */}
         <Route path="/exposure" component={ExposureDashboard} />
