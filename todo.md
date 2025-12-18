@@ -1738,3 +1738,17 @@
 - [x] Update getDecisionsByCommand to accept domain filter
 - [x] Add CSV export endpoint for authority facts
 - [x] Add export button to dashboard UI
+
+## Critical Ledger Fixes (Bank Production Grade)
+- [ ] Implement true double-entry enforcement (debits = credits validation)
+- [ ] Add DoubleEntryPosting type with multiple legs
+- [ ] Create commitPosting function with balance validation
+- [ ] Wrap DrizzleFactStore.appendFacts in database transaction
+- [ ] Add transaction rollback on partial failure
+- [ ] Create chart of accounts with account hierarchy
+- [ ] Implement GL trial balance generation
+- [ ] Add sub-ledger to GL mapping rules
+- [ ] Create ReversalPosting type with counter-entries
+- [ ] Implement reversePosting function with audit trail
+- [ ] Add reversal reason codes and validation
+- [ ] Write comprehensive tests for all fixes

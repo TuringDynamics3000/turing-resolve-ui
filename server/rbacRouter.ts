@@ -536,7 +536,7 @@ export const rbacRouter = router({
       return filtered.slice(0, input.limit).map(f => ({
         ...f,
         createdAt: f.createdAt?.toISOString() || new Date().toISOString(),
-      }));
+       }));
     }),
 
   /**
