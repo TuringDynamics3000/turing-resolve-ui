@@ -24,7 +24,11 @@ import {
   Landmark,
   PiggyBank,
   Receipt,
+  Database,
+  Calendar,
+  Play,
 } from "lucide-react";
+import { Link } from "wouter";
 import { toast } from "sonner";
 
 // Chart of Accounts data (from DoubleEntryLedger.ts)
@@ -81,6 +85,37 @@ const ACCOUNT_TYPE_ICONS: Record<string, React.ReactNode> = {
 
 // Helper to safely access trial balance data
 const getTB = (data: any) => data?.trialBalance || data;
+
+// Seed Data Button Component
+function SeedDataButton() {
+  const utils = trpc.useUtils();
+  const seedData = trpc.gl.seedGLData.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Seeded ${data.postingsCreated} postings successfully`);
+      utils.ledger.generateTrialBalance.invalidate();
+      utils.gl.listAccounts.invalidate();
+    },
+    onError: (error) => {
+      toast.error(`Failed to seed data: ${error.message}`);
+    },
+  });
+
+  return (
+    <Button 
+      variant="outline" 
+      className="border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10"
+      onClick={() => seedData.mutate()}
+      disabled={seedData.isPending}
+    >
+      {seedData.isPending ? (
+        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+      ) : (
+        <Database className="h-4 w-4 mr-2" />
+      )}
+      Seed Demo Data
+    </Button>
+  );
+}
 
 export default function GLLedger() {
   const [activeTab, setActiveTab] = useState("chart");
@@ -163,6 +198,21 @@ export default function GLLedger() {
             <h1 className="text-2xl font-bold text-white">General Ledger</h1>
             <p className="text-gray-400">Chart of accounts, trial balance, reconciliation, and FX</p>
           </div>
+        </div>
+        <div className="flex gap-2">
+          <SeedDataButton />
+          <Link href="/period-close">
+            <Button variant="outline" className="border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/10">
+              <Calendar className="h-4 w-4 mr-2" />
+              Period Close
+            </Button>
+          </Link>
+          <Link href="/apra">
+            <Button variant="outline" className="border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10">
+              <Building2 className="h-4 w-4 mr-2" />
+              APRA Reporting
+            </Button>
+          </Link>
         </div>
       </div>
       

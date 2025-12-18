@@ -29,6 +29,8 @@ import TuringSentinelLanding from "@/pages/TuringSentinelLanding";
 import CaseManagement from "@/pages/CaseManagement";
 import PolicyEditor from "@/pages/PolicyEditor";
 import GLLedger from "@/pages/GLLedger";
+import APRAReporting from "@/pages/APRAReporting";
+import PeriodClose from "@/pages/PeriodClose";
 import NotFound from "@/pages/NotFound";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
 
@@ -72,6 +74,8 @@ function MainDashboard() {
         {/* Reporting Module */}
         <Route path="/reporting" component={ReportingDashboard} />
         <Route path="/compliance" component={ComplianceReport} />
+        <Route path="/apra" component={APRAReporting} />
+        <Route path="/period-close" component={PeriodClose} />
         
         {/* ML Models */}
         <Route path="/ml-models" component={MLModelsDashboard} />

@@ -1768,3 +1768,8 @@
 - [ ] GL account to APRA mapping configuration
 - [x] Seed GL data with standard chart of accounts
 - [ ] Generate test postings for demo data
+
+## Ledger UI Enhancements
+- [x] APRA Reporting UI page with report generation and submission
+- [x] Period Close UI wizard with validation checklist
+- [x] Seed Demo Data button on GL Ledger page
