@@ -1892,3 +1892,47 @@
 - [x] Future-dated and recurring payments
 - [x] Payment analytics dashboard
 - [x] Volume, success rate, and settlement visualizations
+
+## Turing-Native UI Transformation
+
+### Decision Surfaces (Core Component)
+- [x] DecisionCard component - human-readable decision display
+- [x] Decision intent summary with natural language
+- [x] Policy impact visualization (allowed/blocked/escalate)
+- [x] Action buttons with authority context
+- [x] Evidence link integration
+
+### Authority-Aware UI
+- [x] AuthorityContext provider - user permissions state
+- [x] Permission-aware button component (shows why disabled)
+- [x] Authority badge component (user's current authority level)
+- [x] Escalation path display when blocked
+- [ ] Policy reference tooltips
+
+### Intent-First Screens
+- [ ] SendMoney intent screen (replaces form-first payment)
+- [ ] ReviewPayment decision surface
+- [ ] ApproveTransaction decision surface
+- [ ] CustomerOnboarding intent flow
+- [ ] AccountAction intent selector
+
+### Evidence-Native Screens
+- [ ] Evidence summary card component
+- [ ] Decision-to-evidence linking
+- [ ] Authority chain visualization
+- [ ] Immutable hash display
+- [ ] Audit export button (PDF/JSON)
+
+### Ops Inbox Redesign
+- [x] Inbox-driven dashboard ("Decisions requiring attention")
+- [x] Progressive disclosure pattern
+- [x] Natural language summaries
+- [ ] Zero raw IDs by default
+- [ ] Bulk action support
+
+### Design System Updates
+- [ ] Calm color palette (reduce visual noise)
+- [ ] Strong typography hierarchy
+- [ ] Consistent whitespace system
+- [ ] Dark mode refinement
+- [ ] Loading states and skeletons

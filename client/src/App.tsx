@@ -38,6 +38,12 @@ import PaymentAnalytics from "@/pages/PaymentAnalytics";
 import APRAReporting from "@/pages/APRAReporting";
 import PeriodClose from "@/pages/PeriodClose";
 import NotFound from "@/pages/NotFound";
+
+// Turing Ops Console Pages
+import DecisionInbox from "@/pages/DecisionInbox";
+import ActiveDecisions from "@/pages/ActiveDecisions";
+import CompletedDecisions from "@/pages/CompletedDecisions";
+import { AuthorityProvider } from "@/contexts/AuthorityContext";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
 
 function MainDashboard() {
@@ -105,9 +111,26 @@ function MainDashboard() {
 function Router() {
   // Check if we're on an operator route
   const [isOperator] = useRoute("/operator/*?");
+  // Check if we're on an ops console route
+  const [isOpsConsole] = useRoute("/ops/*?");
+  const [isOpsRoot] = useRoute("/ops");
   
   if (isOperator) {
     return <OperatorPage />;
+  }
+  
+  // Ops Console routes
+  if (isOpsConsole || isOpsRoot) {
+    return (
+      <Switch>
+        <Route path="/ops" component={DecisionInbox} />
+        <Route path="/ops/active" component={ActiveDecisions} />
+        <Route path="/ops/completed" component={CompletedDecisions} />
+        <Route path="/ops/payments" component={PaymentsPage} />
+        <Route path="/ops/evidence" component={EvidenceVault} />
+        <Route component={DecisionInbox} />
+      </Switch>
+    );
   }
   
   return <MainDashboard />;
@@ -117,10 +140,12 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <AuthorityProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AuthorityProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
