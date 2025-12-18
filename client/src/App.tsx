@@ -45,6 +45,8 @@ import ActiveDecisions from "@/pages/ActiveDecisions";
 import CompletedDecisions from "@/pages/CompletedDecisions";
 import { AuthorityProvider } from "@/contexts/AuthorityContext";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
+import LimitsOverridesPage from "@/pages/LimitsOverridesPage";
+import SystemHealthPage from "@/pages/SystemHealthPage";
 
 function MainDashboard() {
   return (
@@ -127,6 +129,8 @@ function Router() {
         <Route path="/ops/active" component={ActiveDecisions} />
         <Route path="/ops/completed" component={CompletedDecisions} />
         <Route path="/ops/payments" component={PaymentsPage} />
+        <Route path="/ops/limits" component={LimitsOverridesPage} />
+        <Route path="/ops/health" component={SystemHealthPage} />
         <Route path="/ops/evidence" component={EvidenceVault} />
         <Route component={DecisionInbox} />
       </Switch>

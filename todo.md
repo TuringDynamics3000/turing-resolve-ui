@@ -1936,3 +1936,57 @@
 - [ ] Consistent whitespace system
 - [ ] Dark mode refinement
 - [ ] Loading states and skeletons
+
+## Ops Console Phase 2
+
+### Decision Inbox Live Data
+- [ ] Create opsRouter for decision queue tRPC endpoints
+- [ ] Add getPendingDecisions endpoint with filtering
+- [ ] Add getDecisionById endpoint for detail view
+- [ ] Add submitDecision mutation (approve/decline/escalate)
+- [ ] Wire DecisionInbox to live tRPC queries
+- [ ] Add real-time updates via refetch interval
+
+### Limits & Overrides Page
+- [ ] Create LimitsOverridesPage component
+- [ ] Build limit catalogue display (transaction limits, daily limits, etc.)
+- [ ] Add override request form with justification
+- [ ] Create override approval workflow
+- [ ] Add limit history and audit trail
+- [ ] Wire to tRPC endpoints
+
+### System Health Dashboard
+- [ ] Create SystemHealthPage component
+- [ ] Add decision backlog metrics (queue depth, oldest item)
+- [ ] Add SLA breach tracking (decisions exceeding time limits)
+- [ ] Add retry queue monitoring
+- [ ] Add system component health checks
+- [ ] Add real-time refresh capability
+
+## Ops Console Phase 2 - COMPLETED ✓
+
+### Decision Inbox Live Data - COMPLETED ✓
+- [x] Create opsRouter for decision queue tRPC endpoints
+- [x] Add getPendingDecisions endpoint with filtering
+- [x] Add getDecisionById endpoint for detail view
+- [x] Add submitDecision mutation (approve/decline/escalate)
+- [x] Wire DecisionInbox to live tRPC queries
+- [x] Add real-time updates via refetch interval
+
+### Limits & Overrides Page - COMPLETED ✓
+- [x] Create LimitsOverridesPage component
+- [x] Build limit catalogue display (transaction limits, daily limits, etc.)
+- [x] Add override request form with justification
+- [x] Create override approval workflow
+- [x] Add limit history and audit trail
+- [x] Wire to tRPC endpoints
+
+### System Health Dashboard - COMPLETED ✓
+- [x] Create SystemHealthPage component
+- [x] Add decision backlog metrics (queue depth, oldest item)
+- [x] Add SLA breach tracking (decisions exceeding time limits)
+- [x] Add retry queue monitoring
+- [x] Add system component health checks
+- [x] Add real-time refresh capability
+
+**All 25 opsRouter tests passing**

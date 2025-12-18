@@ -3,6 +3,8 @@ import { OpsConsoleLayout } from "@/components/OpsConsoleLayout";
 import { DecisionCard, DecisionCardData } from "@/components/DecisionCard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { trpc } from "@/lib/trpc";
 import { 
   Filter, 
   SortAsc, 
@@ -11,185 +13,17 @@ import {
   CheckCircle,
   XCircle,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from "lucide-react";
+import { toast } from "sonner";
 
 // ============================================
-// MOCK DATA
+// TYPES
 // ============================================
 
-const MOCK_DECISIONS: DecisionCardData[] = [
-  {
-    decisionId: "D-2025-000381",
-    status: "PENDING",
-    riskLevel: "HIGH",
-    decisionType: "PAYMENT_APPROVAL",
-    slaRemaining: "01:12",
-    subject: {
-      type: "payment",
-      description: "High-value external payment",
-      amount: 40000,
-      currency: "£",
-      from: "Wallet A (Customer X)",
-      to: "External Beneficiary Y",
-      channel: "Faster Payments",
-      customer: "Acme Corp Ltd",
-    },
-    triggers: [
-      "Exceeds standard limit (£25,000)",
-      "No previous override in period",
-      "New beneficiary (first payment)",
-    ],
-    policyTriggered: {
-      policyId: "PAY-004",
-      policyName: "High-Value External Payments",
-      description: "High-value external payments require supervisor review",
-      allowedAuthorities: ["Supervisor", "Dual Control (Ops + Compliance)"],
-    },
-    userAuthority: {
-      role: "Supervisor",
-      canApprove: true,
-      canReject: true,
-      canEscalate: true,
-    },
-    onApprovalOutcome: "Execution delegated to TuringCore",
-    createdAt: new Date(Date.now() - 3600000).toISOString(),
-  },
-  {
-    decisionId: "D-2025-000382",
-    status: "PENDING",
-    riskLevel: "CRITICAL",
-    decisionType: "AML_EXCEPTION",
-    slaRemaining: "00:45",
-    slaExpired: false,
-    subject: {
-      type: "aml_review",
-      description: "AML alert - unusual transaction pattern",
-      amount: 125000,
-      currency: "$",
-      customer: "Global Trading Pty Ltd",
-    },
-    triggers: [
-      "Multiple large transactions in 24h",
-      "New jurisdiction (first time)",
-      "AML score: 78 (threshold: 70)",
-    ],
-    policyTriggered: {
-      policyId: "AML-002",
-      policyName: "Enhanced Due Diligence",
-      description: "Transactions triggering AML alerts require compliance review",
-      allowedAuthorities: ["Compliance Officer", "MLRO"],
-    },
-    userAuthority: {
-      role: "Supervisor",
-      canApprove: false,
-      canReject: false,
-      canEscalate: true,
-      reason: "AML decisions require Compliance authority",
-    },
-    onApprovalOutcome: "Transaction released, monitoring continues",
-    createdAt: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    decisionId: "D-2025-000383",
-    status: "ESCALATED",
-    riskLevel: "MEDIUM",
-    decisionType: "LIMIT_OVERRIDE",
-    slaRemaining: "02:30",
-    subject: {
-      type: "limit_override",
-      description: "Temporary limit increase request",
-      amount: 100000,
-      currency: "$",
-      customer: "Smith Industries",
-    },
-    triggers: [
-      "Requested limit exceeds tier maximum",
-      "Customer tenure: 6 months",
-    ],
-    policyTriggered: {
-      policyId: "LIM-001",
-      policyName: "Limit Override Policy",
-      description: "Limit overrides above tier maximum require manager approval",
-      allowedAuthorities: ["Manager", "Credit Committee"],
-    },
-    userAuthority: {
-      role: "Supervisor",
-      canApprove: false,
-      canReject: true,
-      canEscalate: false,
-      reason: "Escalated to Manager - awaiting decision",
-    },
-    onApprovalOutcome: "Temporary limit applied for 30 days",
-    createdAt: new Date(Date.now() - 10800000).toISOString(),
-  },
-  {
-    decisionId: "D-2025-000384",
-    status: "PENDING",
-    riskLevel: "LOW",
-    decisionType: "MANUAL_JOURNAL",
-    slaRemaining: "04:00",
-    subject: {
-      type: "journal",
-      description: "Manual journal entry - fee reversal",
-      amount: 250,
-      currency: "$",
-      customer: "Johnson & Partners",
-    },
-    triggers: [
-      "Manual journal requires dual approval",
-      "Customer complaint reference: CMP-2025-0891",
-    ],
-    policyTriggered: {
-      policyId: "JNL-001",
-      policyName: "Manual Journal Policy",
-      description: "All manual journals require maker-checker approval",
-      allowedAuthorities: ["Supervisor", "Finance Officer"],
-    },
-    userAuthority: {
-      role: "Supervisor",
-      canApprove: true,
-      canReject: true,
-      canEscalate: true,
-    },
-    onApprovalOutcome: "Journal posted to ledger",
-    createdAt: new Date(Date.now() - 14400000).toISOString(),
-  },
-  {
-    decisionId: "D-2025-000385",
-    status: "PENDING",
-    riskLevel: "MEDIUM",
-    decisionType: "FX_APPROVAL",
-    slaRemaining: "00:30",
-    subject: {
-      type: "fx_trade",
-      description: "FX conversion - large amount",
-      amount: 75000,
-      currency: "€",
-      from: "AUD Account",
-      to: "EUR Account",
-      customer: "EuroTech Solutions",
-    },
-    triggers: [
-      "Amount exceeds auto-approval threshold",
-      "Rate variance: 0.3% from mid-market",
-    ],
-    policyTriggered: {
-      policyId: "FX-002",
-      policyName: "Large FX Trades",
-      description: "FX trades above threshold require treasury approval",
-      allowedAuthorities: ["Treasury", "Supervisor"],
-    },
-    userAuthority: {
-      role: "Supervisor",
-      canApprove: true,
-      canReject: true,
-      canEscalate: true,
-    },
-    onApprovalOutcome: "FX trade executed at quoted rate",
-    createdAt: new Date(Date.now() - 1800000).toISOString(),
-  },
-];
+type DecisionType = 'PAYMENT' | 'LENDING' | 'LIMIT_OVERRIDE' | 'ACCOUNT_ACTION' | 'COMPLIANCE';
+type DecisionPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
 // ============================================
 // COMPONENTS
@@ -199,18 +33,24 @@ function StatCard({
   label, 
   value, 
   icon: Icon, 
-  color 
+  color,
+  loading = false
 }: { 
   label: string; 
   value: number; 
   icon: React.ElementType; 
   color: string;
+  loading?: boolean;
 }) {
   return (
     <div className={`p-4 rounded-lg border ${color}`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-2xl font-bold text-slate-100">{value}</p>
+          {loading ? (
+            <Skeleton className="h-8 w-12 bg-slate-700" />
+          ) : (
+            <p className="text-2xl font-bold text-slate-100">{value}</p>
+          )}
           <p className="text-sm text-slate-400">{label}</p>
         </div>
         <Icon className="w-8 h-8 opacity-50" />
@@ -223,7 +63,25 @@ function DecisionRow({
   decision, 
   onClick 
 }: { 
-  decision: DecisionCardData; 
+  decision: {
+    id: string;
+    type: DecisionType;
+    status: string;
+    priority: DecisionPriority;
+    title: string;
+    summary: string;
+    customerName: string;
+    customerId: string;
+    amount?: number;
+    currency?: string;
+    slaDeadline: Date;
+    policyContext: {
+      policyId: string;
+      policyName: string;
+      outcome: string;
+      reason: string;
+    };
+  }; 
   onClick: () => void;
 }) {
   const riskColors = {
@@ -235,13 +93,25 @@ function DecisionRow({
   
   const statusIcons = {
     PENDING: Clock,
-    ESCALATED: AlertTriangle,
+    IN_PROGRESS: Loader2,
     APPROVED: CheckCircle,
-    REJECTED: XCircle,
+    DECLINED: XCircle,
+    ESCALATED: AlertTriangle,
     EXPIRED: AlertTriangle,
   };
   
-  const StatusIcon = statusIcons[decision.status];
+  const StatusIcon = statusIcons[decision.status as keyof typeof statusIcons] || Clock;
+  
+  // Calculate SLA remaining
+  const now = new Date();
+  const slaDeadline = new Date(decision.slaDeadline);
+  const slaRemainingMs = slaDeadline.getTime() - now.getTime();
+  const slaExpired = slaRemainingMs < 0;
+  const slaMinutes = Math.abs(Math.floor(slaRemainingMs / 60000));
+  const slaHours = Math.floor(slaMinutes / 60);
+  const slaRemaining = slaExpired 
+    ? `-${slaHours.toString().padStart(2, '0')}:${(slaMinutes % 60).toString().padStart(2, '0')}`
+    : `${slaHours.toString().padStart(2, '0')}:${(slaMinutes % 60).toString().padStart(2, '0')}`;
   
   return (
     <button
@@ -264,40 +134,38 @@ function DecisionRow({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <span className="text-sm font-medium text-slate-200 group-hover:text-white">
-              {decision.subject.description}
+              {decision.title}
             </span>
-            {decision.subject.amount && (
+            {decision.amount && (
               <span className="text-sm font-bold text-cyan-400">
-                {decision.subject.currency}{decision.subject.amount.toLocaleString()}
+                {decision.currency || '$'}{decision.amount.toLocaleString()}
               </span>
             )}
           </div>
           <div className="flex items-center gap-3 text-xs text-slate-500">
-            <span className="font-mono">{decision.decisionId}</span>
+            <span className="font-mono">{decision.id}</span>
             <span>•</span>
-            <span className="text-cyan-400">{decision.policyTriggered.policyId}</span>
+            <span className="text-cyan-400">{decision.policyContext.policyId}</span>
             <span>•</span>
-            <span>{decision.subject.customer}</span>
+            <span>{decision.customerName}</span>
           </div>
         </div>
         
         {/* Risk & SLA */}
         <div className="flex items-center gap-4">
-          <Badge className={`${riskColors[decision.riskLevel]} bg-transparent border-current`}>
-            {decision.riskLevel}
+          <Badge className={`${riskColors[decision.priority]} bg-transparent border-current`}>
+            {decision.priority}
           </Badge>
           
-          {decision.slaRemaining && (
-            <div className={`flex items-center gap-1 text-sm ${
-              decision.slaExpired ? "text-red-400" : "text-slate-400"
-            }`}>
-              <Clock className="w-4 h-4" />
-              {decision.slaRemaining}
-            </div>
-          )}
+          <div className={`flex items-center gap-1 text-sm ${
+            slaExpired ? "text-red-400" : "text-slate-400"
+          }`}>
+            <Clock className="w-4 h-4" />
+            {slaRemaining}
+          </div>
           
           <Badge variant="outline" className="text-xs border-slate-600 text-slate-400">
-            {decision.userAuthority.role}
+            {decision.type.replace('_', ' ')}
           </Badge>
           
           <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-cyan-400 transition-colors" />
@@ -308,22 +176,146 @@ function DecisionRow({
 }
 
 // ============================================
+// TRANSFORM FUNCTION
+// ============================================
+
+function transformToDecisionCardData(decision: {
+  id: string;
+  type: DecisionType;
+  status: string;
+  priority: DecisionPriority;
+  title: string;
+  summary: string;
+  customerName: string;
+  customerId: string;
+  amount?: number;
+  currency?: string;
+  createdAt: Date;
+  slaDeadline: Date;
+  policyContext: {
+    policyId: string;
+    policyName: string;
+    version: string;
+    outcome: string;
+    reason: string;
+  };
+  facts: Record<string, unknown>;
+}): DecisionCardData {
+  const now = new Date();
+  const slaDeadline = new Date(decision.slaDeadline);
+  const slaRemainingMs = slaDeadline.getTime() - now.getTime();
+  const slaExpired = slaRemainingMs < 0;
+  const slaMinutes = Math.abs(Math.floor(slaRemainingMs / 60000));
+  const slaHours = Math.floor(slaMinutes / 60);
+  const slaRemaining = `${slaHours.toString().padStart(2, '0')}:${(slaMinutes % 60).toString().padStart(2, '0')}`;
+
+  return {
+    decisionId: decision.id,
+    status: decision.status === 'PENDING' ? 'PENDING' : 
+            decision.status === 'IN_PROGRESS' ? 'PENDING' :
+            decision.status === 'APPROVED' ? 'APPROVED' :
+            decision.status === 'DECLINED' ? 'REJECTED' :
+            decision.status === 'ESCALATED' ? 'ESCALATED' : 'EXPIRED',
+    riskLevel: decision.priority,
+    decisionType: decision.type === 'PAYMENT' ? 'PAYMENT_APPROVAL' :
+                  decision.type === 'LENDING' ? 'LOAN_APPROVAL' :
+                  decision.type === 'LIMIT_OVERRIDE' ? 'LIMIT_OVERRIDE' :
+                  decision.type === 'COMPLIANCE' ? 'AML_EXCEPTION' : 'MANUAL_JOURNAL',
+    slaRemaining,
+    slaExpired,
+    subject: {
+      type: decision.type.toLowerCase(),
+      description: decision.title,
+      amount: decision.amount,
+      currency: decision.currency || '$',
+      customer: decision.customerName,
+    },
+    triggers: [
+      decision.policyContext.reason,
+      `Risk Level: ${decision.priority}`,
+    ],
+    policyTriggered: {
+      policyId: decision.policyContext.policyId,
+      policyName: decision.policyContext.policyName,
+      description: decision.policyContext.reason,
+      allowedAuthorities: decision.policyContext.outcome === 'ESCALATE' 
+        ? ['Manager', 'Compliance Officer'] 
+        : ['Supervisor', 'Ops Analyst'],
+    },
+    userAuthority: {
+      role: 'Supervisor',
+      canApprove: decision.policyContext.outcome !== 'ESCALATE',
+      canReject: true,
+      canEscalate: true,
+      reason: decision.policyContext.outcome === 'ESCALATE' 
+        ? 'Escalated - requires higher authority' 
+        : undefined,
+    },
+    onApprovalOutcome: 'Execution delegated to TuringCore',
+    createdAt: new Date(decision.createdAt).toISOString(),
+  };
+}
+
+// ============================================
 // MAIN PAGE
 // ============================================
 
 export default function DecisionInbox() {
   const [selectedDecision, setSelectedDecision] = useState<DecisionCardData | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "escalated">("all");
+  const [typeFilter, setTypeFilter] = useState<DecisionType | undefined>(undefined);
+  const [priorityFilter, setPriorityFilter] = useState<DecisionPriority | undefined>(undefined);
   
-  const filteredDecisions = MOCK_DECISIONS.filter(d => {
+  // Fetch pending decisions from tRPC
+  const { data: pendingData, isLoading: pendingLoading, refetch: refetchPending } = trpc.ops.getPendingDecisions.useQuery({
+    type: typeFilter,
+    priority: priorityFilter,
+    limit: 50,
+    offset: 0,
+  }, {
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+  
+  // Fetch decision stats
+  const { data: stats, isLoading: statsLoading, refetch: refetchStats } = trpc.ops.getDecisionStats.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
+  
+  // Submit decision mutation
+  const submitDecision = trpc.ops.submitDecision.useMutation({
+    onSuccess: (result) => {
+      toast.success(`Decision ${result.newStatus.toLowerCase()}`, {
+        description: `Evidence pack: ${result.evidencePackId}`,
+      });
+      setSelectedDecision(null);
+      refetchPending();
+      refetchStats();
+    },
+    onError: (error) => {
+      toast.error('Failed to submit decision', {
+        description: error.message,
+      });
+    },
+  });
+  
+  const handleRefresh = () => {
+    refetchPending();
+    refetchStats();
+    toast.info('Refreshing decision queue...');
+  };
+  
+  const decisions = pendingData?.items || [];
+  
+  const filteredDecisions = decisions.filter(d => {
     if (filter === "pending") return d.status === "PENDING";
-    if (filter === "escalated") return d.status === "ESCALATED";
+    if (filter === "escalated") return d.status === "IN_PROGRESS"; // Map escalated to in_progress for now
     return true;
   });
   
-  const pendingCount = MOCK_DECISIONS.filter(d => d.status === "PENDING").length;
-  const escalatedCount = MOCK_DECISIONS.filter(d => d.status === "ESCALATED").length;
-  const criticalCount = MOCK_DECISIONS.filter(d => d.riskLevel === "CRITICAL").length;
+  const pendingCount = stats?.pending ?? 0;
+  const escalatedCount = stats?.inProgress ?? 0;
+  const criticalCount = stats?.byPriority?.critical ?? 0;
+  const totalToday = stats?.completedToday ?? 0;
   
   return (
     <OpsConsoleLayout>
@@ -334,8 +326,13 @@ export default function DecisionInbox() {
             <h1 className="text-2xl font-bold text-slate-100">Decision Inbox</h1>
             <p className="text-slate-400 mt-1">Items requiring your authority</p>
           </div>
-          <Button variant="outline" className="border-slate-700 text-slate-300">
-            <RefreshCw className="w-4 h-4 mr-2" />
+          <Button 
+            variant="outline" 
+            className="border-slate-700 text-slate-300"
+            onClick={handleRefresh}
+            disabled={pendingLoading}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${pendingLoading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
         </div>
@@ -347,26 +344,40 @@ export default function DecisionInbox() {
             value={pendingCount} 
             icon={Clock}
             color="bg-amber-500/10 border-amber-500/30 text-amber-400"
+            loading={statsLoading}
           />
           <StatCard 
-            label="Escalated" 
+            label="In Progress" 
             value={escalatedCount} 
-            icon={AlertTriangle}
+            icon={Loader2}
             color="bg-purple-500/10 border-purple-500/30 text-purple-400"
+            loading={statsLoading}
           />
           <StatCard 
             label="Critical Risk" 
             value={criticalCount} 
             icon={AlertTriangle}
             color="bg-red-500/10 border-red-500/30 text-red-400"
+            loading={statsLoading}
           />
           <StatCard 
-            label="Total Today" 
-            value={MOCK_DECISIONS.length} 
+            label="Completed Today" 
+            value={totalToday} 
             icon={CheckCircle}
             color="bg-cyan-500/10 border-cyan-500/30 text-cyan-400"
+            loading={statsLoading}
           />
         </div>
+        
+        {/* SLA Breach Warning */}
+        {stats && stats.slaBreached > 0 && (
+          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-400" />
+            <span className="text-red-300">
+              <strong>{stats.slaBreached} decisions</strong> have breached SLA. Immediate attention required.
+            </span>
+          </div>
+        )}
         
         {/* Filters */}
         <div className="flex items-center gap-3 mb-4">
@@ -376,7 +387,7 @@ export default function DecisionInbox() {
             onClick={() => setFilter("all")}
             className={filter === "all" ? "bg-cyan-600" : "border-slate-700 text-slate-400"}
           >
-            All ({MOCK_DECISIONS.length})
+            All ({decisions.length})
           </Button>
           <Button
             variant={filter === "pending" ? "default" : "outline"}
@@ -392,7 +403,7 @@ export default function DecisionInbox() {
             onClick={() => setFilter("escalated")}
             className={filter === "escalated" ? "bg-purple-600" : "border-slate-700 text-slate-400"}
           >
-            Escalated ({escalatedCount})
+            In Progress ({escalatedCount})
           </Button>
           
           <div className="flex-1" />
@@ -421,26 +432,50 @@ export default function DecisionInbox() {
             <DecisionCard 
               data={selectedDecision}
               onApprove={(justification) => {
-                console.log("Approved:", justification);
-                setSelectedDecision(null);
+                const originalDecision = decisions.find(d => d.id === selectedDecision.decisionId);
+                if (originalDecision) {
+                  submitDecision.mutate({
+                    decisionId: originalDecision.id,
+                    action: 'APPROVE',
+                    reason: justification,
+                  });
+                }
               }}
               onReject={(justification) => {
-                console.log("Rejected:", justification);
-                setSelectedDecision(null);
+                const originalDecision = decisions.find(d => d.id === selectedDecision.decisionId);
+                if (originalDecision) {
+                  submitDecision.mutate({
+                    decisionId: originalDecision.id,
+                    action: 'DECLINE',
+                    reason: justification,
+                  });
+                }
               }}
               onEscalate={() => {
-                console.log("Escalated");
-                setSelectedDecision(null);
+                const originalDecision = decisions.find(d => d.id === selectedDecision.decisionId);
+                if (originalDecision) {
+                  submitDecision.mutate({
+                    decisionId: originalDecision.id,
+                    action: 'ESCALATE',
+                    reason: 'Escalated to higher authority',
+                  });
+                }
               }}
             />
+          </div>
+        ) : pendingLoading ? (
+          <div className="space-y-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-20 w-full bg-slate-800" />
+            ))}
           </div>
         ) : (
           <div className="space-y-2">
             {filteredDecisions.map((decision) => (
               <DecisionRow
-                key={decision.decisionId}
+                key={decision.id}
                 decision={decision}
-                onClick={() => setSelectedDecision(decision)}
+                onClick={() => setSelectedDecision(transformToDecisionCardData(decision))}
               />
             ))}
             

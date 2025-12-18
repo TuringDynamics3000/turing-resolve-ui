@@ -33,6 +33,7 @@ import { mlRouter } from "./mlRouter";
 import { rbacRouter } from "./rbacRouter";
 import { policyRouter } from "./policyRouter";
 import { forbiddenRouter } from "./forbiddenRouter";
+import { opsRouter } from "./opsRouter";
 import { ledgerRouter as glLedgerRouter } from "./ledgerRouter";
 import { getSealerStatus, forceSeal, generateEvidencePack, verifyEvidencePack, type EvidencePack as VerifiableEvidencePack } from "./services";
 
@@ -46,6 +47,7 @@ export const appRouter = router({
   rbac: rbacRouter,
   policy: policyRouter,
   forbidden: forbiddenRouter,
+  ops: opsRouter, // Ops Console - decisions, limits, health
   gl: glLedgerRouter, // Bank-grade double-entry GL
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
