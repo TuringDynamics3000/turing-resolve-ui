@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { CommandPalette } from "./CommandPalette";
 import { useRole, UserRole, Environment } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
@@ -158,6 +158,15 @@ export function Sidebar({ collapsed = false, onCollapsedChange }: SidebarProps) 
           </Button>
         </div>
       )}
+
+      {/* Search */}
+      <div className={cn("px-2 py-3 border-b border-blue-500/20", collapsed && "px-1")}>
+        {!collapsed ? (
+          <CommandPalette />
+        ) : (
+          <CommandPalette />
+        )}
+      </div>
 
       {/* Main Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
