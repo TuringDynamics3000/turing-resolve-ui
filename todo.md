@@ -1817,3 +1817,12 @@
 - [x] Interest Scheduler controls and status
 - [x] APRA ARF 220.0 Credit Risk template
 - [x] ARF 220.0 GL-to-APRA mappings
+
+## Customer Multi-Currency Wallets
+
+- [x] Database schema for customer currency balances
+- [x] MultiCurrencyWalletService with FX conversion
+- [x] Real-time FX rate quotes with spread/markup
+- [x] Currency conversion execution with GL postings
+- [x] tRPC endpoints for wallet operations
+- [x] Customer wallet UI with currency breakdown

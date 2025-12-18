@@ -33,6 +33,7 @@ import {
   BookOpen,
   AlertTriangle,
   Calculator,
+  Globe,
 } from "lucide-react";
 
 export function GlobalNav() {
@@ -46,6 +47,7 @@ export function GlobalNav() {
     { href: "/lending", label: "Lending", icon: CreditCard, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/payments", label: "Payments", icon: Wallet, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/deposits", label: "Deposits", icon: Building2, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
+    { href: "/wallets", label: "Wallets", icon: Globe, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/exposure", label: "Exposure", icon: TrendingUp, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'BOARD_VIEWER'] },
     { href: "/reporting", label: "Reporting", icon: FileText, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'BOARD_VIEWER'] },
     { href: "/ml-models", label: "ML Models", icon: Brain, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'SYSTEM_ADMIN'] },

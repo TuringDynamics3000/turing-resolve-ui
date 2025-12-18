@@ -1079,6 +1079,216 @@ export const ledgerRouter = router({
         })),
       };
     }),
+
+  // ============================================
+  // MULTI-CURRENCY WALLET ENDPOINTS
+  // ============================================
+
+  /**
+   * Get all FX rates.
+   */
+  getFXRates: publicProcedure
+    .query(async () => {
+      const { multiCurrencyWalletService } = await import("./core/ledger/MultiCurrencyWalletService");
+      const rates = multiCurrencyWalletService.getAllRates();
+      
+      return {
+        rates: rates.map(r => ({
+          baseCurrency: r.baseCurrency,
+          quoteCurrency: r.quoteCurrency,
+          bidRate: r.bidRate.toFixed(4),
+          askRate: r.askRate.toFixed(4),
+          midRate: r.midRate.toFixed(4),
+          source: r.source,
+          timestamp: r.timestamp,
+        })),
+        lastUpdated: new Date().toISOString(),
+      };
+    }),
+
+  /**
+   * Get customer wallet with all currency balances.
+   */
+  getCustomerWallet: publicProcedure
+    .input(z.object({
+      customerId: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const { multiCurrencyWalletService } = await import("./core/ledger/MultiCurrencyWalletService");
+      const wallet = multiCurrencyWalletService.getWallet(input.customerId);
+      
+      if (!wallet) {
+        return null;
+      }
+      
+      return {
+        customerId: wallet.customerId,
+        customerName: wallet.customerName,
+        balances: wallet.balances.map(b => ({
+          currency: b.currency,
+          balance: b.balance.toDisplayString(),
+          availableBalance: b.availableBalance.toDisplayString(),
+          holdAmount: b.holdAmount.toDisplayString(),
+          balanceValue: Number(b.balance.amount) / 100,
+          isActive: b.isActive,
+        })),
+        totalValueAUD: wallet.totalValueAUD.toDisplayString(),
+        totalValueAUDNum: Number(wallet.totalValueAUD.amount) / 100,
+        lastUpdated: wallet.lastUpdated,
+      };
+    }),
+
+  /**
+   * Get all customer wallets.
+   */
+  getAllCustomerWallets: publicProcedure
+    .query(async () => {
+      const { multiCurrencyWalletService } = await import("./core/ledger/MultiCurrencyWalletService");
+      const wallets = multiCurrencyWalletService.getAllWallets();
+      
+      return {
+        wallets: wallets.map(w => ({
+          customerId: w.customerId,
+          customerName: w.customerName,
+          currencyCount: w.balances.length,
+          currencies: w.balances.map(b => b.currency),
+          totalValueAUD: w.totalValueAUD.toDisplayString(),
+          totalValueAUDNum: Number(w.totalValueAUD.amount) / 100,
+        })),
+        totalWallets: wallets.length,
+      };
+    }),
+
+  /**
+   * Get FX quote for conversion.
+   */
+  getFXQuote: publicProcedure
+    .input(z.object({
+      customerId: z.string(),
+      fromCurrency: z.string(),
+      toCurrency: z.string(),
+      fromAmountCents: z.number().int().positive(),
+    }))
+    .query(async ({ input }) => {
+      const { multiCurrencyWalletService } = await import("./core/ledger/MultiCurrencyWalletService");
+      const { Money } = await import("../core/deposits/ledger/Money");
+      
+      const fromAmount = new Money(BigInt(input.fromAmountCents), input.fromCurrency);
+      const quote = multiCurrencyWalletService.getQuote(
+        input.customerId,
+        input.fromCurrency as any,
+        input.toCurrency as any,
+        fromAmount
+      );
+      
+      if (!quote) {
+        return null;
+      }
+      
+      return {
+        quoteId: quote.quoteId,
+        customerId: quote.customerId,
+        fromCurrency: quote.fromCurrency,
+        toCurrency: quote.toCurrency,
+        fromAmount: quote.fromAmount.toDisplayString(),
+        toAmount: quote.toAmount.toDisplayString(),
+        spotRate: quote.spotRate.toFixed(6),
+        customerRate: quote.customerRate.toFixed(6),
+        spreadPercent: quote.spreadPercent.toFixed(2) + "%",
+        spreadAmount: quote.spreadAmount.toDisplayString(),
+        expiresAt: quote.expiresAt,
+        disclosures: quote.disclosures,
+      };
+    }),
+
+  /**
+   * Execute currency conversion.
+   */
+  executeFXConversion: publicProcedure
+    .input(z.object({
+      customerId: z.string(),
+      fromCurrency: z.string(),
+      toCurrency: z.string(),
+      fromAmountCents: z.number().int().positive(),
+      quoteId: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const { multiCurrencyWalletService } = await import("./core/ledger/MultiCurrencyWalletService");
+      const { Money } = await import("../core/deposits/ledger/Money");
+      
+      const fromAmount = new Money(BigInt(input.fromAmountCents), input.fromCurrency);
+      const result = multiCurrencyWalletService.executeConversion(
+        input.customerId,
+        input.fromCurrency as any,
+        input.toCurrency as any,
+        fromAmount,
+        input.quoteId
+      );
+      
+      if (!result) {
+        return { success: false, error: "Conversion failed - insufficient balance or invalid parameters" };
+      }
+      
+      return {
+        success: true,
+        transactionId: result.transactionId,
+        fromCurrency: result.fromCurrency,
+        toCurrency: result.toCurrency,
+        fromAmount: result.fromAmount.toDisplayString(),
+        toAmount: result.toAmount.toDisplayString(),
+        spotRate: result.spotRate.toFixed(6),
+        customerRate: result.customerRate.toFixed(6),
+        spreadPercent: result.spreadPercent.toFixed(2) + "%",
+        postingId: result.postingId,
+        executedAt: result.executedAt,
+        glPostings: result.glPostings,
+      };
+    }),
+
+  /**
+   * Get FX transaction history for customer.
+   */
+  getFXTransactionHistory: publicProcedure
+    .input(z.object({
+      customerId: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const { multiCurrencyWalletService } = await import("./core/ledger/MultiCurrencyWalletService");
+      const transactions = multiCurrencyWalletService.getTransactionHistory(input.customerId);
+      
+      return {
+        transactions: transactions.map(t => ({
+          transactionId: t.transactionId,
+          fromCurrency: t.fromCurrency,
+          toCurrency: t.toCurrency,
+          fromAmount: t.fromAmount.toDisplayString(),
+          toAmount: t.toAmount.toDisplayString(),
+          customerRate: t.customerRate.toFixed(6),
+          spreadPercent: t.spreadPercent.toFixed(2) + "%",
+          status: t.status,
+          executedAt: t.executedAt,
+        })),
+        totalTransactions: transactions.length,
+      };
+    }),
+
+  /**
+   * Add currency to customer wallet.
+   */
+  addCurrencyToWallet: publicProcedure
+    .input(z.object({
+      customerId: z.string(),
+      currency: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const { multiCurrencyWalletService } = await import("./core/ledger/MultiCurrencyWalletService");
+      const success = multiCurrencyWalletService.addCurrencyToWallet(
+        input.customerId,
+        input.currency as any
+      );
+      
+      return { success };
+    }),
 });
 
 export default ledgerRouter;

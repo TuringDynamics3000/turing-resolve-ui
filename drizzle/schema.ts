@@ -660,3 +660,100 @@ export const merkleAnchorVerifications = mysqlTable("merkle_anchor_verifications
 
 export type MerkleAnchorVerification = typeof merkleAnchorVerifications.$inferSelect;
 export type InsertMerkleAnchorVerification = typeof merkleAnchorVerifications.$inferInsert;
+
+
+// ============================================
+// MULTI-CURRENCY WALLET TABLES
+// ============================================
+
+/**
+ * Customer Currency Balances - Multi-currency wallet support.
+ * Each customer can hold balances in multiple currencies.
+ */
+export const customerCurrencyBalances = mysqlTable("customer_currency_balances", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Customer and currency identity
+  customerId: varchar("customerId", { length: 64 }).notNull(),
+  currency: varchar("currency", { length: 3 }).notNull(),
+  
+  // Balances (in minor units - cents/pence)
+  balance: decimal("balance", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  availableBalance: decimal("availableBalance", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  holdAmount: decimal("holdAmount", { precision: 18, scale: 2 }).default("0.00").notNull(),
+  
+  // Linked GL account for this currency pocket
+  glAccountId: varchar("glAccountId", { length: 64 }),
+  
+  // Status
+  isActive: mysqlEnum("isActive", ["true", "false"]).default("true").notNull(),
+  
+  // Audit
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type CustomerCurrencyBalance = typeof customerCurrencyBalances.$inferSelect;
+export type InsertCustomerCurrencyBalance = typeof customerCurrencyBalances.$inferInsert;
+
+/**
+ * FX Transactions - Record of currency conversions.
+ * Immutable audit trail of all FX activity.
+ */
+export const fxTransactions = mysqlTable("fx_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  transactionId: varchar("transactionId", { length: 64 }).notNull().unique(),
+  
+  // Customer
+  customerId: varchar("customerId", { length: 64 }).notNull(),
+  
+  // Conversion details
+  fromCurrency: varchar("fromCurrency", { length: 3 }).notNull(),
+  toCurrency: varchar("toCurrency", { length: 3 }).notNull(),
+  fromAmount: decimal("fromAmount", { precision: 18, scale: 2 }).notNull(),
+  toAmount: decimal("toAmount", { precision: 18, scale: 2 }).notNull(),
+  
+  // Rate information
+  spotRate: decimal("spotRate", { precision: 18, scale: 8 }).notNull(),
+  customerRate: decimal("customerRate", { precision: 18, scale: 8 }).notNull(),
+  spreadPercent: decimal("spreadPercent", { precision: 5, scale: 4 }).notNull(),
+  
+  // GL posting reference
+  postingId: varchar("postingId", { length: 64 }),
+  
+  // Status
+  status: mysqlEnum("status", ["PENDING", "COMPLETED", "FAILED", "REVERSED"]).default("PENDING").notNull(),
+  
+  // Audit
+  executedAt: timestamp("executedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FXTransaction = typeof fxTransactions.$inferSelect;
+export type InsertFXTransaction = typeof fxTransactions.$inferInsert;
+
+/**
+ * FX Rate History - Historical FX rates for audit and reporting.
+ */
+export const fxRateHistory = mysqlTable("fx_rate_history", {
+  id: int("id").autoincrement().primaryKey(),
+  
+  // Currency pair
+  baseCurrency: varchar("baseCurrency", { length: 3 }).notNull(),
+  quoteCurrency: varchar("quoteCurrency", { length: 3 }).notNull(),
+  
+  // Rates
+  bidRate: decimal("bidRate", { precision: 18, scale: 8 }).notNull(),
+  askRate: decimal("askRate", { precision: 18, scale: 8 }).notNull(),
+  midRate: decimal("midRate", { precision: 18, scale: 8 }).notNull(),
+  
+  // Source and validity
+  source: varchar("source", { length: 64 }).notNull(),
+  validFrom: timestamp("validFrom").notNull(),
+  validTo: timestamp("validTo"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FXRateHistory = typeof fxRateHistory.$inferSelect;
+export type InsertFXRateHistory = typeof fxRateHistory.$inferInsert;

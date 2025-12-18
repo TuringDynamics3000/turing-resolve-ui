@@ -31,6 +31,7 @@ import PolicyEditor from "@/pages/PolicyEditor";
 import GLLedger from "@/pages/GLLedger";
 import ECLDashboard from "@/pages/ECLDashboard";
 import OperationsPage from "@/pages/OperationsPage";
+import WalletsPage from "@/pages/WalletsPage";
 import APRAReporting from "@/pages/APRAReporting";
 import PeriodClose from "@/pages/PeriodClose";
 import NotFound from "@/pages/NotFound";
@@ -61,6 +62,7 @@ function MainDashboard() {
         
         {/* Deposits Module */}
         <Route path="/deposits" component={DepositsDashboard} />
+        <Route path="/wallets" component={WalletsPage} />
         
         {/* General Ledger */}
         <Route path="/gl" component={GLLedger} />
