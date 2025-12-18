@@ -2093,3 +2093,13 @@
 - [x] Push status changes to member portal
 - [x] Add toast notifications for decision outcomes
 - [x] Update UI state in real-time
+
+
+## Navigation Redesign
+
+### Vertical Sidebar Navigation
+- [x] Convert horizontal top tabs to vertical sidebar on left
+- [x] Move all navigation items (Overview, Resolve, Cases, Lending, etc.) to sidebar
+- [x] Keep logo and branding in sidebar header
+- [x] Add collapsible sidebar option for more screen space
+- [x] Maintain Tools and version badge in appropriate location
