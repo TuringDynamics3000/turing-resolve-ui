@@ -1832,4 +1832,4 @@
 - [x] ADI-level functional currency configuration
 - [x] Customer-level reporting currency preference
 - [x] Dynamic total value calculation based on preference
-- [ ] UI currency selector for reporting
+- [x] UI currency selector for reporting

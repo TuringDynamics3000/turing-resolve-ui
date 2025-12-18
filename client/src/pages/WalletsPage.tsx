@@ -182,8 +182,13 @@ export default function WalletsPage() {
                       {wallet.currencyCount} {wallet.currencyCount === 1 ? "currency" : "currencies"}
                     </span>
                   </div>
-                  <div className="mt-1 text-sm font-medium text-cyan-500">
-                    {wallet.totalValueAUD} total
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-sm font-medium text-cyan-500">
+                      {wallet.totalValue} total
+                    </span>
+                    <Badge variant="outline" className="text-xs">
+                      {CURRENCY_FLAGS[wallet.reportingCurrency]} {wallet.reportingCurrency}
+                    </Badge>
                   </div>
                 </button>
               ))}
@@ -199,7 +204,15 @@ export default function WalletsPage() {
                     {walletData ? walletData.customerName : "Select a Customer"}
                   </CardTitle>
                   <CardDescription>
-                    {walletData ? `Total Value: ${walletData.totalValueAUD}` : "Choose a customer to view their wallet"}
+                    {walletData ? (
+                      <span className="flex items-center gap-2">
+                        Total: {walletData.totalValue}
+                        <Badge variant="outline" className="text-xs">
+                          {CURRENCY_FLAGS[walletData.reportingCurrency]} {walletData.reportingCurrency}
+                        </Badge>
+                        <span className="text-muted-foreground">({walletData.totalValueAUD} AUD)</span>
+                      </span>
+                    ) : "Choose a customer to view their wallet"}
                   </CardDescription>
                 </div>
                 {walletData && (
