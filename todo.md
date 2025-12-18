@@ -120,12 +120,12 @@
 - [x] E1-8: Governance freeze for exposure surface
 
 ### AU v1 Limits Policies (Phase E2 prep)
-- [ ] LIMIT-AU-TOTAL-001: Total Exposure Cap (150k AUD)
-- [ ] LIMIT-AU-LENDING-001: Lending Exposure Cap (120k AUD)
-- [ ] LIMIT-AU-PAYPEND-001: Pending Payments Cap (20k AUD)
-- [ ] LIMIT-AU-STOPLIST-001: Hard Stop (stoplist flag)
-- [ ] LIMIT-AU-CONSISTENCY-001: Data Completeness Gate
-- [ ] LIMIT-AU-HIGHVALUE-001: Escalation Threshold (250k)
+- [x] LIMIT-AU-TOTAL-001: Total Exposure Cap (150k AUD)
+- [x] LIMIT-AU-LENDING-001: Lending Exposure Cap (120k AUD)
+- [x] LIMIT-AU-PAYPEND-001: Pending Payments Cap (20k AUD)
+- [x] LIMIT-AU-STOPLIST-001: Hard Stop (stoplist flag)
+- [x] LIMIT-AU-CONSISTENCY-001: Data Completeness Gate
+- [x] LIMIT-AU-HIGHVALUE-001: Escalation Threshold (250k)
 
 
 ## Exposure Phase E2 - Resolve Consumes ExposureSnapshot - COMPLETED ✓
@@ -1833,3 +1833,29 @@
 - [x] Customer-level reporting currency preference
 - [x] Dynamic total value calculation based on preference
 - [x] UI currency selector for reporting
+
+## Critical Items - COMPLETED ✓
+### AUSTRAC Reporting Service
+- [x] AUSTRACReportingService with TTR, IFTI, SMR generation
+- [x] Transaction recording with risk scoring
+- [x] Suspicion indicator detection (structuring, high-risk jurisdiction, etc.)
+- [x] AUSTRAC-ready transaction dataset export
+- [x] Compliance metrics dashboard
+- [x] 18 tests passing
+
+### Payments Spine v1.0.0
+- [x] PaymentsSpine orchestration service
+- [x] Scheme routing (NPP, BECS, RTGS, INTERNAL)
+- [x] Resolve governance integration
+- [x] Event sourcing with hash chain
+- [x] Idempotent payment initiation
+- [x] Payment lifecycle management
+
+### NPP Scheme Adapter v1
+- [x] NppTypes.ts - ISO 20022 message types
+- [x] NppIdempotency.ts - Duplicate handling
+- [x] NppMessageMapper.ts - Message conversion
+- [x] NppAdapter.ts - Stateless adapter
+- [x] Payment fact mapping (PAYMENT_SENT, PAYMENT_SETTLED, PAYMENT_FAILED)
+- [x] All invariants enforced (stateless, idempotent, emits facts only)
+
