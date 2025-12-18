@@ -32,6 +32,7 @@ import GLLedger from "@/pages/GLLedger";
 import ECLDashboard from "@/pages/ECLDashboard";
 import OperationsPage from "@/pages/OperationsPage";
 import WalletsPage from "@/pages/WalletsPage";
+import PaymentsPage from "@/pages/PaymentsPage";
 import APRAReporting from "@/pages/APRAReporting";
 import PeriodClose from "@/pages/PeriodClose";
 import NotFound from "@/pages/NotFound";
@@ -58,7 +59,7 @@ function MainDashboard() {
         <Route path="/lending" component={LendingDashboard} />
         
         {/* Payments Module */}
-        <Route path="/payments" component={PaymentsDashboard} />
+        <Route path="/payments" component={PaymentsPage} />
         
         {/* Deposits Module */}
         <Route path="/deposits" component={DepositsDashboard} />

@@ -1866,3 +1866,13 @@
 - [x] Update PaymentsSpine to route to scheme adapters
 - [x] Add callback handling from NPP to Spine
 - [x] Write integration tests
+
+## Payment System Enhancements
+- [x] BECS Scheme Adapter with batch processing
+- [x] BECS file generation (ABA format)
+- [x] Same-day and next-day settlement support
+- [x] Real NPP endpoint configuration
+- [x] NPP production API integration
+- [x] Payments UI - initiation form
+- [x] Payments UI - transaction tracking dashboard
+- [ ] Payment status real-time updates

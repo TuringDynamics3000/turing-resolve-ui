@@ -35,6 +35,7 @@ import {
   type PaymentFactType,
 } from "./NppMessageMapper";
 import type { Payment } from "../../../server/core/payments/PaymentsSpine";
+import { nppProductionClient } from "./NppProductionClient";
 
 // ============================================
 // NPP ADAPTER RESULT TYPES

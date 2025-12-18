@@ -6,6 +6,7 @@
 
 import { schemeAdapterRegistry } from "./SchemeAdapterInterface";
 import { nppSchemeAdapter } from "./adapters/NppSchemeAdapter";
+import { becsSchemeAdapter } from "./adapters/BecsSchemeAdapter";
 import { paymentsSpine } from "./PaymentsSpine";
 
 // ============================================
@@ -14,6 +15,9 @@ import { paymentsSpine } from "./PaymentsSpine";
 
 // Register NPP adapter
 schemeAdapterRegistry.register(nppSchemeAdapter);
+
+// Register BECS adapter
+schemeAdapterRegistry.register(becsSchemeAdapter);
 
 // Future adapters:
 // schemeAdapterRegistry.register(becsSchemeAdapter);
@@ -27,6 +31,7 @@ schemeAdapterRegistry.register(nppSchemeAdapter);
 export { paymentsSpine } from "./PaymentsSpine";
 export { schemeAdapterRegistry } from "./SchemeAdapterInterface";
 export { nppSchemeAdapter } from "./adapters/NppSchemeAdapter";
+export { becsSchemeAdapter } from "./adapters/BecsSchemeAdapter";
 
 export type {
   Payment,
