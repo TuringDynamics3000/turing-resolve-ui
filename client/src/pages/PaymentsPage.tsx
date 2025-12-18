@@ -155,6 +155,48 @@ function PaymentForm({ onSubmit }: { onSubmit: (data: unknown) => void }) {
   const [creditorBsb, setCreditorBsb] = useState("");
   const [creditorAccount, setCreditorAccount] = useState("");
   const [reference, setReference] = useState("");
+  
+  // PayID lookup state
+  const [payIdMode, setPayIdMode] = useState(false);
+  const [payIdValue, setPayIdValue] = useState("");
+  const [payIdLooking, setPayIdLooking] = useState(false);
+  const [payIdResolved, setPayIdResolved] = useState<{ name: string; bsb: string; account: string } | null>(null);
+  const [payIdError, setPayIdError] = useState<string | null>(null);
+
+  const handlePayIdLookup = async () => {
+    if (!payIdValue.trim()) return;
+    
+    setPayIdLooking(true);
+    setPayIdError(null);
+    setPayIdResolved(null);
+    
+    // Simulate PayID lookup (in production, this would call the backend)
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Simulated PayID directory
+    const payIds: Record<string, { name: string; bsb: string; account: string }> = {
+      "john.smith@example.com": { name: "JOHN SMITH", bsb: "062-000", account: "12345678" },
+      "jane.doe@company.com.au": { name: "JANE DOE", bsb: "063-001", account: "87654321" },
+      "accounts@supplier.com.au": { name: "SUPPLIER PTY LTD", bsb: "064-002", account: "11223344" },
+      "+61412345678": { name: "MOBILE USER", bsb: "062-000", account: "99887766" },
+      "12345678901": { name: "ACME CORPORATION PTY LTD", bsb: "064-002", account: "12121212" },
+    };
+    
+    const normalized = payIdValue.toLowerCase().trim();
+    const result = payIds[normalized];
+    
+    if (result) {
+      setPayIdResolved(result);
+      setCreditorName(result.name);
+      setCreditorBsb(result.bsb);
+      setCreditorAccount(result.account);
+      toast.success("PayID Verified", { description: `Found: ${result.name}` });
+    } else {
+      setPayIdError("PayID not found. Please check and try again.");
+    }
+    
+    setPayIdLooking(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -217,40 +259,109 @@ function PaymentForm({ onSubmit }: { onSubmit: (data: unknown) => void }) {
       </div>
 
       <div className="space-y-4 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-        <h4 className="text-sm font-medium text-slate-300">Recipient Details</h4>
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-slate-300">Recipient Details</h4>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setPayIdMode(!payIdMode);
+              setPayIdResolved(null);
+              setPayIdError(null);
+            }}
+            className="text-cyan-400 hover:text-cyan-300"
+          >
+            {payIdMode ? "Enter BSB/Account" : "Use PayID"}
+          </Button>
+        </div>
         
-        <div className="space-y-2">
-          <Label>Account Name</Label>
-          <Input
-            value={creditorName}
-            onChange={(e) => setCreditorName(e.target.value)}
-            placeholder="Recipient name"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>BSB</Label>
-            <Input
-              value={creditorBsb}
-              onChange={(e) => setCreditorBsb(e.target.value)}
-              placeholder="000-000"
-              pattern="\d{3}-?\d{3}"
-              required
-            />
+        {payIdMode ? (
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>PayID (Email, Phone, or ABN)</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={payIdValue}
+                  onChange={(e) => {
+                    setPayIdValue(e.target.value);
+                    setPayIdResolved(null);
+                    setPayIdError(null);
+                  }}
+                  placeholder="email@example.com or +61412345678"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  onClick={handlePayIdLookup}
+                  disabled={payIdLooking || !payIdValue.trim()}
+                  className="bg-cyan-600 hover:bg-cyan-700"
+                >
+                  {payIdLooking ? (
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+            
+            {payIdError && (
+              <div className="flex items-center gap-2 text-red-400 text-sm">
+                <XCircle className="w-4 h-4" />
+                {payIdError}
+              </div>
+            )}
+            
+            {payIdResolved && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                <div className="flex items-center gap-2 text-emerald-400 text-sm mb-2">
+                  <CheckCircle className="w-4 h-4" />
+                  PayID Verified
+                </div>
+                <p className="font-medium text-slate-200">{payIdResolved.name}</p>
+                <p className="text-sm text-slate-400 font-mono">
+                  BSB: {payIdResolved.bsb} | Acc: {payIdResolved.account}
+                </p>
+              </div>
+            )}
           </div>
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Label>Account Name</Label>
+              <Input
+                value={creditorName}
+                onChange={(e) => setCreditorName(e.target.value)}
+                placeholder="Recipient name"
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label>Account Number</Label>
-            <Input
-              value={creditorAccount}
-              onChange={(e) => setCreditorAccount(e.target.value)}
-              placeholder="12345678"
-              required
-            />
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>BSB</Label>
+                <Input
+                  value={creditorBsb}
+                  onChange={(e) => setCreditorBsb(e.target.value)}
+                  placeholder="000-000"
+                  pattern="\d{3}-?\d{3}"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Account Number</Label>
+                <Input
+                  value={creditorAccount}
+                  onChange={(e) => setCreditorAccount(e.target.value)}
+                  placeholder="12345678"
+                  required
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="space-y-2">

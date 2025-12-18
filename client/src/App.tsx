@@ -33,6 +33,7 @@ import ECLDashboard from "@/pages/ECLDashboard";
 import OperationsPage from "@/pages/OperationsPage";
 import WalletsPage from "@/pages/WalletsPage";
 import PaymentsPage from "@/pages/PaymentsPage";
+import BecsBatchesPage from "@/pages/BecsBatchesPage";
 import APRAReporting from "@/pages/APRAReporting";
 import PeriodClose from "@/pages/PeriodClose";
 import NotFound from "@/pages/NotFound";
@@ -60,6 +61,7 @@ function MainDashboard() {
         
         {/* Payments Module */}
         <Route path="/payments" component={PaymentsPage} />
+        <Route path="/payments/batches" component={BecsBatchesPage} />
         
         {/* Deposits Module */}
         <Route path="/deposits" component={DepositsDashboard} />

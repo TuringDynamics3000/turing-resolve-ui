@@ -1876,3 +1876,11 @@
 - [x] Payments UI - initiation form
 - [x] Payments UI - transaction tracking dashboard
 - [ ] Payment status real-time updates
+
+## Payment Features - Phase 2
+- [x] PayID lookup service
+- [x] PayID form integration with instant verification
+- [x] BECS batch management UI
+- [x] Batch view/edit before submission
+- [x] Payment webhooks with WebSocket
+- [x] Real-time status updates
