@@ -463,3 +463,195 @@ describe("Scope-Aware Authorization", () => {
     });
   });
 });
+
+
+// ============================================
+// TuringSentinel Metrics Tests
+// ============================================
+
+describe("TuringSentinel Metrics", () => {
+  describe("getSentinelMetrics", () => {
+    it("should return metrics with expected shape", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const metrics = await caller.rbac.getSentinelMetrics();
+      
+      expect(metrics).toHaveProperty("totalDecisions");
+      expect(metrics).toHaveProperty("allowedCount");
+      expect(metrics).toHaveProperty("deniedCount");
+      expect(metrics).toHaveProperty("pendingApprovals");
+      expect(metrics).toHaveProperty("activeRoleAssignments");
+      expect(metrics).toHaveProperty("autoApprovalRate");
+      expect(metrics).toHaveProperty("evidencePacksVerified");
+    });
+    
+    it("should return numeric values", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const metrics = await caller.rbac.getSentinelMetrics();
+      
+      expect(typeof metrics.totalDecisions).toBe("number");
+      expect(typeof metrics.allowedCount).toBe("number");
+      expect(typeof metrics.deniedCount).toBe("number");
+      expect(typeof metrics.pendingApprovals).toBe("number");
+      expect(typeof metrics.activeRoleAssignments).toBe("number");
+      expect(typeof metrics.autoApprovalRate).toBe("number");
+      expect(typeof metrics.evidencePacksVerified).toBe("number");
+    });
+    
+    it("should return non-negative values", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const metrics = await caller.rbac.getSentinelMetrics();
+      
+      expect(metrics.totalDecisions).toBeGreaterThanOrEqual(0);
+      expect(metrics.allowedCount).toBeGreaterThanOrEqual(0);
+      expect(metrics.deniedCount).toBeGreaterThanOrEqual(0);
+      expect(metrics.pendingApprovals).toBeGreaterThanOrEqual(0);
+      expect(metrics.activeRoleAssignments).toBeGreaterThanOrEqual(0);
+    });
+    
+    it("should have auto-approval rate between 0 and 100", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const metrics = await caller.rbac.getSentinelMetrics();
+      
+      expect(metrics.autoApprovalRate).toBeGreaterThanOrEqual(0);
+      expect(metrics.autoApprovalRate).toBeLessThanOrEqual(100);
+    });
+  });
+  
+  describe("getRecentAuthorityFacts", () => {
+    it("should return array of authority facts", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const facts = await caller.rbac.getRecentAuthorityFacts({ limit: 5 });
+      
+      expect(Array.isArray(facts)).toBe(true);
+    });
+    
+    it("should respect limit parameter", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const facts = await caller.rbac.getRecentAuthorityFacts({ limit: 3 });
+      
+      expect(facts.length).toBeLessThanOrEqual(3);
+    });
+    
+    it("should return facts with expected structure", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const facts = await caller.rbac.getRecentAuthorityFacts({ limit: 10 });
+      
+      if (facts.length > 0) {
+        const fact = facts[0];
+        expect(fact).toHaveProperty("authorityFactId");
+        expect(fact).toHaveProperty("actorId");
+        expect(fact).toHaveProperty("actorRole");
+        expect(fact).toHaveProperty("commandCode");
+        expect(fact).toHaveProperty("decision");
+        expect(fact).toHaveProperty("reasonCode");
+        expect(fact).toHaveProperty("createdAt");
+      }
+    });
+    
+    it("should have valid decision values", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const facts = await caller.rbac.getRecentAuthorityFacts({ limit: 10 });
+      
+      facts.forEach(fact => {
+        expect(["ALLOW", "DENY"]).toContain(fact.decision);
+      });
+    });
+  });
+  
+  describe("getRoleStats", () => {
+    it("should return array of role statistics", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const roleStats = await caller.rbac.getRoleStats();
+      
+      expect(Array.isArray(roleStats)).toBe(true);
+    });
+    
+    it("should return roles with expected structure", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const roleStats = await caller.rbac.getRoleStats();
+      
+      if (roleStats.length > 0) {
+        const role = roleStats[0];
+        expect(role).toHaveProperty("roleCode");
+        expect(role).toHaveProperty("category");
+        expect(role).toHaveProperty("assignedCount");
+        expect(typeof role.assignedCount).toBe("number");
+      }
+    });
+    
+    it("should include standard role categories", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const roleStats = await caller.rbac.getRoleStats();
+      
+      if (roleStats.length > 0) {
+        const categories = roleStats.map(r => r.category);
+        const standardCategories = ["PLATFORM", "GOVERNANCE", "ML", "OPERATIONS"];
+        const hasStandardCategories = standardCategories.some(cat => categories.includes(cat));
+        expect(hasStandardCategories).toBe(true);
+      }
+    });
+  });
+  
+  describe("getPendingProposalsList", () => {
+    it("should return array of pending proposals", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const proposals = await caller.rbac.getPendingProposalsList();
+      
+      expect(Array.isArray(proposals)).toBe(true);
+    });
+    
+    it("should return proposals with expected structure", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const proposals = await caller.rbac.getPendingProposalsList();
+      
+      if (proposals.length > 0) {
+        const proposal = proposals[0];
+        expect(proposal).toHaveProperty("proposalId");
+        expect(proposal).toHaveProperty("commandCode");
+        expect(proposal).toHaveProperty("resourceId");
+        expect(proposal).toHaveProperty("proposedBy");
+        expect(proposal).toHaveProperty("requiredApprovers");
+        expect(proposal).toHaveProperty("currentApprovals");
+        expect(Array.isArray(proposal.requiredApprovers)).toBe(true);
+        expect(Array.isArray(proposal.currentApprovals)).toBe(true);
+      }
+    });
+    
+    it("should only return pending proposals", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const proposals = await caller.rbac.getPendingProposalsList();
+      
+      proposals.forEach(proposal => {
+        expect(proposal.status).toBe("PENDING");
+      });
+    });
+  });
+});

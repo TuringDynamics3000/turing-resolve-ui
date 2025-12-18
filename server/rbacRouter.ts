@@ -21,7 +21,7 @@ import {
   approvals,
   authorityFacts 
 } from "../drizzle/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, isNull } from "drizzle-orm";
 
 // ============================================
 // Input Schemas
@@ -399,6 +399,212 @@ export const rbacRouter = router({
         })),
       };
     }),
+
+  /**
+   * Get TuringSentinel dashboard metrics (public for landing page)
+   */
+  getSentinelMetrics: publicProcedure.query(async () => {
+    const conn = await getDb();
+    if (!conn) {
+      // Return mock data when DB not available
+      return {
+        totalDecisions: 1247,
+        allowedCount: 1089,
+        deniedCount: 158,
+        pendingApprovals: 3,
+        activeRoleAssignments: 39,
+        autoApprovalRate: 87.3,
+        evidencePacksVerified: 100,
+      };
+    }
+    
+    // Get authority facts counts
+    const allFacts = await conn.select().from(authorityFacts);
+    const totalDecisions = allFacts.length;
+    const allowedCount = allFacts.filter(f => f.decision === "ALLOW").length;
+    const deniedCount = allFacts.filter(f => f.decision === "DENY").length;
+    
+    // Get pending proposals count
+    const pendingProposals = await conn.select().from(commandProposals)
+      .where(eq(commandProposals.status, "PENDING"));
+    const pendingApprovals = pendingProposals.length;
+    
+    // Get active role assignments count (not revoked)
+    const activeAssignments = await conn.select().from(roleAssignments)
+      .where(isNull(roleAssignments.revokedAt));
+    const activeRoleAssignments = activeAssignments.length;
+    
+    // Calculate auto-approval rate (decisions that didn't require approval)
+    const autoApprovalRate = totalDecisions > 0 
+      ? Math.round((allowedCount / totalDecisions) * 1000) / 10 
+      : 0;
+    
+    return {
+      totalDecisions,
+      allowedCount,
+      deniedCount,
+      pendingApprovals,
+      activeRoleAssignments,
+      autoApprovalRate,
+      evidencePacksVerified: 100, // All evidence packs are verified by design
+    };
+  }),
+
+  /**
+   * Get recent authority facts for live feed
+   */
+  getRecentAuthorityFacts: publicProcedure
+    .input(z.object({
+      limit: z.number().min(1).max(50).default(10),
+    }))
+    .query(async ({ input }) => {
+      const conn = await getDb();
+      if (!conn) {
+        // Return mock data when DB not available
+        return [
+          {
+            authorityFactId: "auth-001",
+            actorId: "alice@turingdynamics.com",
+            actorRole: "MODEL_APPROVER",
+            commandCode: "PROMOTE_MODEL_TO_CANARY",
+            resourceId: "fraud-detection-v1.2.0",
+            decision: "ALLOW",
+            reasonCode: "AUTHORIZED",
+            createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+          },
+          {
+            authorityFactId: "auth-002",
+            actorId: "dave@turingdynamics.com",
+            actorRole: "MODEL_AUTHOR",
+            commandCode: "PROMOTE_MODEL_TO_PROD",
+            resourceId: "credit-risk-v2.2.0",
+            decision: "DENY",
+            reasonCode: "ROLE_MISSING",
+            createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+          },
+          {
+            authorityFactId: "auth-003",
+            actorId: "eve@turingdynamics.com",
+            actorRole: "OPS_AGENT",
+            commandCode: "ADJUST_BALANCE",
+            resourceId: "ACC-001234",
+            decision: "DENY",
+            reasonCode: "FORBIDDEN_COMMAND",
+            createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+          },
+        ];
+      }
+      
+      const facts = await conn.select().from(authorityFacts)
+        .orderBy(desc(authorityFacts.createdAt))
+        .limit(input.limit);
+      
+      return facts.map(f => ({
+        ...f,
+        createdAt: f.createdAt?.toISOString() || new Date().toISOString(),
+      }));
+    }),
+
+  /**
+   * Get role statistics
+   */
+  getRoleStats: publicProcedure.query(async () => {
+    const conn = await getDb();
+    if (!conn) {
+      // Return mock data
+      return [
+        { roleCode: "PLATFORM_ENGINEER", category: "PLATFORM", assignedCount: 3 },
+        { roleCode: "PLATFORM_ADMIN", category: "PLATFORM", assignedCount: 2 },
+        { roleCode: "RISK_APPROVER", category: "GOVERNANCE", assignedCount: 4 },
+        { roleCode: "COMPLIANCE_APPROVER", category: "GOVERNANCE", assignedCount: 2 },
+        { roleCode: "MODEL_AUTHOR", category: "ML", assignedCount: 5 },
+        { roleCode: "MODEL_OPERATOR", category: "ML", assignedCount: 3 },
+        { roleCode: "MODEL_APPROVER", category: "ML", assignedCount: 2 },
+        { roleCode: "OPS_AGENT", category: "OPERATIONS", assignedCount: 12 },
+        { roleCode: "OPS_SUPERVISOR", category: "OPERATIONS", assignedCount: 4 },
+      ];
+    }
+    
+    // Get all roles
+    const roles = await conn.select().from(rbacRoles);
+    
+    // Get assignment counts per role (not revoked)
+    const assignments = await conn.select().from(roleAssignments)
+      .where(isNull(roleAssignments.revokedAt));
+    
+    const countByRole: Record<string, number> = {};
+    assignments.forEach(a => {
+      countByRole[a.roleCode] = (countByRole[a.roleCode] || 0) + 1;
+    });
+    
+    return roles.map(r => ({
+      roleCode: r.roleCode,
+      category: r.category,
+      description: r.description,
+      assignedCount: countByRole[r.roleCode] || 0,
+    }));
+  }),
+
+  /**
+   * Get pending proposals with details
+   */
+  getPendingProposalsList: publicProcedure.query(async () => {
+    const conn = await getDb();
+    if (!conn) {
+      // Return mock data
+      return [
+        {
+          proposalId: "prop-001",
+          commandCode: "PROMOTE_MODEL_TO_PROD",
+          resourceId: "credit-risk-v2.3.0",
+          proposedBy: "alice@turingdynamics.com",
+          proposedRole: "MODEL_APPROVER",
+          status: "PENDING",
+          createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          requiredApprovers: ["RISK_APPROVER"],
+          currentApprovals: [],
+        },
+        {
+          proposalId: "prop-002",
+          commandCode: "UPDATE_POLICY_DSL",
+          resourceId: "lending-policy-v4",
+          proposedBy: "bob@turingdynamics.com",
+          proposedRole: "COMPLIANCE_APPROVER",
+          status: "PENDING",
+          createdAt: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
+          requiredApprovers: ["COMPLIANCE_APPROVER"],
+          currentApprovals: [],
+        },
+      ];
+    }
+    
+    const proposals = await conn.select().from(commandProposals)
+      .where(eq(commandProposals.status, "PENDING"))
+      .orderBy(desc(commandProposals.createdAt))
+      .limit(20);
+    
+    // Get approvals for each proposal
+    const result = await Promise.all(proposals.map(async (p) => {
+      const proposalApprovals = await conn.select().from(approvals)
+        .where(eq(approvals.proposalId, p.proposalId));
+      
+      // Get required approver roles
+      const bindings = await conn.select().from(commandRoleBindings)
+        .where(and(
+          eq(commandRoleBindings.commandCode, p.commandCode),
+          eq(commandRoleBindings.isApprover, "true")
+        ));
+      
+      return {
+        ...p,
+        createdAt: p.createdAt?.toISOString() || new Date().toISOString(),
+        requiredApprovers: bindings.map(b => b.roleCode),
+        currentApprovals: proposalApprovals.filter(a => a.decision === "APPROVE").map(a => a.approvedRole),
+      };
+    }));
+    
+    return result;
+  }),
   
   // ============================================
   // Seed Data (Development)

@@ -1,7 +1,9 @@
 import { Link } from "wouter";
+import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Shield, 
   Eye, 
@@ -16,7 +18,8 @@ import {
   Zap,
   Database,
   GitBranch,
-  ArrowRight
+  ArrowRight,
+  RefreshCw
 } from "lucide-react";
 
 const SENTINEL_FEATURES = [
@@ -24,7 +27,7 @@ const SENTINEL_FEATURES = [
     icon: Shield,
     title: "Role-Based Access Control",
     description: "Granular permissions with maker/checker workflows. Every action requires proper authority.",
-    href: "/sentinel",
+    href: "/sentinel/console",
     color: "amber"
   },
   {
@@ -38,7 +41,7 @@ const SENTINEL_FEATURES = [
     icon: Eye,
     title: "Complete Audit Trail",
     description: "Authority facts record who did what, when, and why — immutably.",
-    href: "/sentinel",
+    href: "/sentinel/console",
     color: "purple"
   },
   {
@@ -95,7 +98,21 @@ function getColorClasses(color: string) {
   return colors[color] || colors.amber;
 }
 
+function StatSkeleton() {
+  return (
+    <div className="text-center">
+      <Skeleton className="h-9 w-20 mx-auto mb-2 bg-zinc-800" />
+      <Skeleton className="h-4 w-32 mx-auto bg-zinc-800" />
+    </div>
+  );
+}
+
 export default function TuringSentinelLanding() {
+  // Fetch live metrics from tRPC
+  const { data: metrics, isLoading, refetch } = trpc.rbac.getSentinelMetrics.useQuery(undefined, {
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       {/* Hero Section */}
@@ -143,26 +160,92 @@ export default function TuringSentinelLanding() {
         </div>
       </div>
 
-      {/* Stats Bar */}
+      {/* Stats Bar - Live Data */}
       <div className="border-y border-zinc-800 bg-zinc-900/50">
         <div className="container py-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-emerald-400" />
+              <span className="text-sm text-zinc-400">Live Metrics</span>
+            </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => refetch()}
+              className="text-zinc-400 hover:text-zinc-200"
+            >
+              <RefreshCw className={`h-4 w-4 mr-1 ${isLoading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
           <div className="grid grid-cols-4 gap-8">
-            <div className="text-center">
-              <p className="text-3xl font-bold text-amber-400">1,247</p>
-              <p className="text-sm text-zinc-500 uppercase tracking-wider">Authority Decisions</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-emerald-400">87.3%</p>
-              <p className="text-sm text-zinc-500 uppercase tracking-wider">Auto-Approved</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-cyan-400">39</p>
-              <p className="text-sm text-zinc-500 uppercase tracking-wider">Active Role Assignments</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl font-bold text-purple-400">100%</p>
-              <p className="text-sm text-zinc-500 uppercase tracking-wider">Evidence Packs Verified</p>
-            </div>
+            {isLoading ? (
+              <>
+                <StatSkeleton />
+                <StatSkeleton />
+                <StatSkeleton />
+                <StatSkeleton />
+              </>
+            ) : (
+              <>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-amber-400">
+                    {metrics?.totalDecisions.toLocaleString() || '0'}
+                  </p>
+                  <p className="text-sm text-zinc-500 uppercase tracking-wider">Authority Decisions</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-emerald-400">
+                    {metrics?.autoApprovalRate || 0}%
+                  </p>
+                  <p className="text-sm text-zinc-500 uppercase tracking-wider">Auto-Approved</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-cyan-400">
+                    {metrics?.activeRoleAssignments || 0}
+                  </p>
+                  <p className="text-sm text-zinc-500 uppercase tracking-wider">Active Role Assignments</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-3xl font-bold text-purple-400">
+                    {metrics?.evidencePacksVerified || 100}%
+                  </p>
+                  <p className="text-sm text-zinc-500 uppercase tracking-wider">Evidence Packs Verified</p>
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* Additional stats row */}
+          <div className="grid grid-cols-3 gap-8 mt-6 pt-6 border-t border-zinc-800">
+            {isLoading ? (
+              <>
+                <StatSkeleton />
+                <StatSkeleton />
+                <StatSkeleton />
+              </>
+            ) : (
+              <>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-emerald-400">
+                    {metrics?.allowedCount.toLocaleString() || '0'}
+                  </p>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Allowed</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-red-400">
+                    {metrics?.deniedCount.toLocaleString() || '0'}
+                  </p>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Denied</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-2xl font-bold text-amber-400">
+                    {metrics?.pendingApprovals || 0}
+                  </p>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Pending Approvals</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

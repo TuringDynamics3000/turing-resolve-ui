@@ -1706,3 +1706,12 @@
 - [x] Update App.tsx routes
 - [x] Update documentation references
 - [ ] Commit and push to GitHub
+
+
+## TuringSentinel Real-Time Metrics
+- [x] Create tRPC procedures for authority stats (total decisions, allowed, denied, pending)
+- [x] Create tRPC procedures for role assignments count
+- [x] Create tRPC procedures for authority facts stream
+- [x] Update TuringSentinel.tsx to use live tRPC data
+- [x] Update TuringSentinelLanding.tsx stats bar with live data
+- [x] Add loading states and error handling
