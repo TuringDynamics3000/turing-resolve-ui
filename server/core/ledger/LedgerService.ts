@@ -592,6 +592,141 @@ export class LedgerService {
       entries,
     };
   }
+  
+  /**
+   * Seed GL data with sample postings for demo purposes.
+   * Creates realistic financial transactions across all account types.
+   */
+  async seedGLData(): Promise<{
+    success: boolean;
+    postingsCreated: number;
+    totalAmount: string;
+    error?: string;
+  }> {
+    const conn = await getDb();
+    if (!conn) {
+      return { success: false, postingsCreated: 0, totalAmount: "$0.00", error: "Database connection not available" };
+    }
+    
+    try {
+      // First ensure chart of accounts exists
+      await this.initializeChartOfAccounts();
+      
+      // Sample transactions to seed
+      const sampleTransactions = [
+        // Customer deposits
+        { debit: "1000", credit: "2000", amount: 5000000, desc: "Customer deposit - John Smith", ref: "DEP-001" },
+        { debit: "1000", credit: "2000", amount: 2500000, desc: "Customer deposit - Jane Doe", ref: "DEP-002" },
+        { debit: "1000", credit: "2100", amount: 10000000, desc: "Term deposit - ABC Corp", ref: "TD-001" },
+        
+        // Loan disbursements
+        { debit: "1220", credit: "1000", amount: 45000000, desc: "Home loan disbursement - Smith", ref: "HL-001" },
+        { debit: "1210", credit: "1000", amount: 1500000, desc: "Personal loan - Doe", ref: "PL-001" },
+        
+        // Interest income
+        { debit: "1200", credit: "4000", amount: 125000, desc: "Monthly interest income - loans", ref: "INT-001" },
+        { debit: "1200", credit: "4000", amount: 98000, desc: "Monthly interest income - loans", ref: "INT-002" },
+        
+        // Interest expense
+        { debit: "5000", credit: "2000", amount: 45000, desc: "Interest paid on deposits", ref: "INTEXP-001" },
+        { debit: "5000", credit: "2100", amount: 85000, desc: "Interest paid on term deposits", ref: "INTEXP-002" },
+        
+        // Fee income
+        { debit: "1000", credit: "4100", amount: 15000, desc: "Account maintenance fees", ref: "FEE-001" },
+        { debit: "1000", credit: "4100", amount: 25000, desc: "Loan origination fees", ref: "FEE-002" },
+        
+        // Card transactions
+        { debit: "1400", credit: "1000", amount: 350000, desc: "Card purchases - batch settlement", ref: "CARD-001" },
+        { debit: "1000", credit: "4200", amount: 7500, desc: "Interchange income", ref: "CARD-INT-001" },
+        
+        // Payment processing
+        { debit: "1300", credit: "1000", amount: 250000, desc: "NPP payment clearing", ref: "NPP-001" },
+        { debit: "5200", credit: "1000", amount: 2500, desc: "Payment processing fees", ref: "PROCFEE-001" },
+        
+        // Provisions
+        { debit: "5100", credit: "1200", amount: 50000, desc: "Loan loss provision", ref: "PROV-001" },
+        
+        // Capital injection
+        { debit: "1000", credit: "3000", amount: 100000000, desc: "Share capital injection", ref: "CAP-001" },
+      ];
+      
+      let postingsCreated = 0;
+      let totalAmount = BigInt(0);
+      
+      for (const txn of sampleTransactions) {
+        const postingId = `SEED-${nanoid(8)}`;
+        const now = new Date();
+        const effectiveDate = now.toISOString().split("T")[0];
+        
+        // Create posting (reference stored in metadata)
+        await conn.insert(ledgerPostings).values({
+          postingId,
+          description: `${txn.desc} [Ref: ${txn.ref}]`,
+          status: "COMMITTED",
+          committedAt: now,
+          createdAt: now,
+          metadata: { reference: txn.ref, effectiveDate },
+        });
+        
+        // Create debit entry
+        await conn.insert(ledgerEntries).values({
+          entryId: `ENT-${nanoid(8)}`,
+          postingId,
+          accountId: txn.debit,
+          direction: "DEBIT",
+          amount: (txn.amount / 100).toFixed(2),
+          currency: "AUD",
+          description: txn.desc,
+          createdAt: now,
+        });
+        
+        // Create credit entry
+        await conn.insert(ledgerEntries).values({
+          entryId: `ENT-${nanoid(8)}`,
+          postingId,
+          accountId: txn.credit,
+          direction: "CREDIT",
+          amount: (txn.amount / 100).toFixed(2),
+          currency: "AUD",
+          description: txn.desc,
+          createdAt: now,
+        });
+        
+        // Update account balances
+        await conn.update(ledgerAccounts)
+          .set({
+            balance: sql`CAST(CAST(${ledgerAccounts.balance} AS DECIMAL(20,2)) + ${txn.amount / 100} AS TEXT)`,
+            updatedAt: now,
+          })
+          .where(eq(ledgerAccounts.accountId, txn.debit));
+        
+        await conn.update(ledgerAccounts)
+          .set({
+            balance: sql`CAST(CAST(${ledgerAccounts.balance} AS DECIMAL(20,2)) - ${txn.amount / 100} AS TEXT)`,
+            updatedAt: now,
+          })
+          .where(eq(ledgerAccounts.accountId, txn.credit));
+        
+        postingsCreated++;
+        totalAmount += BigInt(txn.amount);
+      }
+      
+      return {
+        success: true,
+        postingsCreated,
+        totalAmount: `$${(Number(totalAmount) / 100).toLocaleString("en-AU", { minimumFractionDigits: 2 })}`,
+      };
+      
+    } catch (error) {
+      console.error("[LedgerService] Seed GL data failed:", error);
+      return {
+        success: false,
+        postingsCreated: 0,
+        totalAmount: "$0.00",
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
+  }
 }
 
 // Export singleton instance

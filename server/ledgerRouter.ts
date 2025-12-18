@@ -384,6 +384,224 @@ export const ledgerRouter = router({
         rateType: conversion.rateType,
       };
     }),
+  
+  // ============================================
+  // Period Close Operations
+  // ============================================
+  
+  /**
+   * List all accounting periods.
+   */
+  listPeriods: publicProcedure
+    .input(z.object({
+      fiscalYear: z.number().int().optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      return periodCloseService.listPeriods(input?.fiscalYear);
+    }),
+  
+  /**
+   * Get current open period.
+   */
+  getCurrentPeriod: publicProcedure.query(async () => {
+    const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+    return periodCloseService.getCurrentPeriod();
+  }),
+  
+  /**
+   * Validate period for close.
+   */
+  validatePeriodForClose: publicProcedure
+    .input(z.object({
+      periodId: z.string().regex(/^\d{4}-\d{2}$/),
+    }))
+    .query(async ({ input }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      return periodCloseService.validatePeriodForClose(input.periodId);
+    }),
+  
+  /**
+   * Soft close a period.
+   */
+  softClosePeriod: protectedProcedure
+    .input(z.object({
+      periodId: z.string().regex(/^\d{4}-\d{2}$/),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      return periodCloseService.softClosePeriod(input.periodId, ctx.user?.openId || "system");
+    }),
+  
+  /**
+   * Hard close a period with P&L rollup.
+   */
+  hardClosePeriod: protectedProcedure
+    .input(z.object({
+      periodId: z.string().regex(/^\d{4}-\d{2}$/),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      return periodCloseService.hardClosePeriod(input.periodId, ctx.user?.openId || "system");
+    }),
+  
+  /**
+   * Lock a period permanently.
+   */
+  lockPeriod: protectedProcedure
+    .input(z.object({
+      periodId: z.string().regex(/^\d{4}-\d{2}$/),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      return periodCloseService.lockPeriod(input.periodId, ctx.user?.openId || "system");
+    }),
+  
+  /**
+   * Reopen a closed period.
+   */
+  reopenPeriod: protectedProcedure
+    .input(z.object({
+      periodId: z.string().regex(/^\d{4}-\d{2}$/),
+      reason: z.string().min(10),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      return periodCloseService.reopenPeriod(input.periodId, ctx.user?.openId || "system", input.reason);
+    }),
+  
+  /**
+   * Calculate P&L rollup preview.
+   */
+  previewPLRollup: publicProcedure
+    .input(z.object({
+      periodId: z.string().regex(/^\d{4}-\d{2}$/),
+    }))
+    .query(async ({ input }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      const rollup = periodCloseService.calculatePLRollup(input.periodId);
+      return {
+        revenueAccounts: rollup.revenueAccounts.map(a => ({
+          ...a,
+          balance: `$${(Number(a.balance) / 100).toFixed(2)}`,
+        })),
+        expenseAccounts: rollup.expenseAccounts.map(a => ({
+          ...a,
+          balance: `$${(Number(a.balance) / 100).toFixed(2)}`,
+        })),
+        totalRevenue: `$${(Number(rollup.totalRevenue) / 100).toFixed(2)}`,
+        totalExpenses: `$${(Number(rollup.totalExpenses) / 100).toFixed(2)}`,
+        netIncome: `$${(Number(rollup.netIncome) / 100).toFixed(2)}`,
+      };
+    }),
+  
+  /**
+   * Get period close summary for a fiscal year.
+   */
+  getPeriodCloseSummary: publicProcedure
+    .input(z.object({
+      fiscalYear: z.number().int(),
+    }))
+    .query(async ({ input }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      return periodCloseService.getPeriodCloseSummary(input.fiscalYear);
+    }),
+  
+  /**
+   * Check if posting is allowed for a date.
+   */
+  canPostToDate: publicProcedure
+    .input(z.object({
+      effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }))
+    .query(async ({ input }) => {
+      const { periodCloseService } = await import("./core/ledger/PeriodCloseService");
+      return periodCloseService.canPostToDate(input.effectiveDate);
+    }),
+  
+  // ============================================
+  // APRA Regulatory Reporting
+  // ============================================
+  
+  /**
+   * Get GL to APRA mappings.
+   */
+  getAPRAMappings: publicProcedure
+    .input(z.object({
+      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4"]).optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const { apraReportingService } = await import("./core/ledger/APRAReportingService");
+      return apraReportingService.getMappings(input?.reportType);
+    }),
+  
+  /**
+   * Get APRA report template.
+   */
+  getAPRAReportTemplate: publicProcedure
+    .input(z.object({
+      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4"]),
+    }))
+    .query(async ({ input }) => {
+      const { apraReportingService } = await import("./core/ledger/APRAReportingService");
+      return apraReportingService.getReportTemplate(input.reportType);
+    }),
+  
+  /**
+   * Generate demo APRA report.
+   */
+  generateAPRADemoReport: publicProcedure
+    .input(z.object({
+      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4"]),
+      reportingPeriod: z.string().regex(/^\d{4}-\d{2}$/),
+    }))
+    .mutation(async ({ input }) => {
+      const { apraReportingService } = await import("./core/ledger/APRAReportingService");
+      return apraReportingService.generateDemoReport(input.reportType, input.reportingPeriod);
+    }),
+  
+  /**
+   * List APRA reports.
+   */
+  listAPRAReports: publicProcedure
+    .input(z.object({
+      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4"]).optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const { apraReportingService } = await import("./core/ledger/APRAReportingService");
+      return apraReportingService.listReports(input?.reportType);
+    }),
+  
+  /**
+   * Get APRA report by ID.
+   */
+  getAPRAReport: publicProcedure
+    .input(z.object({
+      reportId: z.string(),
+    }))
+    .query(async ({ input }) => {
+      const { apraReportingService } = await import("./core/ledger/APRAReportingService");
+      return apraReportingService.getReport(input.reportId);
+    }),
+  
+  /**
+   * Submit APRA report (simulated).
+   */
+  submitAPRAReport: protectedProcedure
+    .input(z.object({
+      reportId: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const { apraReportingService } = await import("./core/ledger/APRAReportingService");
+      return apraReportingService.submitReport(input.reportId);
+    }),
+  
+  /**
+   * Seed GL data with sample postings.
+   */
+  seedGLData: protectedProcedure.mutation(async () => {
+    return ledgerService.seedGLData();
+  }),
 });
 
 export default ledgerRouter;

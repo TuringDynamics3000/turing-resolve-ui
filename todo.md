@@ -1760,3 +1760,11 @@
 - [ ] Chart of accounts viewer
 - [ ] Trial balance report UI
 - [ ] Posting interface
+
+## Ledger Enhancements (Phase 2)
+- [x] Period close workflow with journal entry freeze
+- [ ] P&L rollup to retained earnings at period end
+- [x] APRA regulatory reporting templates
+- [ ] GL account to APRA mapping configuration
+- [x] Seed GL data with standard chart of accounts
+- [ ] Generate test postings for demo data

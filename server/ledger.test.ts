@@ -411,3 +411,95 @@ describe("GL Ledger Integrity", () => {
     expect(result.checkedAt).toBeDefined();
   }, 10000);
 });
+
+// ============================================
+// Period Close Tests
+// ============================================
+
+describe("Period Close Service", () => {
+  const ctx = createTestContext();
+  const caller = appRouter.createCaller(ctx);
+
+  it("should list accounting periods", async () => {
+    const result = await caller.gl.listPeriods();
+    expect(Array.isArray(result)).toBe(true);
+  });
+
+  it("should get current period", async () => {
+    const result = await caller.gl.getCurrentPeriod();
+    expect(result).toBeDefined();
+    expect(result.periodId).toMatch(/^\d{4}-\d{2}$/);
+    expect(result.status).toBe("OPEN");
+  });
+
+  it("should validate period for close", async () => {
+    const result = await caller.gl.validatePeriodForClose({ periodId: "2025-12" });
+    expect(result).toBeDefined();
+    expect(result.isValid).toBeDefined();
+    expect(Array.isArray(result.issues)).toBe(true);
+  });
+
+  it("should preview P&L rollup", async () => {
+    const result = await caller.gl.previewPLRollup({ periodId: "2025-12" });
+    expect(result).toBeDefined();
+    expect(result.totalRevenue).toBeDefined();
+    expect(result.totalExpenses).toBeDefined();
+    expect(result.netIncome).toBeDefined();
+  });
+
+  it("should check if posting is allowed for date", async () => {
+    const result = await caller.gl.canPostToDate({ effectiveDate: "2025-12-18" });
+    expect(result).toBeDefined();
+    expect(typeof result.canPost).toBe("boolean");
+  });
+});
+
+// ============================================
+// APRA Reporting Tests
+// ============================================
+
+describe("APRA Reporting Service", () => {
+  const ctx = createTestContext();
+  const caller = appRouter.createCaller(ctx);
+
+  it("should get GL to APRA mappings", async () => {
+    const result = await caller.gl.getAPRAMappings();
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0]).toHaveProperty("glAccountCode");
+    expect(result[0]).toHaveProperty("apraLineNumber");
+  });
+
+  it("should get mappings filtered by report type", async () => {
+    const result = await caller.gl.getAPRAMappings({ reportType: "ARF_720_0" });
+    expect(Array.isArray(result)).toBe(true);
+    result.forEach((mapping: any) => {
+      expect(mapping.apraReportType).toBe("ARF_720_0");
+    });
+  });
+
+  it("should get APRA report template", async () => {
+    const result = await caller.gl.getAPRAReportTemplate({ reportType: "ARF_720_0" });
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0]).toHaveProperty("lineNumber");
+    expect(result[0]).toHaveProperty("description");
+  });
+
+  it("should generate demo APRA report", async () => {
+    const result = await caller.gl.generateAPRADemoReport({
+      reportType: "ARF_720_0",
+      reportingPeriod: "2025-12",
+    });
+    expect(result).toBeDefined();
+    expect(result.reportId).toBeDefined();
+    expect(result.reportType).toBe("ARF_720_0");
+    expect(result.status).toBe("DRAFT");
+    expect(Array.isArray(result.lineItems)).toBe(true);
+  });
+
+  it("should list APRA reports", async () => {
+    const result = await caller.gl.listAPRAReports();
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
