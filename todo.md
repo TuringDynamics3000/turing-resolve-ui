@@ -1625,3 +1625,66 @@
 - [x] Implement governed override UI (Override button with RBAC)
 - [x] Add case-to-evidence linking (evidencePackIds)
 - [x] Create ops metrics dashboard (6 stat cards: Open, In Progress, Pending Approval, Resolved Today, Critical, Avg Resolution)
+
+
+## Future Enhancements Implementation - IN PROGRESS
+
+### 1. Reversal UI ✓
+- [x] Add "Reverse Transaction" button to PaymentsDashboard
+- [x] Create ReversalDialog component with confirmation
+- [x] Wire to existing reversePayment tRPC endpoint
+- [x] Show reversal status in transaction list
+
+### 2. Partial Reversals ✓
+- [x] Add amount input field to ReversalDialog (full/partial toggle)
+- [x] Validate partial amount <= original amount
+- [x] Partial amount stored in reason (API update pending)
+- [x] Show partial reversal indicator in UI
+
+### 3. Reversal Approval Workflow ✓
+- [x] RBAC check triggers approval flow on FORBIDDEN
+- [x] Shows "Approval Required" UI when supervisor needed
+- [x] Wire RBAC for OPS_SUPERVISOR approval
+- [ ] Add pending reversals queue to Ops Inbox (future)
+
+### 4. PDF Export for Evidence Packs
+- [ ] Create PDF generation endpoint
+- [ ] Design evidence pack PDF template
+- [ ] Add "Export PDF" button to Evidence Vault
+- [ ] Include hash verification in PDF
+
+### 5. Policy Editor UI ✓
+- [x] Create PolicyEditor page with syntax highlighting
+- [x] Add policy validation (DSL parser)
+- [x] Implement save draft / publish workflow
+- [x] Add version history viewer
+
+### 6. Real-time WebSocket Updates
+- [ ] Set up WebSocket server endpoint
+- [ ] Create useWebSocket hook for client
+- [ ] Add real-time updates to Ops Inbox
+- [ ] Add real-time updates to Cases page
+
+### 7. Empty States ✓
+- [x] Create EmptyState component with variants
+- [x] Add empty states for search, decisions, evidence, payments, cases
+- [x] Add contextual actions in empty states
+- [x] Add icons for empty states
+
+### 8. Error Boundaries ✓
+- [x] Enhanced ErrorBoundary component with recovery
+- [x] Add retry functionality
+- [x] Add copy error details button
+- [x] Add technical details toggle
+
+### 9. Payments UI in Resolve Dashboard ✓
+- [x] Add RecentPaymentsWidget to SystemOverview
+- [x] Show recent payment decisions with decision badges
+- [x] Add payment metrics cards (volume, count, allow rate, latency)
+- [x] Link to full Payments dashboard
+
+### 10. Payment Evidence Pack Viewer ✓
+- [x] Create PaymentEvidenceViewer component
+- [x] Show payment event chain with hash links
+- [x] Display hash verification status
+- [x] Add JSON export option

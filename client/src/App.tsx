@@ -26,6 +26,7 @@ import WhatIfSimulator from "@/pages/WhatIfSimulator";
 import ComplianceReport from "@/pages/ComplianceReport";
 import GovernanceConsole from "@/pages/GovernanceConsole";
 import CaseManagement from "@/pages/CaseManagement";
+import PolicyEditor from "@/pages/PolicyEditor";
 import NotFound from "@/pages/NotFound";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
 
@@ -44,6 +45,7 @@ function MainDashboard() {
         <Route path="/compare" component={CompareDecisions} />
         <Route path="/simulator" component={WhatIfSimulator} />
         <Route path="/policies" component={PolicyViewer} />
+        <Route path="/policy-editor" component={PolicyEditor} />
         
         {/* Lending Module */}
         <Route path="/lending" component={LendingDashboard} />

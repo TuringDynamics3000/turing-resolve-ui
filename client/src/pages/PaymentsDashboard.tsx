@@ -30,6 +30,9 @@ import {
   Database,
 } from "lucide-react";
 import PaymentsCorePage from "./PaymentsCorePage";
+import { ReversalDialog } from "@/components/ReversalDialog";
+import { PaymentEvidenceViewer } from "@/components/PaymentEvidenceViewer";
+import { RotateCcw } from "lucide-react";
 
 // Payment states
 type PaymentState = "CREATED" | "AUTHORISED" | "SUBMITTED" | "COMPLETED" | "FAILED" | "REVERSED";
@@ -302,7 +305,31 @@ function SummaryCards() {
 }
 
 function PaymentsTable() {
+  const [selectedPayment, setSelectedPayment] = useState<typeof payments[0] | null>(null);
+  const [reversalDialogOpen, setReversalDialogOpen] = useState(false);
+  const [evidenceViewerOpen, setEvidenceViewerOpen] = useState(false);
+
+  const handleReverseClick = (payment: typeof payments[0]) => {
+    setSelectedPayment(payment);
+    setReversalDialogOpen(true);
+  };
+
   return (
+    <>
+    <ReversalDialog
+      payment={selectedPayment}
+      open={reversalDialogOpen}
+      onOpenChange={setReversalDialogOpen}
+      onSuccess={() => {
+        // Refresh data would go here
+        setSelectedPayment(null);
+      }}
+    />
+    <PaymentEvidenceViewer
+      evidence={null}
+      open={evidenceViewerOpen}
+      onOpenChange={setEvidenceViewerOpen}
+    />
     <Card className="glass-panel">
       <CardHeader>
         <div className="flex items-center justify-between">
@@ -372,12 +399,31 @@ function PaymentsTable() {
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <Link href={`/payments/${payment.id}`}>
-                    <Button variant="ghost" size="sm" className="gap-1">
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="gap-1"
+                      onClick={() => {
+                        setSelectedPayment(payment);
+                        setEvidenceViewerOpen(true);
+                      }}
+                    >
                       <Eye className="h-4 w-4" />
-                      View
+                      Evidence
                     </Button>
-                  </Link>
+                    {(payment.state === "COMPLETED" || payment.state === "AUTHORISED") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-amber-500 hover:text-amber-400 hover:bg-amber-500/10"
+                        onClick={() => handleReverseClick(payment)}
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                        Reverse
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -385,6 +431,7 @@ function PaymentsTable() {
         </Table>
       </CardContent>
     </Card>
+    </>
   );
 }
 
