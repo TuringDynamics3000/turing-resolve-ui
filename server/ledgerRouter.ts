@@ -868,6 +868,214 @@ export const ledgerRouter = router({
         convention: input.convention,
       };
     }),
+
+  // ============================================
+  // FX REVALUATION ENDPOINTS
+  // ============================================
+
+  /**
+   * Get FX positions for revaluation.
+   */
+  getFXPositions: publicProcedure
+    .query(async () => {
+      const { fxRevaluationService } = await import("./core/ledger/FXRevaluationService");
+      const positions = fxRevaluationService.getPositions();
+      
+      return {
+        positions: positions.map(p => ({
+          accountId: p.accountId,
+          accountName: p.accountName,
+          currency: p.currency,
+          balance: `${(Number(p.balanceCents) / 100).toLocaleString("en-AU", { minimumFractionDigits: 2 })} ${p.currency}`,
+          originalAudCost: `${(Number(p.originalAudCostCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+          currentAudValue: `${(Number(p.currentAudValueCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+          unrealizedGainLoss: `${(Number(p.unrealizedGainLossCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+          unrealizedGainLossCents: Number(p.unrealizedGainLossCents),
+          lastRevaluedAt: p.lastRevaluedAt,
+        })),
+        totalPositions: positions.length,
+      };
+    }),
+
+  /**
+   * Run month-end FX revaluation.
+   */
+  runFXRevaluation: publicProcedure
+    .input(z.object({
+      periodEnd: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const { fxRevaluationService } = await import("./core/ledger/FXRevaluationService");
+      const run = fxRevaluationService.runMonthEndRevaluation(input.periodEnd);
+      
+      return {
+        runId: run.runId,
+        periodEnd: run.periodEnd,
+        status: run.status,
+        positionsProcessed: run.positionsProcessed,
+        totalUnrealizedGainLoss: `${(Number(run.totalUnrealizedGainLossCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+        results: run.results.map(r => ({
+          accountId: r.accountId,
+          currency: r.currency,
+          movement: `${(Number(r.movementCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+          fxRate: r.fxRateMid.toFixed(4),
+          glPostings: r.glPostings.length,
+        })),
+        completedAt: run.completedAt,
+      };
+    }),
+
+  /**
+   * Get FX revaluation history.
+   */
+  getFXRevaluationHistory: publicProcedure
+    .query(async () => {
+      const { fxRevaluationService } = await import("./core/ledger/FXRevaluationService");
+      const runs = fxRevaluationService.getRevaluationRuns();
+      
+      return {
+        runs: runs.map(r => ({
+          runId: r.runId,
+          periodEnd: r.periodEnd,
+          status: r.status,
+          positionsProcessed: r.positionsProcessed,
+          totalUnrealizedGainLoss: `${(Number(r.totalUnrealizedGainLossCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+          completedAt: r.completedAt,
+        })),
+      };
+    }),
+
+  // ============================================
+  // INTEREST POSTING SCHEDULER ENDPOINTS
+  // ============================================
+
+  /**
+   * Get interest-bearing accounts.
+   */
+  getInterestAccounts: publicProcedure
+    .query(async () => {
+      const { interestPostingScheduler } = await import("./core/ledger/InterestPostingScheduler");
+      const accounts = interestPostingScheduler.getAccounts();
+      
+      return {
+        accounts: accounts.map(a => ({
+          accountId: a.accountId,
+          accountType: a.accountType,
+          customerId: a.customerId,
+          customerName: a.customerName,
+          productCode: a.productCode,
+          balance: `${(Number(a.balanceCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+          annualRate: `${(a.annualRate * 100).toFixed(2)}%`,
+          accruedInterest: `${(Number(a.accruedInterestCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+          accruedInterestCents: Number(a.accruedInterestCents),
+          lastAccrualDate: a.lastAccrualDate,
+          capitalizationDay: a.capitalizationDay,
+          isActive: a.isActive,
+        })),
+        totalAccounts: accounts.length,
+        activeAccounts: accounts.filter(a => a.isActive).length,
+      };
+    }),
+
+  /**
+   * Run daily interest accrual.
+   */
+  runDailyAccrual: publicProcedure
+    .input(z.object({
+      accrualDate: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const { interestPostingScheduler } = await import("./core/ledger/InterestPostingScheduler");
+      const run = interestPostingScheduler.runDailyAccrual(input.accrualDate);
+      
+      return {
+        runId: run.runId,
+        runType: run.runType,
+        runDate: run.runDate,
+        status: run.status,
+        accountsProcessed: run.accountsProcessed,
+        totalInterest: `${(Number(run.totalInterestCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+        glPostingsGenerated: run.glPostings.length,
+        errors: run.errors.length,
+        completedAt: run.completedAt,
+      };
+    }),
+
+  /**
+   * Run interest capitalization.
+   */
+  runCapitalization: publicProcedure
+    .input(z.object({
+      capitalizationDate: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const { interestPostingScheduler } = await import("./core/ledger/InterestPostingScheduler");
+      const run = interestPostingScheduler.runCapitalization(input.capitalizationDate);
+      
+      return {
+        runId: run.runId,
+        runType: run.runType,
+        runDate: run.runDate,
+        status: run.status,
+        accountsProcessed: run.accountsProcessed,
+        totalCapitalized: `${(Number(run.totalInterestCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+        glPostingsGenerated: run.glPostings.length,
+        completedAt: run.completedAt,
+      };
+    }),
+
+  /**
+   * Run EOD reconciliation.
+   */
+  runEODReconciliation: publicProcedure
+    .input(z.object({
+      reconciliationDate: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const { interestPostingScheduler } = await import("./core/ledger/InterestPostingScheduler");
+      const recon = interestPostingScheduler.runEODReconciliation(input.reconciliationDate);
+      
+      return {
+        reconciliationId: recon.reconciliationId,
+        reconciliationDate: recon.reconciliationDate,
+        status: recon.status,
+        totalAccrued: `${(Number(recon.totalAccruedCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+        totalPosted: `${(Number(recon.totalPostedCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+        variance: `${(Number(recon.varianceCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+        isBalanced: recon.status === "BALANCED",
+        accountCount: recon.accountCount,
+        completedAt: recon.completedAt,
+      };
+    }),
+
+  /**
+   * Get scheduler run history.
+   */
+  getSchedulerHistory: publicProcedure
+    .query(async () => {
+      const { interestPostingScheduler } = await import("./core/ledger/InterestPostingScheduler");
+      const runs = interestPostingScheduler.getRuns();
+      const recons = interestPostingScheduler.getReconciliations();
+      
+      return {
+        runs: runs.map(r => ({
+          runId: r.runId,
+          runType: r.runType,
+          runDate: r.runDate,
+          status: r.status,
+          accountsProcessed: r.accountsProcessed,
+          totalInterest: `${(Number(r.totalInterestCents) / 100).toLocaleString("en-AU", { style: "currency", currency: "AUD" })}`,
+          completedAt: r.completedAt,
+        })),
+        reconciliations: recons.map(r => ({
+          reconciliationId: r.reconciliationId,
+          reconciliationDate: r.reconciliationDate,
+          status: r.status,
+          isBalanced: r.status === "BALANCED",
+          completedAt: r.completedAt,
+        })),
+      };
+    }),
 });
 
 export default ledgerRouter;

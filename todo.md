@@ -1785,3 +1785,26 @@
 - [x] Interest Accrual Service - Daily accrual calculations
 - [x] Interest Accrual Service - Automated GL postings
 - [x] Interest Accrual Service - Tiered rate support
+
+## State-of-the-Art Ledger - Phase 2
+
+- [x] ECL Dashboard UI - Portfolio ECL summary by stage
+- [x] ECL Dashboard UI - Stage distribution visualization
+- [x] ECL Dashboard UI - Asset drill-down with ECL details
+- [ ] ECL Dashboard UI - Scenario breakdown display
+- [x] FX Revaluation Job - Automated month-end revaluation
+- [x] FX Revaluation Job - GL posting generation
+- [ ] FX Revaluation Job - Unrealized gain/loss tracking
+- [x] Interest Posting Scheduler - Daily accrual automation
+- [x] Interest Posting Scheduler - EOD reconciliation
+- [ ] Interest Posting Scheduler - Capitalization processing
+
+## State-of-the-Art Ledger - Phase 2
+
+- [x] ECL Dashboard UI - Portfolio ECL summary by stage
+- [x] ECL Dashboard UI - Stage distribution visualization
+- [x] ECL Dashboard UI - Asset drill-down with ECL details
+- [x] FX Revaluation Job - Automated month-end revaluation
+- [x] FX Revaluation Job - GL posting generation
+- [x] Interest Posting Scheduler - Daily accrual automation
+- [x] Interest Posting Scheduler - EOD reconciliation

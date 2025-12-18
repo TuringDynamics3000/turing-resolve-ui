@@ -29,6 +29,7 @@ import TuringSentinelLanding from "@/pages/TuringSentinelLanding";
 import CaseManagement from "@/pages/CaseManagement";
 import PolicyEditor from "@/pages/PolicyEditor";
 import GLLedger from "@/pages/GLLedger";
+import ECLDashboard from "@/pages/ECLDashboard";
 import APRAReporting from "@/pages/APRAReporting";
 import PeriodClose from "@/pages/PeriodClose";
 import NotFound from "@/pages/NotFound";
@@ -62,6 +63,7 @@ function MainDashboard() {
         
         {/* General Ledger */}
         <Route path="/gl" component={GLLedger} />
+        <Route path="/ecl" component={ECLDashboard} />
         
         {/* Exposure Module */}
         <Route path="/exposure" component={ExposureDashboard} />
