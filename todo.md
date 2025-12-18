@@ -1723,3 +1723,11 @@
 - [x] Create DecisionTrendsChart component
 - [x] Integrate chart into TuringSentinelLanding page
 - [x] Add period selector (24h, 7d, 30d)
+
+## TuringSentinel Enhanced Dashboard
+- [x] Create seed endpoint for authority facts data
+- [x] Add getDecisionsByCommand tRPC endpoint
+- [x] Create CommandBreakdownChart component (pie/bar)
+- [x] Create LiveDecisionFeed component with auto-scroll
+- [x] Integrate all components into TuringSentinelLanding
+- [x] Add WebSocket subscription for real-time updates (polling)

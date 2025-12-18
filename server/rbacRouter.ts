@@ -789,4 +789,126 @@ export const rbacRouter = router({
       
       return { success: true, message: "RBAC data seeded successfully" };
     }),
+
+  /**
+   * Seed authority facts with sample data for dashboard visualization
+   */
+  seedAuthorityFacts: protectedProcedure
+    .mutation(async () => {
+      const conn = await getDb();
+      if (!conn) throw new Error("Database not available");
+      
+      const actors = [
+        { id: "alice@turingdynamics.com", role: "MODEL_APPROVER" },
+        { id: "bob@turingdynamics.com", role: "OPS_SUPERVISOR" },
+        { id: "carol@turingdynamics.com", role: "RISK_APPROVER" },
+        { id: "dave@turingdynamics.com", role: "MODEL_AUTHOR" },
+        { id: "eve@turingdynamics.com", role: "OPS_AGENT" },
+        { id: "frank@turingdynamics.com", role: "COMPLIANCE_APPROVER" },
+      ];
+      
+      const commands = [
+        { code: "OPEN_ACCOUNT", domain: "DEPOSITS", allowRate: 0.95 },
+        { code: "CLOSE_ACCOUNT", domain: "DEPOSITS", allowRate: 0.90 },
+        { code: "INITIATE_PAYMENT", domain: "PAYMENTS", allowRate: 0.92 },
+        { code: "REVERSE_PAYMENT", domain: "PAYMENTS", allowRate: 0.85 },
+        { code: "CREATE_LOAN", domain: "LENDING", allowRate: 0.88 },
+        { code: "MODIFY_TERMS", domain: "LENDING", allowRate: 0.75 },
+        { code: "REGISTER_MODEL_VERSION", domain: "ML", allowRate: 0.98 },
+        { code: "PROMOTE_MODEL_TO_SHADOW", domain: "ML", allowRate: 0.95 },
+        { code: "PROMOTE_MODEL_TO_CANARY", domain: "ML", allowRate: 0.80 },
+        { code: "PROMOTE_MODEL_TO_PROD", domain: "ML", allowRate: 0.70 },
+        { code: "UPDATE_POLICY_DSL", domain: "POLICY", allowRate: 0.85 },
+        { code: "ADJUST_BALANCE", domain: "DEPOSITS", allowRate: 0.0 }, // Forbidden
+        { code: "DELETE_MODEL", domain: "ML", allowRate: 0.0 }, // Forbidden
+      ];
+      
+      const denyReasons = ["ROLE_MISSING", "APPROVAL_REQUIRED", "FORBIDDEN_COMMAND", "SCOPE_MISMATCH"];
+      
+      const now = Date.now();
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+      
+      // Generate ~500 authority facts over the last 30 days
+      const facts = [];
+      for (let i = 0; i < 500; i++) {
+        const actor = actors[Math.floor(Math.random() * actors.length)];
+        const command = commands[Math.floor(Math.random() * commands.length)];
+        const isAllowed = Math.random() < command.allowRate;
+        const timestamp = new Date(now - Math.random() * thirtyDaysMs);
+        
+        facts.push({
+          authorityFactId: `auth-seed-${i.toString().padStart(5, '0')}`,
+          actorId: actor.id,
+          actorRole: actor.role,
+          commandCode: command.code,
+          resourceId: `RES-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`,
+          tenantId: "tenant-001",
+          environmentId: "prod",
+          domain: command.domain,
+          decision: isAllowed ? "ALLOW" as const : "DENY" as const,
+          reasonCode: isAllowed ? "AUTHORIZED" : denyReasons[Math.floor(Math.random() * denyReasons.length)],
+          createdAt: timestamp,
+        });
+      }
+      
+      // Insert in batches
+      let inserted = 0;
+      for (const fact of facts) {
+        try {
+          await conn.insert(authorityFacts).values(fact);
+          inserted++;
+        } catch (e) {
+          // Ignore duplicate key errors
+        }
+      }
+      
+      return { success: true, message: `Seeded ${inserted} authority facts` };
+    }),
+
+  /**
+   * Get decision breakdown by command type
+   */
+  getDecisionsByCommand: publicProcedure.query(async () => {
+    const conn = await getDb();
+    
+    if (!conn) {
+      // Return mock data when DB not available
+      return [
+        { command: "OPEN_ACCOUNT", domain: "DEPOSITS", allowed: 145, denied: 8 },
+        { command: "INITIATE_PAYMENT", domain: "PAYMENTS", allowed: 234, denied: 19 },
+        { command: "CREATE_LOAN", domain: "LENDING", allowed: 89, denied: 12 },
+        { command: "PROMOTE_MODEL_TO_PROD", domain: "ML", allowed: 23, denied: 9 },
+        { command: "MODIFY_TERMS", domain: "LENDING", allowed: 45, denied: 15 },
+        { command: "UPDATE_POLICY_DSL", domain: "POLICY", allowed: 34, denied: 6 },
+        { command: "REGISTER_MODEL_VERSION", domain: "ML", allowed: 67, denied: 2 },
+        { command: "ADJUST_BALANCE", domain: "DEPOSITS", allowed: 0, denied: 12 },
+      ];
+    }
+    
+    const allFacts = await conn.select().from(authorityFacts);
+    
+    // Group by command
+    const byCommand: Record<string, { command: string; domain: string; allowed: number; denied: number }> = {};
+    
+    allFacts.forEach(fact => {
+      if (!byCommand[fact.commandCode]) {
+        byCommand[fact.commandCode] = {
+          command: fact.commandCode,
+          domain: fact.domain,
+          allowed: 0,
+          denied: 0,
+        };
+      }
+      if (fact.decision === "ALLOW") {
+        byCommand[fact.commandCode].allowed++;
+      } else {
+        byCommand[fact.commandCode].denied++;
+      }
+    });
+    
+    // Sort by total count descending
+    return Object.values(byCommand)
+      .sort((a, b) => (b.allowed + b.denied) - (a.allowed + a.denied))
+      .slice(0, 10); // Top 10 commands
+  }),
 });

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { CommandBreakdownChart } from "@/components/CommandBreakdownChart";
+import { LiveDecisionFeed } from "@/components/LiveDecisionFeed";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -399,6 +401,14 @@ export default function TuringSentinelLanding() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* Command Breakdown and Live Feed */}
+      <div className="container pb-12">
+        <div className="grid grid-cols-2 gap-6">
+          <CommandBreakdownChart />
+          <LiveDecisionFeed />
+        </div>
       </div>
 
       {/* Features Grid */}

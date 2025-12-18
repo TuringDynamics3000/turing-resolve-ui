@@ -730,3 +730,57 @@ describe("TuringSentinel Decision Trends", () => {
     });
   });
 });
+
+
+describe("TuringSentinel Command Breakdown", () => {
+  describe("getDecisionsByCommand", () => {
+    it("should return array of command breakdown data", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const breakdown = await caller.rbac.getDecisionsByCommand();
+      
+      expect(Array.isArray(breakdown)).toBe(true);
+    });
+    
+    it("should return commands with expected structure", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const breakdown = await caller.rbac.getDecisionsByCommand();
+      
+      if (breakdown.length > 0) {
+        const item = breakdown[0];
+        expect(item).toHaveProperty("command");
+        expect(item).toHaveProperty("domain");
+        expect(item).toHaveProperty("allowed");
+        expect(item).toHaveProperty("denied");
+        expect(typeof item.command).toBe("string");
+        expect(typeof item.domain).toBe("string");
+        expect(typeof item.allowed).toBe("number");
+        expect(typeof item.denied).toBe("number");
+      }
+    });
+    
+    it("should return non-negative counts", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const breakdown = await caller.rbac.getDecisionsByCommand();
+      
+      breakdown.forEach(item => {
+        expect(item.allowed).toBeGreaterThanOrEqual(0);
+        expect(item.denied).toBeGreaterThanOrEqual(0);
+      });
+    });
+    
+    it("should return at most 10 commands", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const breakdown = await caller.rbac.getDecisionsByCommand();
+      
+      expect(breakdown.length).toBeLessThanOrEqual(10);
+    });
+  });
+});
