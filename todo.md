@@ -1808,3 +1808,12 @@
 - [x] FX Revaluation Job - GL posting generation
 - [x] Interest Posting Scheduler - Daily accrual automation
 - [x] Interest Posting Scheduler - EOD reconciliation
+
+## State-of-the-Art Ledger - Phase 3
+
+- [x] ECL sidebar link in DashboardLayout
+- [x] FX/Interest Operations UI page
+- [x] FX Revaluation trigger and history
+- [x] Interest Scheduler controls and status
+- [x] APRA ARF 220.0 Credit Risk template
+- [x] ARF 220.0 GL-to-APRA mappings

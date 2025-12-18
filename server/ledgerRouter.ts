@@ -528,7 +528,7 @@ export const ledgerRouter = router({
    */
   getAPRAMappings: publicProcedure
     .input(z.object({
-      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4"]).optional(),
+      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4", "ARF_220_0"]).optional(),
     }).optional())
     .query(async ({ input }) => {
       const { apraReportingService } = await import("./core/ledger/APRAReportingService");
@@ -540,7 +540,7 @@ export const ledgerRouter = router({
    */
   getAPRAReportTemplate: publicProcedure
     .input(z.object({
-      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4"]),
+      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4", "ARF_220_0"]),
     }))
     .query(async ({ input }) => {
       const { apraReportingService } = await import("./core/ledger/APRAReportingService");
@@ -552,11 +552,14 @@ export const ledgerRouter = router({
    */
   generateAPRADemoReport: publicProcedure
     .input(z.object({
-      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4"]),
+      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4", "ARF_220_0"]),
       reportingPeriod: z.string().regex(/^\d{4}-\d{2}$/),
     }))
     .mutation(async ({ input }) => {
       const { apraReportingService } = await import("./core/ledger/APRAReportingService");
+      if (input.reportType === "ARF_220_0") {
+        return apraReportingService.generateDemoARF220Report(input.reportingPeriod);
+      }
       return apraReportingService.generateDemoReport(input.reportType, input.reportingPeriod);
     }),
   
@@ -565,7 +568,7 @@ export const ledgerRouter = router({
    */
   listAPRAReports: publicProcedure
     .input(z.object({
-      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4"]).optional(),
+      reportType: z.enum(["ARF_720_0", "ARF_720_1", "ARF_720_2", "ARF_720_3", "ARF_720_4", "ARF_220_0"]).optional(),
     }).optional())
     .query(async ({ input }) => {
       const { apraReportingService } = await import("./core/ledger/APRAReportingService");

@@ -31,6 +31,8 @@ import {
   FlaskConical,
   Scale,
   BookOpen,
+  AlertTriangle,
+  Calculator,
 } from "lucide-react";
 
 export function GlobalNav() {
@@ -50,6 +52,8 @@ export function GlobalNav() {
     { href: "/evidence", label: "Evidence", icon: FileCheck, roles: ['COMPLIANCE_VIEWER', 'OPS_SUPERVISOR', 'BOARD_VIEWER'] },
     { href: "/sentinel", label: "TuringSentinel", icon: Shield, roles: ['COMPLIANCE_VIEWER', 'BOARD_VIEWER', 'SYSTEM_ADMIN'] },
     { href: "/gl", label: "GL Ledger", icon: BookOpen, roles: ['OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'SYSTEM_ADMIN'] },
+    { href: "/ecl", label: "ECL", icon: AlertTriangle, roles: ['OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'SYSTEM_ADMIN'] },
+    { href: "/operations", label: "Operations", icon: Calculator, roles: ['OPS_SUPERVISOR', 'SYSTEM_ADMIN'] },
     { href: "/apra", label: "APRA", icon: Building2, roles: ['COMPLIANCE_VIEWER', 'SYSTEM_ADMIN'] },
   ];
 

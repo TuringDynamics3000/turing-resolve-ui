@@ -19,7 +19,8 @@ export type APRAReportType =
   | "ARF_720_1" // Statement of Financial Performance (P&L)
   | "ARF_720_2" // Capital Adequacy
   | "ARF_720_3" // Liquidity Coverage Ratio
-  | "ARF_720_4" // Net Stable Funding Ratio;
+  | "ARF_720_4" // Net Stable Funding Ratio
+  | "ARF_220_0"; // Credit Risk - On-Balance Sheet Exposures
 
 export type ReportStatus = "DRAFT" | "SUBMITTED" | "ACCEPTED" | "REJECTED";
 
@@ -116,6 +117,14 @@ const GL_TO_APRA_MAPPINGS: GLToAPRAMapping[] = [
   { glAccountCode: "3000", glAccountName: "Share Capital", apraReportType: "ARF_720_2", apraLineNumber: "1.1", apraDescription: "CET1 - Paid-up capital", sign: "POSITIVE" },
   { glAccountCode: "3100", glAccountName: "Retained Earnings", apraReportType: "ARF_720_2", apraLineNumber: "1.2", apraDescription: "CET1 - Retained earnings", sign: "POSITIVE" },
   { glAccountCode: "3200", glAccountName: "Reserves", apraReportType: "ARF_720_2", apraLineNumber: "1.3", apraDescription: "CET1 - Reserves", sign: "POSITIVE" },
+  
+  // ARF 220.0 - Credit Risk On-Balance Sheet Exposures
+  { glAccountCode: "1220", glAccountName: "Home Loans", apraReportType: "ARF_220_0", apraLineNumber: "1.1", apraDescription: "Residential mortgages - Standard", sign: "POSITIVE" },
+  { glAccountCode: "1210", glAccountName: "Personal Loans", apraReportType: "ARF_220_0", apraLineNumber: "2.1", apraDescription: "Other retail exposures", sign: "POSITIVE" },
+  { glAccountCode: "1400", glAccountName: "Card Receivables Control", apraReportType: "ARF_220_0", apraLineNumber: "2.2", apraDescription: "Qualifying revolving retail", sign: "POSITIVE" },
+  { glAccountCode: "1200", glAccountName: "Loans Receivable Control", apraReportType: "ARF_220_0", apraLineNumber: "3.1", apraDescription: "Corporate exposures", sign: "POSITIVE" },
+  { glAccountCode: "1000", glAccountName: "Cash at Bank", apraReportType: "ARF_220_0", apraLineNumber: "4.1", apraDescription: "Claims on ADIs", sign: "POSITIVE" },
+  { glAccountCode: "1100", glAccountName: "Customer Deposits Control", apraReportType: "ARF_220_0", apraLineNumber: "4.2", apraDescription: "Claims on central government", sign: "POSITIVE" },
 ];
 
 // ============================================
@@ -149,6 +158,43 @@ const ARF_720_0_TEMPLATE: { lineNumber: string; description: string; category: s
   { lineNumber: "20.3", description: "Reserves", category: "EQUITY" },
   { lineNumber: "29", description: "TOTAL EQUITY", category: "TOTAL" },
   { lineNumber: "30", description: "TOTAL LIABILITIES AND EQUITY", category: "TOTAL" },
+];
+
+// ARF 220.0 - Credit Risk On-Balance Sheet Exposures Template
+const ARF_220_0_TEMPLATE: { lineNumber: string; description: string; category: string; riskWeight: number }[] = [
+  // Residential Mortgages
+  { lineNumber: "1", description: "RESIDENTIAL MORTGAGES", category: "HEADER", riskWeight: 0 },
+  { lineNumber: "1.1", description: "Standard residential mortgages (LVR <= 80%)", category: "EXPOSURE", riskWeight: 35 },
+  { lineNumber: "1.2", description: "Non-standard residential mortgages (LVR > 80%)", category: "EXPOSURE", riskWeight: 50 },
+  { lineNumber: "1.3", description: "Residential mortgages - LMI covered", category: "EXPOSURE", riskWeight: 35 },
+  
+  // Other Retail
+  { lineNumber: "2", description: "OTHER RETAIL EXPOSURES", category: "HEADER", riskWeight: 0 },
+  { lineNumber: "2.1", description: "Other retail exposures", category: "EXPOSURE", riskWeight: 75 },
+  { lineNumber: "2.2", description: "Qualifying revolving retail (credit cards)", category: "EXPOSURE", riskWeight: 75 },
+  { lineNumber: "2.3", description: "SME retail exposures", category: "EXPOSURE", riskWeight: 85 },
+  
+  // Corporate
+  { lineNumber: "3", description: "CORPORATE EXPOSURES", category: "HEADER", riskWeight: 0 },
+  { lineNumber: "3.1", description: "Corporate exposures - unrated", category: "EXPOSURE", riskWeight: 100 },
+  { lineNumber: "3.2", description: "Corporate exposures - rated (BBB- to A+)", category: "EXPOSURE", riskWeight: 50 },
+  { lineNumber: "3.3", description: "Corporate exposures - rated (AA- to AAA)", category: "EXPOSURE", riskWeight: 20 },
+  
+  // Sovereign & ADI
+  { lineNumber: "4", description: "SOVEREIGN AND ADI EXPOSURES", category: "HEADER", riskWeight: 0 },
+  { lineNumber: "4.1", description: "Claims on ADIs (Australian)", category: "EXPOSURE", riskWeight: 20 },
+  { lineNumber: "4.2", description: "Claims on central government (Australian)", category: "EXPOSURE", riskWeight: 0 },
+  { lineNumber: "4.3", description: "Claims on state/territory government", category: "EXPOSURE", riskWeight: 0 },
+  
+  // Past Due
+  { lineNumber: "5", description: "PAST DUE EXPOSURES", category: "HEADER", riskWeight: 0 },
+  { lineNumber: "5.1", description: "Past due exposures (< 90 days)", category: "EXPOSURE", riskWeight: 100 },
+  { lineNumber: "5.2", description: "Past due exposures (>= 90 days, provisioned < 20%)", category: "EXPOSURE", riskWeight: 150 },
+  { lineNumber: "5.3", description: "Past due exposures (>= 90 days, provisioned >= 20%)", category: "EXPOSURE", riskWeight: 100 },
+  
+  // Totals
+  { lineNumber: "9", description: "TOTAL ON-BALANCE SHEET EXPOSURES", category: "TOTAL", riskWeight: 0 },
+  { lineNumber: "10", description: "TOTAL RISK-WEIGHTED ASSETS", category: "TOTAL", riskWeight: 0 },
 ];
 
 const ARF_720_1_TEMPLATE: { lineNumber: string; description: string; category: string }[] = [
@@ -191,15 +237,124 @@ class APRAReportingService {
   /**
    * Get report template
    */
-  getReportTemplate(reportType: APRAReportType): { lineNumber: string; description: string; category: string }[] {
+  getReportTemplate(reportType: APRAReportType): { lineNumber: string; description: string; category: string; riskWeight?: number }[] {
     switch (reportType) {
       case "ARF_720_0":
         return ARF_720_0_TEMPLATE;
       case "ARF_720_1":
         return ARF_720_1_TEMPLATE;
+      case "ARF_220_0":
+        return ARF_220_0_TEMPLATE;
       default:
         return [];
     }
+  }
+
+  /**
+   * Generate ARF 220.0 Credit Risk report with ECL integration
+   */
+  generateARF220Report(
+    reportingPeriod: string,
+    reportingEntity: string,
+    abn: string,
+    exposures: {
+      lineNumber: string;
+      exposure: bigint;
+      provisions: bigint;
+      stage: "STAGE_1" | "STAGE_2" | "STAGE_3";
+    }[]
+  ): APRAReport {
+    const reportId = `APRA-ARF_220_0-${reportingPeriod}-${Date.now()}`;
+    const template = ARF_220_0_TEMPLATE;
+    const validationIssues: ValidationIssue[] = [];
+
+    // Build line items with risk weights
+    const lineItems: APRALineItem[] = template.map(line => {
+      const exposureData = exposures.find(e => e.lineNumber === line.lineNumber);
+      const exposure = exposureData?.exposure || BigInt(0);
+      const provisions = exposureData?.provisions || BigInt(0);
+      const riskWeight = line.riskWeight || 0;
+      const rwa = BigInt(Math.round(Number(exposure) * riskWeight / 100));
+
+      return {
+        lineNumber: line.lineNumber,
+        description: line.description,
+        amount: this.formatCurrency(exposure),
+        currency: "AUD",
+        glAccounts: [],
+        notes: line.category === "EXPOSURE" 
+          ? `RW: ${riskWeight}% | RWA: ${this.formatCurrency(rwa)} | ECL: ${this.formatCurrency(provisions)}`
+          : undefined,
+      };
+    });
+
+    // Calculate totals
+    let totalExposure = BigInt(0);
+    let totalRWA = BigInt(0);
+    let totalProvisions = BigInt(0);
+
+    for (const exp of exposures) {
+      const templateLine = template.find(t => t.lineNumber === exp.lineNumber);
+      if (templateLine && templateLine.category === "EXPOSURE") {
+        totalExposure += exp.exposure;
+        totalRWA += BigInt(Math.round(Number(exp.exposure) * (templateLine.riskWeight || 0) / 100));
+        totalProvisions += exp.provisions;
+      }
+    }
+
+    // Update total lines
+    const totalExposureLine = lineItems.find(i => i.lineNumber === "9");
+    if (totalExposureLine) {
+      totalExposureLine.amount = this.formatCurrency(totalExposure);
+    }
+    const totalRWALine = lineItems.find(i => i.lineNumber === "10");
+    if (totalRWALine) {
+      totalRWALine.amount = this.formatCurrency(totalRWA);
+      totalRWALine.notes = `Total ECL Provisions: ${this.formatCurrency(totalProvisions)}`;
+    }
+
+    const report: APRAReport = {
+      reportId,
+      reportType: "ARF_220_0",
+      reportingPeriod,
+      reportingEntity,
+      abn,
+      status: "DRAFT",
+      generatedAt: new Date().toISOString(),
+      lineItems,
+      totals: {
+        totalAssets: this.formatCurrency(totalExposure),
+        riskWeightedAssets: this.formatCurrency(totalRWA),
+      },
+      validationIssues,
+    };
+
+    this.reports.set(reportId, report);
+    return report;
+  }
+
+  /**
+   * Generate demo ARF 220.0 report
+   */
+  generateDemoARF220Report(reportingPeriod: string): APRAReport {
+    const exposures = [
+      { lineNumber: "1.1", exposure: BigInt(120000000), provisions: BigInt(180000), stage: "STAGE_1" as const },
+      { lineNumber: "1.2", exposure: BigInt(25000000), provisions: BigInt(125000), stage: "STAGE_2" as const },
+      { lineNumber: "2.1", exposure: BigInt(30000000), provisions: BigInt(225000), stage: "STAGE_1" as const },
+      { lineNumber: "2.2", exposure: BigInt(8000000), provisions: BigInt(60000), stage: "STAGE_1" as const },
+      { lineNumber: "3.1", exposure: BigInt(15000000), provisions: BigInt(150000), stage: "STAGE_1" as const },
+      { lineNumber: "4.1", exposure: BigInt(5000000), provisions: BigInt(0), stage: "STAGE_1" as const },
+      { lineNumber: "4.2", exposure: BigInt(2000000), provisions: BigInt(0), stage: "STAGE_1" as const },
+      { lineNumber: "5.1", exposure: BigInt(3500000), provisions: BigInt(175000), stage: "STAGE_2" as const },
+      { lineNumber: "5.2", exposure: BigInt(1500000), provisions: BigInt(450000), stage: "STAGE_3" as const },
+    ];
+
+    return this.generateARF220Report(
+      reportingPeriod,
+      "TuringDynamics Credit Union Ltd",
+      "12 345 678 901",
+      exposures
+    );
   }
 
   /**

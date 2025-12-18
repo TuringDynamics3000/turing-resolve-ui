@@ -19,7 +19,7 @@ import {
   Eye
 } from "lucide-react";
 
-type APRAReportType = "ARF_720_0" | "ARF_720_1" | "ARF_720_2" | "ARF_720_3" | "ARF_720_4";
+type APRAReportType = "ARF_720_0" | "ARF_720_1" | "ARF_720_2" | "ARF_720_3" | "ARF_720_4" | "ARF_220_0";
 
 const REPORT_TYPES: { value: APRAReportType; label: string; description: string }[] = [
   { value: "ARF_720_0", label: "ARF 720.0", description: "Statement of Financial Position (Balance Sheet)" },
@@ -27,6 +27,7 @@ const REPORT_TYPES: { value: APRAReportType; label: string; description: string 
   { value: "ARF_720_2", label: "ARF 720.2", description: "Capital Adequacy" },
   { value: "ARF_720_3", label: "ARF 720.3", description: "Liquidity Coverage Ratio" },
   { value: "ARF_720_4", label: "ARF 720.4", description: "Net Stable Funding Ratio" },
+  { value: "ARF_220_0", label: "ARF 220.0", description: "Credit Risk - On-Balance Sheet Exposures (with ECL)" },
 ];
 
 export default function APRAReporting() {

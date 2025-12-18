@@ -30,6 +30,7 @@ import CaseManagement from "@/pages/CaseManagement";
 import PolicyEditor from "@/pages/PolicyEditor";
 import GLLedger from "@/pages/GLLedger";
 import ECLDashboard from "@/pages/ECLDashboard";
+import OperationsPage from "@/pages/OperationsPage";
 import APRAReporting from "@/pages/APRAReporting";
 import PeriodClose from "@/pages/PeriodClose";
 import NotFound from "@/pages/NotFound";
@@ -64,6 +65,7 @@ function MainDashboard() {
         {/* General Ledger */}
         <Route path="/gl" component={GLLedger} />
         <Route path="/ecl" component={ECLDashboard} />
+        <Route path="/operations" component={OperationsPage} />
         
         {/* Exposure Module */}
         <Route path="/exposure" component={ExposureDashboard} />
