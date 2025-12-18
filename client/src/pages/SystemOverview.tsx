@@ -734,7 +734,7 @@ export default function SystemOverview() {
                       Evidence Vault
                     </Button>
                   </Link>
-                  <Link href="/governance">
+                  <Link href="/sentinel">
                     <Button variant="outline" className="w-full justify-start gap-2">
                       <Lock className="h-4 w-4" />
                       Governance Controls

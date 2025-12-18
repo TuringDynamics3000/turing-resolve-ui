@@ -1695,3 +1695,14 @@
 - [x] Add Live/Offline connection status badge
 - [x] Add new case count indicator
 - [x] Add toast notifications for new/updated cases
+
+
+## TuringSentinel Rebrand
+- [x] Rename GovernanceConsole.tsx to TuringSentinel branding
+- [x] Update navigation links and labels
+- [x] Update page headers and titles
+- [x] Create TuringSentinel landing/overview page
+- [x] Update DashboardLayout navigation
+- [x] Update App.tsx routes
+- [x] Update documentation references
+- [ ] Commit and push to GitHub

@@ -24,7 +24,8 @@ import MLModelsDashboard from "@/pages/MLModelsDashboard";
 import CompareDecisions from "@/pages/CompareDecisions";
 import WhatIfSimulator from "@/pages/WhatIfSimulator";
 import ComplianceReport from "@/pages/ComplianceReport";
-import GovernanceConsole from "@/pages/GovernanceConsole";
+import TuringSentinel from "@/pages/TuringSentinel";
+import TuringSentinelLanding from "@/pages/TuringSentinelLanding";
 import CaseManagement from "@/pages/CaseManagement";
 import PolicyEditor from "@/pages/PolicyEditor";
 import NotFound from "@/pages/NotFound";
@@ -70,7 +71,8 @@ function MainDashboard() {
         
         {/* ML Models */}
         <Route path="/ml-models" component={MLModelsDashboard} />
-        <Route path="/governance" component={GovernanceConsole} />
+        <Route path="/sentinel" component={TuringSentinelLanding} />
+        <Route path="/sentinel/console" component={TuringSentinel} />
         <Route path="/governance-controls" component={GovernanceControls} />
         
         {/* 404 */}

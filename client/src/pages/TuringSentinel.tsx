@@ -179,7 +179,7 @@ function formatTimeAgo(dateString: string) {
   return `${diffDays}d ago`;
 }
 
-export default function GovernanceConsole() {
+export default function TuringSentinel() {
   const [activeTab, setActiveTab] = useState("overview");
   const [searchQuery, setSearchQuery] = useState("");
   const [decisionFilter, setDecisionFilter] = useState("all");
@@ -219,9 +219,9 @@ export default function GovernanceConsole() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">
-                  Governance Console
+                  TuringSentinel
                 </h1>
-                <p className="text-zinc-400 text-sm">RBAC & Authority Management</p>
+                <p className="text-zinc-400 text-sm">Vigilant governance, provable decisions</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
