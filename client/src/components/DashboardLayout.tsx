@@ -1,5 +1,6 @@
 import { ReactNode, useState } from "react";
 import { Sidebar } from "./Sidebar";
+import { Breadcrumb } from "./Breadcrumb";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           )}
         >
           <div className="container py-6 px-6">
+            <Breadcrumb />
             {children}
           </div>
         </main>

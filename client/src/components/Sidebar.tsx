@@ -1,4 +1,5 @@
 import { CommandPalette } from "./CommandPalette";
+import { NotificationCenter } from "./NotificationCenter";
 import { useRole, UserRole, Environment } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
 import { Link, useLocation } from "wouter";
@@ -134,14 +135,17 @@ export function Sidebar({ collapsed = false, onCollapsedChange }: SidebarProps) 
           )}
         </Link>
         {!collapsed && (
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="h-8 w-8 text-slate-400 hover:text-white"
-            onClick={() => onCollapsedChange?.(true)}
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            <NotificationCenter />
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 text-slate-400 hover:text-white"
+              onClick={() => onCollapsedChange?.(true)}
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
+          </div>
         )}
       </div>
 
