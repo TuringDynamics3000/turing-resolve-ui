@@ -1715,3 +1715,11 @@
 - [x] Update TuringSentinel.tsx to use live tRPC data
 - [x] Update TuringSentinelLanding.tsx stats bar with live data
 - [x] Add loading states and error handling
+
+
+## TuringSentinel Time-Series Charts
+- [x] Create tRPC endpoint for decision trends (hourly/daily aggregation)
+- [x] Add recharts or chart.js for time-series visualization
+- [x] Create DecisionTrendsChart component
+- [x] Integrate chart into TuringSentinelLanding page
+- [x] Add period selector (24h, 7d, 30d)

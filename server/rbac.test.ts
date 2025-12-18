@@ -655,3 +655,78 @@ describe("TuringSentinel Metrics", () => {
     });
   });
 });
+
+
+describe("TuringSentinel Decision Trends", () => {
+  describe("getDecisionTrends", () => {
+    it("should return trends for 24h period", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const trends = await caller.rbac.getDecisionTrends({ period: "24h" });
+      
+      expect(Array.isArray(trends)).toBe(true);
+      expect(trends.length).toBe(24); // 24 hourly buckets
+    });
+    
+    it("should return trends for 7d period", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const trends = await caller.rbac.getDecisionTrends({ period: "7d" });
+      
+      expect(Array.isArray(trends)).toBe(true);
+      expect(trends.length).toBe(7); // 7 daily buckets
+    });
+    
+    it("should return trends for 30d period", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const trends = await caller.rbac.getDecisionTrends({ period: "30d" });
+      
+      expect(Array.isArray(trends)).toBe(true);
+      expect(trends.length).toBe(30); // 30 daily buckets
+    });
+    
+    it("should return trends with expected structure", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const trends = await caller.rbac.getDecisionTrends({ period: "7d" });
+      
+      if (trends.length > 0) {
+        const bucket = trends[0];
+        expect(bucket).toHaveProperty("timestamp");
+        expect(bucket).toHaveProperty("allowed");
+        expect(bucket).toHaveProperty("denied");
+        expect(typeof bucket.timestamp).toBe("string");
+        expect(typeof bucket.allowed).toBe("number");
+        expect(typeof bucket.denied).toBe("number");
+      }
+    });
+    
+    it("should return non-negative counts", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      const trends = await caller.rbac.getDecisionTrends({ period: "7d" });
+      
+      trends.forEach(bucket => {
+        expect(bucket.allowed).toBeGreaterThanOrEqual(0);
+        expect(bucket.denied).toBeGreaterThanOrEqual(0);
+      });
+    });
+    
+    it("should default to 7d period", async () => {
+      const ctx = createTestContext("test-user");
+      const caller = appRouter.createCaller(ctx);
+      
+      // @ts-ignore - testing default behavior
+      const trends = await caller.rbac.getDecisionTrends({});
+      
+      expect(Array.isArray(trends)).toBe(true);
+      expect(trends.length).toBe(7);
+    });
+  });
+});

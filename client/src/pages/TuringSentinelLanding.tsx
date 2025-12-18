@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,8 +20,19 @@ import {
   Database,
   GitBranch,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  TrendingUp
 } from "lucide-react";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
 
 const SENTINEL_FEATURES = [
   {
@@ -107,11 +119,53 @@ function StatSkeleton() {
   );
 }
 
+function ChartSkeleton() {
+  return (
+    <div className="h-[300px] flex items-center justify-center">
+      <div className="text-center">
+        <Skeleton className="h-8 w-8 mx-auto mb-2 bg-zinc-800 rounded-full" />
+        <Skeleton className="h-4 w-32 mx-auto bg-zinc-800" />
+      </div>
+    </div>
+  );
+}
+
+type Period = "24h" | "7d" | "30d";
+
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-zinc-900 border border-zinc-700 rounded-lg p-3 shadow-xl">
+        <p className="text-zinc-400 text-sm mb-2">{label}</p>
+        <div className="space-y-1">
+          <p className="text-emerald-400 text-sm flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            Allowed: <span className="font-semibold">{payload[0]?.value || 0}</span>
+          </p>
+          <p className="text-red-400 text-sm flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-400" />
+            Denied: <span className="font-semibold">{payload[1]?.value || 0}</span>
+          </p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function TuringSentinelLanding() {
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>("7d");
+  
   // Fetch live metrics from tRPC
   const { data: metrics, isLoading, refetch } = trpc.rbac.getSentinelMetrics.useQuery(undefined, {
     refetchInterval: 30000, // Refresh every 30 seconds
   });
+
+  // Fetch decision trends for chart
+  const { data: trends, isLoading: trendsLoading } = trpc.rbac.getDecisionTrends.useQuery(
+    { period: selectedPeriod },
+    { refetchInterval: 60000 } // Refresh every minute
+  );
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -248,6 +302,103 @@ export default function TuringSentinelLanding() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Decision Trends Chart */}
+      <div className="container py-12">
+        <Card className="bg-zinc-900/50 border-zinc-800">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/10">
+                  <TrendingUp className="h-5 w-5 text-amber-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl text-zinc-100">Decision Trends</CardTitle>
+                  <CardDescription className="text-zinc-500">Authority decisions over time</CardDescription>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {(["24h", "7d", "30d"] as Period[]).map((period) => (
+                  <Button
+                    key={period}
+                    variant={selectedPeriod === period ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedPeriod(period)}
+                    className={selectedPeriod === period 
+                      ? "bg-amber-500/20 text-amber-400 border-amber-500/30 hover:bg-amber-500/30" 
+                      : "border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                    }
+                  >
+                    {period}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {trendsLoading ? (
+              <ChartSkeleton />
+            ) : (
+              <div className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart
+                    data={trends || []}
+                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                  >
+                    <defs>
+                      <linearGradient id="colorAllowed" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorDenied" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                    <XAxis 
+                      dataKey="timestamp" 
+                      stroke="#71717a" 
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={{ stroke: '#27272a' }}
+                    />
+                    <YAxis 
+                      stroke="#71717a" 
+                      fontSize={12}
+                      tickLine={false}
+                      axisLine={{ stroke: '#27272a' }}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: '20px' }}
+                      formatter={(value) => <span className="text-zinc-400 text-sm">{value}</span>}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="allowed"
+                      name="Allowed"
+                      stroke="#10b981"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorAllowed)"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="denied"
+                      name="Denied"
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorDenied)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Features Grid */}

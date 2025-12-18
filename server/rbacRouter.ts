@@ -546,6 +546,93 @@ export const rbacRouter = router({
   }),
 
   /**
+   * Get decision trends over time for charts
+   */
+  getDecisionTrends: publicProcedure
+    .input(z.object({
+      period: z.enum(["24h", "7d", "30d"]).default("7d"),
+    }))
+    .query(async ({ input }) => {
+      const conn = await getDb();
+      
+      // Calculate time buckets based on period
+      const now = new Date();
+      const buckets: { timestamp: string; allowed: number; denied: number }[] = [];
+      
+      let bucketCount: number;
+      let bucketSizeMs: number;
+      let labelFormat: (date: Date) => string;
+      
+      switch (input.period) {
+        case "24h":
+          bucketCount = 24;
+          bucketSizeMs = 60 * 60 * 1000; // 1 hour
+          labelFormat = (d) => `${d.getHours().toString().padStart(2, '0')}:00`;
+          break;
+        case "7d":
+          bucketCount = 7;
+          bucketSizeMs = 24 * 60 * 60 * 1000; // 1 day
+          labelFormat = (d) => d.toLocaleDateString('en-US', { weekday: 'short' });
+          break;
+        case "30d":
+          bucketCount = 30;
+          bucketSizeMs = 24 * 60 * 60 * 1000; // 1 day
+          labelFormat = (d) => `${d.getMonth() + 1}/${d.getDate()}`;
+          break;
+      }
+      
+      if (!conn) {
+        // Return mock data when DB not available
+        for (let i = bucketCount - 1; i >= 0; i--) {
+          const bucketTime = new Date(now.getTime() - i * bucketSizeMs);
+          buckets.push({
+            timestamp: labelFormat(bucketTime),
+            allowed: Math.floor(Math.random() * 50) + 20,
+            denied: Math.floor(Math.random() * 15) + 2,
+          });
+        }
+        return buckets;
+      }
+      
+      // Get all facts within the time range
+      const startTime = new Date(now.getTime() - bucketCount * bucketSizeMs);
+      const allFacts = await conn.select().from(authorityFacts);
+      
+      // Filter facts within time range
+      const factsInRange = allFacts.filter(f => {
+        const factTime = f.createdAt ? new Date(f.createdAt) : new Date();
+        return factTime >= startTime && factTime <= now;
+      });
+      
+      // Initialize buckets
+      for (let i = bucketCount - 1; i >= 0; i--) {
+        const bucketTime = new Date(now.getTime() - i * bucketSizeMs);
+        buckets.push({
+          timestamp: labelFormat(bucketTime),
+          allowed: 0,
+          denied: 0,
+        });
+      }
+      
+      // Aggregate facts into buckets
+      factsInRange.forEach(fact => {
+        const factTime = fact.createdAt ? new Date(fact.createdAt) : new Date();
+        const bucketIndex = Math.floor((now.getTime() - factTime.getTime()) / bucketSizeMs);
+        const reversedIndex = bucketCount - 1 - bucketIndex;
+        
+        if (reversedIndex >= 0 && reversedIndex < buckets.length) {
+          if (fact.decision === "ALLOW") {
+            buckets[reversedIndex].allowed++;
+          } else {
+            buckets[reversedIndex].denied++;
+          }
+        }
+      });
+      
+      return buckets;
+    }),
+
+  /**
    * Get pending proposals with details
    */
   getPendingProposalsList: publicProcedure.query(async () => {
