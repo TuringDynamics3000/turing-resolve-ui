@@ -48,6 +48,14 @@ import { OperatorPage } from "@/pages/operator/OperatorPage";
 import LimitsOverridesPage from "@/pages/LimitsOverridesPage";
 import SystemHealthPage from "@/pages/SystemHealthPage";
 
+// Member Portal Pages
+import MemberDashboard from "@/pages/member/MemberDashboard";
+import ActivityPage from "@/pages/member/ActivityPage";
+import SaversPage from "@/pages/member/SaversPage";
+import TransferPage from "@/pages/member/TransferPage";
+import LimitsPage from "@/pages/member/LimitsPage";
+import ProfilePage from "@/pages/member/ProfilePage";
+
 function MainDashboard() {
   return (
     <DashboardLayout>
@@ -116,9 +124,27 @@ function Router() {
   // Check if we're on an ops console route
   const [isOpsConsole] = useRoute("/ops/*?");
   const [isOpsRoot] = useRoute("/ops");
+  // Check if we're on a member portal route
+  const [isMember] = useRoute("/member/*?");
+  const [isMemberRoot] = useRoute("/member");
   
   if (isOperator) {
     return <OperatorPage />;
+  }
+  
+  // Member Portal routes
+  if (isMember || isMemberRoot) {
+    return (
+      <Switch>
+        <Route path="/member" component={MemberDashboard} />
+        <Route path="/member/activity" component={ActivityPage} />
+        <Route path="/member/savers" component={SaversPage} />
+        <Route path="/member/transfer" component={TransferPage} />
+        <Route path="/member/limits" component={LimitsPage} />
+        <Route path="/member/profile" component={ProfilePage} />
+        <Route component={MemberDashboard} />
+      </Switch>
+    );
   }
   
   // Ops Console routes

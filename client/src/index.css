@@ -64,6 +64,18 @@
   /* Typography */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  
+  /* Coral Palette (Member Portal) */
+  --color-coral-50: var(--coral-50);
+  --color-coral-100: var(--coral-100);
+  --color-coral-200: var(--coral-200);
+  --color-coral-300: var(--coral-300);
+  --color-coral-400: var(--coral-400);
+  --color-coral-500: var(--coral-500);
+  --color-coral-600: var(--coral-600);
+  --color-coral-700: var(--coral-700);
+  --color-coral-800: var(--coral-800);
+  --color-coral-900: var(--coral-900);
 }
 
 /* ============================================
@@ -183,6 +195,18 @@
   --sidebar-accent-foreground: oklch(0.95 0.01 250);
   --sidebar-border: oklch(1 0 0 / 8%);
   --sidebar-ring: oklch(0.65 0.2 250);
+  
+  /* Coral Palette (Member Portal - Up Bank inspired) */
+  --coral-50: oklch(0.97 0.02 25);
+  --coral-100: oklch(0.93 0.04 25);
+  --coral-200: oklch(0.88 0.08 25);
+  --coral-300: oklch(0.80 0.12 25);
+  --coral-400: oklch(0.72 0.16 25);
+  --coral-500: oklch(0.65 0.18 25);
+  --coral-600: oklch(0.55 0.16 25);
+  --coral-700: oklch(0.45 0.14 25);
+  --coral-800: oklch(0.35 0.12 25);
+  --coral-900: oklch(0.25 0.08 25);
 }
 
 /* ============================================

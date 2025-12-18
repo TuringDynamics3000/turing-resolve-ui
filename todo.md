@@ -1990,3 +1990,67 @@
 - [x] Add real-time refresh capability
 
 **All 25 opsRouter tests passing**
+
+## Customer Portal (Customer I/O)
+
+### Portal Layout & Navigation
+- [ ] Create CustomerPortalLayout with branded header/footer
+- [ ] Add customer authentication context
+- [ ] Build responsive mobile-first navigation
+
+### Customer Dashboard
+- [ ] Account overview with balances and limits
+- [ ] Quick actions (payments, transfers, requests)
+- [ ] Recent activity summary
+- [ ] Notification center
+
+### Transaction History
+- [ ] Paginated transaction list with filters
+- [ ] Transaction detail view with evidence
+- [ ] Export functionality (CSV/PDF)
+- [ ] Search and date range filtering
+
+### Limit Management
+- [ ] View current limits and utilization
+- [ ] Request limit increase with justification
+- [ ] Track override request status
+- [ ] View limit history
+
+### Decision Status Tracking
+- [ ] Pending requests dashboard
+- [ ] Decision timeline with status updates
+- [ ] Notification when decisions are made
+- [ ] Appeal/escalation option for declined requests
+
+
+## CU Member Portal (Up Bank-inspired)
+
+### Portal Layout & Theme
+- [x] Create MemberPortalLayout with dark theme (slate-950 base)
+- [x] Add coral/orange accent color (#FF5A5F / coral-500)
+- [x] Build responsive bottom navigation for mobile
+- [x] Add member greeting header with avatar
+
+### Member Dashboard
+- [x] Total balance hero display (large, prominent)
+- [x] Account cards grouped by type (Savings, Everyday, Loans)
+- [x] Circular progress rings for savings goals
+- [x] Quick action buttons (Transfer, Pay, Request)
+
+### Transaction Feed
+- [x] Chronological transaction list with date headers
+- [x] Merchant icons and categorization
+- [x] Color-coded amounts (+green, -red)
+- [x] Transaction detail modal
+
+### Savings Goals (Savers)
+- [x] Visual progress rings like Up Bank
+- [x] Goal creation and editing
+- [x] Auto-transfer settings
+- [x] Round-up feature display
+
+### Limit & Request Management
+- [x] View current limits with utilization
+- [x] Request limit increase form
+- [x] Track pending decisions with timeline
+- [x] Notification when decisions are made
