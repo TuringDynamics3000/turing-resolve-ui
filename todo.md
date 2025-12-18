@@ -1688,3 +1688,10 @@
 - [x] Show payment event chain with hash links
 - [x] Display hash verification status
 - [x] Add JSON export option
+
+
+## WebSocket Integration for Cases Page - COMPLETED ✓
+- [x] Add WebSocket hook to CaseManagement.tsx
+- [x] Add Live/Offline connection status badge
+- [x] Add new case count indicator
+- [x] Add toast notifications for new/updated cases

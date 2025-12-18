@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +26,9 @@ import {
 } from 'lucide-react';
 import { Link } from 'wouter';
 import { cn } from '@/lib/utils';
+import { useOpsInboxWebSocket, CasePayload } from '@/hooks/useWebSocket';
+import { toast } from 'sonner';
+import { Wifi, WifiOff } from 'lucide-react';
 
 /**
  * Case Management - Central Exception Handling
@@ -280,6 +283,19 @@ export default function CaseManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [newNote, setNewNote] = useState('');
+  const [newCaseCount, setNewCaseCount] = useState(0);
+
+  // WebSocket integration for real-time updates
+  const handleCaseUpdate = useCallback((cases: CasePayload[]) => {
+    setNewCaseCount(prev => prev + cases.length);
+    cases.forEach(c => {
+      toast.info(`New case: ${c.title}`, {
+        description: `Priority: ${c.priority} | Type: ${c.type}`,
+      });
+    });
+  }, []);
+
+  const { connectionState, clearNewCases } = useOpsInboxWebSocket(handleCaseUpdate);
 
   const filteredCases = mockCases.filter(c => {
     const matchesSearch = c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -300,9 +316,31 @@ export default function CaseManagement() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Case Management</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight">Case Management</h1>
+              {/* WebSocket connection status */}
+              <span className={cn(
+                "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+                connectionState === 'connected' ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-500/20 text-zinc-400"
+              )}>
+                {connectionState === 'connected' ? (
+                  <><Wifi className="w-3 h-3" /> Live</>
+                ) : (
+                  <><WifiOff className="w-3 h-3" /> Offline</>
+                )}
+              </span>
+              {/* New cases indicator */}
+              {newCaseCount > 0 && (
+                <button
+                  onClick={() => { setNewCaseCount(0); clearNewCases(); }}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400 animate-pulse hover:bg-red-500/30 transition-colors"
+                >
+                  {newCaseCount} new
+                </button>
+              )}
+            </div>
             <p className="text-muted-foreground mt-1">
-              Central exception handling with notes, approvals, and evidence
+              Central exception handling with notes, approvals, and evidence. {connectionState === 'connected' && 'Real-time updates enabled.'}
             </p>
           </div>
         </div>
