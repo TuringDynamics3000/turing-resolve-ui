@@ -1773,3 +1773,15 @@
 - [x] APRA Reporting UI page with report generation and submission
 - [x] Period Close UI wizard with validation checklist
 - [x] Seed Demo Data button on GL Ledger page
+
+
+## APRA Compliance - State of the Art Ledger Enhancements
+
+- [x] IFRS 9 ECL Engine - 3-stage impairment model
+- [x] IFRS 9 ECL Engine - PD/LGD/EAD calculations
+- [x] IFRS 9 ECL Engine - Stage migration logic
+- [x] IFRS 9 ECL Engine - Provision posting to GL
+- [x] Interest Accrual Service - Day-count conventions (ACT/365, 30/360)
+- [x] Interest Accrual Service - Daily accrual calculations
+- [x] Interest Accrual Service - Automated GL postings
+- [x] Interest Accrual Service - Tiered rate support
