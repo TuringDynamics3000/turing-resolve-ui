@@ -39,6 +39,7 @@ export function GlobalNav() {
   const navItems = [
     { href: "/", label: "Overview", icon: LayoutDashboard, roles: ['BOARD_VIEWER', 'OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'POLICY_AUTHOR', 'SYSTEM_ADMIN'] },
     { href: "/resolve", label: "Resolve", icon: Shield, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER', 'POLICY_AUTHOR'] },
+    { href: "/cases", label: "Cases", icon: Gavel, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/lending", label: "Lending", icon: CreditCard, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/payments", label: "Payments", icon: Wallet, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },
     { href: "/deposits", label: "Deposits", icon: Building2, roles: ['OPS_ANALYST', 'OPS_SUPERVISOR', 'COMPLIANCE_VIEWER'] },

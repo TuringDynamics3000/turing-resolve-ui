@@ -38,6 +38,9 @@ export interface EvidencePack {
   // Model provenance (if AI-governed)
   model?: ModelProvenanceForEvidence;
   
+  // Authority proofs (RBAC decisions) - NEW for 🔴→🟢
+  authority?: AuthorityProofs;
+  
   // Input commitment
   inputs: InputCommitment;
   
@@ -52,6 +55,71 @@ export interface EvidencePack {
   
   // Pack integrity
   evidencePackHash: string;
+}
+
+/**
+ * Authority Proofs - RBAC decisions included in evidence packs
+ * 
+ * This addresses the 🔴 Red gap: "RBAC in evidence packs - Not yet bound"
+ * What "Green" Requires: Authority proofs included by default
+ */
+export interface AuthorityProofs {
+  // All authority facts related to this decision
+  authorityFacts: AuthorityFactProof[];
+  
+  // Actor chain (who authorized what)
+  actorChain: ActorAuthorization[];
+  
+  // Approval chain (if maker/checker was required)
+  approvalChain?: ApprovalRecord[];
+  
+  // Authority summary
+  summary: AuthoritySummary;
+}
+
+export interface AuthorityFactProof {
+  authorityFactId: string;
+  actorId: string;
+  actorRole: string;
+  commandCode: string;
+  resourceId: string | null;
+  decision: 'ALLOW' | 'DENY';
+  reasonCode: string;
+  occurredAt: string;
+  factHash: string;
+  merkleProof?: MerkleProof;
+}
+
+export interface ActorAuthorization {
+  actorId: string;
+  roles: string[];
+  scope: {
+    tenantId: string;
+    environmentId: string;
+    domain: string;
+  };
+  authorizedCommands: string[];
+  authorizationTime: string;
+}
+
+export interface ApprovalRecord {
+  proposalId: string;
+  proposedBy: string;
+  proposedAt: string;
+  approvedBy: string;
+  approvedAt: string;
+  approverRole: string;
+  decision: 'APPROVE' | 'REJECT';
+  reason?: string;
+}
+
+export interface AuthoritySummary {
+  totalAuthorityChecks: number;
+  allowedCount: number;
+  deniedCount: number;
+  approvalRequired: boolean;
+  approvalObtained: boolean;
+  allAuthoritiesValid: boolean;
 }
 
 export interface PolicyProvenance {
@@ -126,6 +194,39 @@ export interface EvidencePackInput {
   // Model info (optional)
   model?: ModelProvenanceForEvidence;
   
+  // Authority proofs (RBAC) - auto-included by default
+  authority?: {
+    authorityFacts: Array<{
+      authorityFactId: string;
+      actorId: string;
+      actorRole: string;
+      commandCode: string;
+      resourceId: string | null;
+      decision: 'ALLOW' | 'DENY';
+      reasonCode: string;
+      occurredAt: Date;
+      factHash: string;
+      merkleProof?: MerkleProof;
+    }>;
+    actorChain: Array<{
+      actorId: string;
+      roles: string[];
+      scope: { tenantId: string; environmentId: string; domain: string };
+      authorizedCommands: string[];
+      authorizationTime: Date;
+    }>;
+    approvalChain?: Array<{
+      proposalId: string;
+      proposedBy: string;
+      proposedAt: Date;
+      approvedBy: string;
+      approvedAt: Date;
+      approverRole: string;
+      decision: 'APPROVE' | 'REJECT';
+      reason?: string;
+    }>;
+  };
+  
   // Feature schema
   featureSchemaId: string;
   featureSchemaVersion: string;
@@ -196,6 +297,59 @@ export class EvidencePackGenerator {
       merkleProof: e.proof,
     }));
     
+    // Build authority proofs (auto-included by default)
+    let authority: AuthorityProofs | undefined;
+    if (input.authority) {
+      const authorityFacts: AuthorityFactProof[] = input.authority.authorityFacts.map(af => ({
+        authorityFactId: af.authorityFactId,
+        actorId: af.actorId,
+        actorRole: af.actorRole,
+        commandCode: af.commandCode,
+        resourceId: af.resourceId,
+        decision: af.decision,
+        reasonCode: af.reasonCode,
+        occurredAt: af.occurredAt.toISOString(),
+        factHash: af.factHash,
+        merkleProof: af.merkleProof,
+      }));
+      
+      const actorChain: ActorAuthorization[] = input.authority.actorChain.map(ac => ({
+        actorId: ac.actorId,
+        roles: ac.roles,
+        scope: ac.scope,
+        authorizedCommands: ac.authorizedCommands,
+        authorizationTime: ac.authorizationTime.toISOString(),
+      }));
+      
+      const approvalChain: ApprovalRecord[] | undefined = input.authority.approvalChain?.map(ap => ({
+        proposalId: ap.proposalId,
+        proposedBy: ap.proposedBy,
+        proposedAt: ap.proposedAt.toISOString(),
+        approvedBy: ap.approvedBy,
+        approvedAt: ap.approvedAt.toISOString(),
+        approverRole: ap.approverRole,
+        decision: ap.decision,
+        reason: ap.reason,
+      }));
+      
+      const allowedCount = authorityFacts.filter(af => af.decision === 'ALLOW').length;
+      const deniedCount = authorityFacts.filter(af => af.decision === 'DENY').length;
+      
+      authority = {
+        authorityFacts,
+        actorChain,
+        approvalChain,
+        summary: {
+          totalAuthorityChecks: authorityFacts.length,
+          allowedCount,
+          deniedCount,
+          approvalRequired: !!input.authority.approvalChain && input.authority.approvalChain.length > 0,
+          approvalObtained: input.authority.approvalChain?.some(ap => ap.decision === 'APPROVE') ?? false,
+          allAuthoritiesValid: deniedCount === 0,
+        },
+      };
+    }
+    
     // Build pack without hash
     const packWithoutHash: Omit<EvidencePack, 'evidencePackHash'> = {
       schema: EVIDENCE_PACK_SCHEMA,
@@ -206,6 +360,7 @@ export class EvidencePackGenerator {
       generatedAt,
       policy,
       model: input.model,
+      authority,
       inputs,
       decisionTrace,
       actions,

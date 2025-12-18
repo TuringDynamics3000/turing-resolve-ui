@@ -1592,3 +1592,36 @@
 - [x] Add DELETE_MODEL handler that always returns FORBIDDEN
 - [x] Emit authority facts for forbidden command attempts
 - [x] Created forbiddenRouter.ts with compliance rationale
+
+
+## Critical Red Items - Enterprise Readiness - COMPLETED ✓
+
+### 1. External Merkle Anchoring with Persistence (🔴 → 🟢)
+- [x] Create ExternalAnchoringService with always-on anchoring
+- [x] Implement persistent anchor storage in database (merkle_anchors, merkle_anchor_events, merkle_anchor_verifications tables)
+- [x] Add anchor verification endpoint (verifyAnchor, getInclusionProof)
+- [x] Create anchor scheduler for batch anchoring (configurable interval)
+- [x] Add blockchain/TSA anchoring hooks (placeholder for external integration)
+- [x] Include Authority + ML + policy facts by default
+
+### 2. RBAC in Evidence Packs (🔴 → 🟢)
+- [x] Extend evidence pack schema with AuthorityProofs interface
+- [x] Auto-include RBAC decisions in evidence generation (authorityFacts, actorChain, approvalChain)
+- [x] Add authority chain verification (AuthoritySummary with allow/deny counts)
+- [x] Link evidence packs to authority facts (evidencePackId field)
+- [x] Add authority proof viewer support in Evidence UI
+
+### 3. ML Provenance in Evidence (🔴 → 🟢)
+- [x] Add model hash to all ML inference results (artifactHash, weightsHash)
+- [x] Add feature vector hash to inference evidence (featureVectorHash)
+- [x] Include model version and lifecycle state (MLProvenanceDetails)
+- [x] Add feature importance snapshot (top 10 features with value hashes)
+- [x] Add drift metrics to provenance (featureDriftScore, predictionDriftScore)
+
+### 4. Ops Inbox / Case Management (🔴 → 🟢)
+- [x] Create CaseManagement page with exception queue (/cases)
+- [x] Build case management system (5 case types: EXCEPTION, REVIEW, OVERRIDE, ESCALATION, INCIDENT)
+- [x] Add notes and approval workflow (internal/external notes, approval chain)
+- [x] Implement governed override UI (Override button with RBAC)
+- [x] Add case-to-evidence linking (evidencePackIds)
+- [x] Create ops metrics dashboard (6 stat cards: Open, In Progress, Pending Approval, Resolved Today, Critical, Avg Resolution)

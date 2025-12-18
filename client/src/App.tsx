@@ -25,6 +25,7 @@ import CompareDecisions from "@/pages/CompareDecisions";
 import WhatIfSimulator from "@/pages/WhatIfSimulator";
 import ComplianceReport from "@/pages/ComplianceReport";
 import GovernanceConsole from "@/pages/GovernanceConsole";
+import CaseManagement from "@/pages/CaseManagement";
 import NotFound from "@/pages/NotFound";
 import { OperatorPage } from "@/pages/operator/OperatorPage";
 
@@ -37,6 +38,7 @@ function MainDashboard() {
         
         {/* Resolve Module */}
         <Route path="/resolve" component={OpsInbox} />
+        <Route path="/cases" component={CaseManagement} />
         <Route path="/decisions" component={OpsInbox} />
         <Route path="/decisions/:id" component={DecisionDetail} />
         <Route path="/compare" component={CompareDecisions} />

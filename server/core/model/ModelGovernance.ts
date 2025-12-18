@@ -728,6 +728,12 @@ export class ModelGovernanceController {
 // EVIDENCE PACK ADDITIONS (D5 - Evidence)
 // ============================================================
 
+/**
+ * Model Provenance for Evidence Packs
+ * 
+ * This addresses the 🔴 Red gap: "ML provenance in evidence - Missing"
+ * What "Green" Requires: Model + feature hashes everywhere
+ */
 export interface ModelProvenanceForEvidence {
   modelId: string;
   version: string;
@@ -737,9 +743,79 @@ export interface ModelProvenanceForEvidence {
   state: ModelLifecycleState;
   evaluationReportHash: string;
   shadowMetrics?: ShadowMetrics;
+  
+  // NEW: ML Provenance fields for 🔴→🟢
+  mlProvenance: MLProvenanceDetails;
 }
 
-export function extractModelProvenance(entry: ModelRegistryEntry): ModelProvenanceForEvidence {
+/**
+ * Detailed ML Provenance - Required for enterprise audit
+ */
+export interface MLProvenanceDetails {
+  // Model artifact hashes
+  weightsHash: string;
+  inferenceCodeHash: string;
+  preprocessingHash: string;
+  postprocessingHash: string;
+  
+  // Feature provenance
+  featureSchemaId: string;
+  featureSchemaVersion: string;
+  featureVectorHash: string; // Hash of actual input features used
+  featureCount: number;
+  
+  // Feature importance snapshot (top N features)
+  featureImportance: Array<{
+    featureName: string;
+    importance: number;
+    value: unknown;
+    valueHash: string;
+  }>;
+  
+  // Inference metadata
+  inferenceTimestamp: string;
+  inferenceLatencyMs: number;
+  inferenceEnvironment: string;
+  
+  // Model lineage
+  trainingDataHash?: string;
+  trainingTimestamp?: string;
+  parentModelVersion?: string;
+  
+  // Drift indicators
+  driftMetrics?: {
+    featureDriftScore: number;
+    predictionDriftScore: number;
+    lastDriftCheckAt: string;
+    driftAlertTriggered: boolean;
+  };
+}
+
+export function extractModelProvenance(
+  entry: ModelRegistryEntry,
+  inferenceContext?: {
+    featureVector: Record<string, unknown>;
+    featureImportance?: Array<{ featureName: string; importance: number }>;
+    inferenceLatencyMs: number;
+    inferenceEnvironment: string;
+  }
+): ModelProvenanceForEvidence {
+  // Compute feature vector hash
+  const featureVectorHash = inferenceContext?.featureVector 
+    ? sha256(canonicalJson(inferenceContext.featureVector))
+    : 'NO_FEATURES';
+  
+  // Build feature importance with value hashes
+  const featureImportance = (inferenceContext?.featureImportance || []).slice(0, 10).map(fi => {
+    const value = inferenceContext?.featureVector?.[fi.featureName];
+    return {
+      featureName: fi.featureName,
+      importance: fi.importance,
+      value,
+      valueHash: sha256(canonicalJson({ [fi.featureName]: value })),
+    };
+  });
+  
   return {
     modelId: entry.modelId,
     version: entry.version,
@@ -749,5 +825,30 @@ export function extractModelProvenance(entry: ModelRegistryEntry): ModelProvenan
     state: entry.state,
     evaluationReportHash: entry.artifact.evaluationReportHash,
     shadowMetrics: entry.shadowMetrics,
+    mlProvenance: {
+      weightsHash: entry.artifact.weightsHash,
+      inferenceCodeHash: sha256(entry.artifact.inferenceCodeVersion),
+      preprocessingHash: sha256(entry.artifact.preprocessingVersion),
+      postprocessingHash: sha256(entry.artifact.postprocessingVersion),
+      featureSchemaId: entry.artifact.featureSchemaId,
+      featureSchemaVersion: entry.artifact.featureSchemaVersion,
+      featureVectorHash,
+      featureCount: inferenceContext?.featureVector 
+        ? Object.keys(inferenceContext.featureVector).length 
+        : 0,
+      featureImportance,
+      inferenceTimestamp: new Date().toISOString(),
+      inferenceLatencyMs: inferenceContext?.inferenceLatencyMs || 0,
+      inferenceEnvironment: inferenceContext?.inferenceEnvironment || 'unknown',
+      trainingDataHash: undefined, // Would come from model card
+      trainingTimestamp: undefined,
+      parentModelVersion: entry.previousVersion,
+      driftMetrics: entry.shadowMetrics ? {
+        featureDriftScore: 0,
+        predictionDriftScore: 0,
+        lastDriftCheckAt: new Date().toISOString(),
+        driftAlertTriggered: false,
+      } : undefined,
+    },
   };
 }

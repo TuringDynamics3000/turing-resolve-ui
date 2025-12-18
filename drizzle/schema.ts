@@ -567,3 +567,96 @@ export const authorityFacts = mysqlTable("authority_facts", {
 
 export type AuthorityFact = typeof authorityFacts.$inferSelect;
 export type InsertAuthorityFact = typeof authorityFacts.$inferInsert;
+
+
+// ============================================
+// MERKLE ANCHORING TABLES (External Anchoring)
+// ============================================
+
+/**
+ * Merkle Anchors - Batch anchors with external persistence
+ */
+export const merkleAnchors = mysqlTable("merkle_anchors", {
+  id: int("id").autoincrement().primaryKey(),
+  anchorId: varchar("anchorId", { length: 64 }).notNull().unique(),
+  
+  tenantId: varchar("tenantId", { length: 64 }).notNull(),
+  environmentId: varchar("environmentId", { length: 32 }).notNull(),
+  batchNumber: int("batchNumber").notNull(),
+  
+  // Merkle tree
+  rootHash: varchar("rootHash", { length: 64 }).notNull(),
+  eventCount: int("eventCount").notNull(),
+  startEventId: varchar("startEventId", { length: 64 }).notNull(),
+  endEventId: varchar("endEventId", { length: 64 }).notNull(),
+  treeLevels: json("treeLevels"),
+  
+  // Chain linking
+  previousAnchorId: varchar("previousAnchorId", { length: 64 }),
+  previousRootHash: varchar("previousRootHash", { length: 64 }),
+  chainHash: varchar("chainHash", { length: 64 }).notNull(),
+  
+  // Signing
+  signedAt: timestamp("signedAt").notNull(),
+  signature: varchar("signature", { length: 128 }).notNull(),
+  signingKeyId: varchar("signingKeyId", { length: 64 }).notNull(),
+  
+  // External anchoring
+  anchorType: mysqlEnum("anchorType", ["S3_OBJECT_LOCK", "BLOCKCHAIN", "TIMESTAMPING_AUTHORITY", "INTERNAL"]).notNull(),
+  externalRef: varchar("externalRef", { length: 512 }),
+  status: mysqlEnum("status", ["PENDING", "ANCHORED", "VERIFIED", "FAILED"]).default("PENDING").notNull(),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MerkleAnchor = typeof merkleAnchors.$inferSelect;
+export type InsertMerkleAnchor = typeof merkleAnchors.$inferInsert;
+
+/**
+ * Merkle Anchor Events - Events included in anchors
+ */
+export const merkleAnchorEvents = mysqlTable("merkle_anchor_events", {
+  id: int("id").autoincrement().primaryKey(),
+  eventId: varchar("eventId", { length: 64 }).notNull().unique(),
+  
+  eventType: mysqlEnum("eventType", [
+    "AUTHORITY_FACT", "ML_INFERENCE", "POLICY_EVALUATION", 
+    "DECISION", "LEDGER_POSTING", "STATE_TRANSITION"
+  ]).notNull(),
+  
+  tenantId: varchar("tenantId", { length: 64 }).notNull(),
+  environmentId: varchar("environmentId", { length: 32 }).notNull(),
+  occurredAt: timestamp("occurredAt").notNull(),
+  
+  leafHash: varchar("leafHash", { length: 64 }).notNull(),
+  leafIndex: int("leafIndex"),
+  payload: json("payload"),
+  
+  // Link to anchor (null until anchored)
+  anchorId: varchar("anchorId", { length: 64 }),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MerkleAnchorEvent = typeof merkleAnchorEvents.$inferSelect;
+export type InsertMerkleAnchorEvent = typeof merkleAnchorEvents.$inferInsert;
+
+/**
+ * Merkle Anchor Verifications - Verification audit trail
+ */
+export const merkleAnchorVerifications = mysqlTable("merkle_anchor_verifications", {
+  id: int("id").autoincrement().primaryKey(),
+  verificationId: varchar("verificationId", { length: 64 }).notNull().unique(),
+  
+  anchorId: varchar("anchorId", { length: 64 }).notNull(),
+  verifiedAt: timestamp("verifiedAt").notNull(),
+  verifiedBy: varchar("verifiedBy", { length: 128 }).notNull(),
+  verificationMethod: mysqlEnum("verificationMethod", ["INTERNAL", "EXTERNAL_AUDITOR", "AUTOMATED"]).notNull(),
+  result: mysqlEnum("result", ["VALID", "INVALID", "TAMPERED"]).notNull(),
+  details: json("details"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MerkleAnchorVerification = typeof merkleAnchorVerifications.$inferSelect;
+export type InsertMerkleAnchorVerification = typeof merkleAnchorVerifications.$inferInsert;
