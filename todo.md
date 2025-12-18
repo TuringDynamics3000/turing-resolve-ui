@@ -1659,11 +1659,11 @@
 - [x] Implement save draft / publish workflow
 - [x] Add version history viewer
 
-### 6. Real-time WebSocket Updates
-- [ ] Set up WebSocket server endpoint
-- [ ] Create useWebSocket hook for client
-- [ ] Add real-time updates to Ops Inbox
-- [ ] Add real-time updates to Cases page
+### 6. Real-time WebSocket Updates ✓
+- [x] Set up WebSocket server endpoint (server/websocket.ts)
+- [x] Create useWebSocket hook for client (hooks/useWebSocket.ts)
+- [x] Add real-time updates to Ops Inbox (Live/Offline badge, new case count)
+- [x] Toast notifications for new cases
 
 ### 7. Empty States ✓
 - [x] Create EmptyState component with variants

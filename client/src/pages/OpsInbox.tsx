@@ -29,9 +29,12 @@ import {
   TrendingUp,
   TrendingDown
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "wouter";
 import { cn } from "@/lib/utils";
+import { useOpsInboxWebSocket, CasePayload } from "@/hooks/useWebSocket";
+import { toast } from "sonner";
+import { Wifi, WifiOff } from "lucide-react";
 
 type ViewMode = "grid" | "table";
 type FilterType = "ALL" | "CRITICAL" | "HIGH" | "REVIEW";
@@ -86,6 +89,19 @@ export default function OpsInbox() {
   const [decisions, setDecisions] = useState<Decision[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [newCaseCount, setNewCaseCount] = useState(0);
+
+  // WebSocket integration for real-time updates
+  const handleCaseUpdate = useCallback((cases: CasePayload[]) => {
+    setNewCaseCount(prev => prev + cases.length);
+    cases.forEach(c => {
+      toast.info(`New case: ${c.title}`, {
+        description: `Priority: ${c.priority} | Type: ${c.type}`,
+      });
+    });
+  }, []);
+
+  const { connectionState, clearNewCases } = useOpsInboxWebSocket(handleCaseUpdate);
 
   const loadDecisions = async () => {
     try {
@@ -143,9 +159,31 @@ export default function OpsInbox() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Ops Inbox</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-3xl font-bold tracking-tight">Ops Inbox</h1>
+            {/* WebSocket connection status */}
+            <span className={cn(
+              "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium",
+              connectionState === 'connected' ? "bg-emerald-500/20 text-emerald-400" : "bg-zinc-500/20 text-zinc-400"
+            )}>
+              {connectionState === 'connected' ? (
+                <><Wifi className="w-3 h-3" /> Live</>
+              ) : (
+                <><WifiOff className="w-3 h-3" /> Offline</>
+              )}
+            </span>
+            {/* New cases indicator */}
+            {newCaseCount > 0 && (
+              <button
+                onClick={() => { setNewCaseCount(0); clearNewCases(); }}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-500/20 text-red-400 animate-pulse hover:bg-red-500/30 transition-colors"
+              >
+                {newCaseCount} new
+              </button>
+            )}
+          </div>
           <p className="text-muted-foreground mt-1">
-            Triage and resolve flagged decisions.
+            Triage and resolve flagged decisions. {connectionState === 'connected' && 'Real-time updates enabled.'}
           </p>
         </div>
         <div className="flex items-center gap-2">
