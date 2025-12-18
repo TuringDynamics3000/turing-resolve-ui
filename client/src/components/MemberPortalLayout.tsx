@@ -1,5 +1,7 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useDecisionUpdates, DecisionUpdate } from "@/hooks/useDecisionUpdates";
+import { toast } from "sonner";
 import { 
   Home, 
   ArrowLeftRight, 
@@ -55,7 +57,7 @@ function BottomNavItem({ item, isActive }: { item: NavItem; isActive: boolean })
   );
 }
 
-function TopBar({ title, showBack = false }: { title?: string; showBack?: boolean }) {
+function TopBar({ title, showBack = false, isConnected = false }: { title?: string; showBack?: boolean; isConnected?: boolean }) {
   return (
     <div className="h-14 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50 flex items-center justify-between px-4 sticky top-0 z-50">
       <div className="flex items-center gap-3">
@@ -72,6 +74,11 @@ function TopBar({ title, showBack = false }: { title?: string; showBack?: boolea
       </div>
       
       <div className="flex items-center gap-2">
+        {/* Live connection indicator */}
+        <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-800/50">
+          <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
+          <span className="text-xs text-slate-400">{isConnected ? 'Live' : 'Offline'}</span>
+        </div>
         <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white hover:bg-slate-800">
           <Bell className="w-5 h-5" />
         </Button>
@@ -118,9 +125,17 @@ export function MemberPortalLayout({
   showBack = false,
   hideNav = false 
 }: MemberPortalLayoutProps) {
+  // Real-time decision updates
+  const { isConnected, lastUpdate } = useDecisionUpdates({
+    showToasts: true,
+    onUpdate: (update: DecisionUpdate) => {
+      console.log('[Member Portal] Decision update received:', update);
+    }
+  });
+  
   return (
     <div className="min-h-screen bg-slate-950 text-white">
-      <TopBar title={title} showBack={showBack} />
+      <TopBar title={title} showBack={showBack} isConnected={isConnected} />
       
       <main className={`${hideNav ? "" : "pb-20"}`}>
         {children}

@@ -9,6 +9,8 @@
 
 import { z } from "zod";
 import { publicProcedure, router } from "./_core/trpc";
+import * as redbellyService from "./services/redbellyNotarisation";
+import * as evidenceService from "./services/evidenceVault";
 
 // ============================================================================
 // Types
@@ -645,5 +647,87 @@ export const opsRouter = router({
       };
       
       return healthData[input.component] ?? { status: 'UNKNOWN', metrics: {} };
+    }),
+
+  // ============================================================================
+  // RedBelly Notarisation Endpoints
+  // ============================================================================
+
+  getNotarisation: publicProcedure
+    .input(z.object({ decisionId: z.string() }))
+    .query(({ input }) => {
+      return redbellyService.getNotarisationByDecisionId(input.decisionId);
+    }),
+
+  notariseDecision: publicProcedure
+    .input(z.object({
+      decisionId: z.string(),
+      decisionHash: z.string()
+    }))
+    .mutation(async ({ input }) => {
+      return redbellyService.notariseDecision(input);
+    }),
+
+  verifyNotarisation: publicProcedure
+    .input(z.object({
+      decisionId: z.string(),
+      expectedHash: z.string()
+    }))
+    .query(async ({ input }) => {
+      return redbellyService.verifyNotarisation(input.decisionId, input.expectedHash);
+    }),
+
+  getNetworkStatus: publicProcedure.query(() => {
+    return redbellyService.getNetworkStatus();
+  }),
+
+  getAllNotarisations: publicProcedure.query(() => {
+    return redbellyService.getAllNotarisations();
+  }),
+
+  // ============================================================================
+  // Evidence Vault Endpoints
+  // ============================================================================
+
+  getEvidencePack: publicProcedure
+    .input(z.object({ decisionId: z.string() }))
+    .query(({ input }) => {
+      return evidenceService.getEvidencePack(input.decisionId);
+    }),
+
+  getEvidencePackById: publicProcedure
+    .input(z.object({ packId: z.string() }))
+    .query(({ input }) => {
+      return evidenceService.getEvidencePackById(input.packId);
+    }),
+
+  getEvidenceItem: publicProcedure
+    .input(z.object({
+      packId: z.string(),
+      itemId: z.string()
+    }))
+    .query(({ input }) => {
+      return evidenceService.getEvidenceItem(input.packId, input.itemId);
+    }),
+
+  generateEvidenceDownload: publicProcedure
+    .input(z.object({
+      packId: z.string(),
+      format: z.enum(['JSON', 'PDF', 'ZIP']).default('JSON')
+    }))
+    .mutation(({ input }) => {
+      return evidenceService.generateDownloadUrl(input.packId, input.format);
+    }),
+
+  verifyEvidencePack: publicProcedure
+    .input(z.object({ packId: z.string() }))
+    .query(({ input }) => {
+      return evidenceService.verifyEvidencePack(input.packId);
+    }),
+
+  getMemberEvidencePacks: publicProcedure
+    .input(z.object({ memberId: z.string() }))
+    .query(({ input }) => {
+      return evidenceService.getMemberEvidencePacks(input.memberId);
     })
 });

@@ -55,6 +55,7 @@ import SaversPage from "@/pages/member/SaversPage";
 import TransferPage from "@/pages/member/TransferPage";
 import LimitsPage from "@/pages/member/LimitsPage";
 import ProfilePage from "@/pages/member/ProfilePage";
+import EvidenceVaultPage from "@/pages/member/EvidenceVaultPage";
 
 function MainDashboard() {
   return (
@@ -142,6 +143,7 @@ function Router() {
         <Route path="/member/transfer" component={TransferPage} />
         <Route path="/member/limits" component={LimitsPage} />
         <Route path="/member/profile" component={ProfilePage} />
+        <Route path="/member/evidence" component={EvidenceVaultPage} />
         <Route component={MemberDashboard} />
       </Switch>
     );

@@ -2072,3 +2072,24 @@
 - [x] Add cryptographic seal indicator to member requests
 - [x] Show hash chain proof for completed decisions
 - [x] Build transparency timeline showing immutable audit trail
+
+
+## Advanced Governance Features
+
+### RedBelly Blockchain Notarisation
+- [x] Create RedBelly notarisation service
+- [x] Add blockchain anchor to decision records
+- [x] Display notarisation status and tx ID in UI
+- [x] Add verification link to blockchain explorer
+
+### Evidence Vault Viewer (Member Portal)
+- [x] Create EvidenceVaultPage for members
+- [x] Display decision audit pack contents
+- [x] Add download functionality for evidence
+- [x] Show hash verification status
+
+### Real-time WebSocket Updates
+- [x] Create WebSocket subscription for decision updates
+- [x] Push status changes to member portal
+- [x] Add toast notifications for decision outcomes
+- [x] Update UI state in real-time
